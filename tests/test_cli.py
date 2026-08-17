@@ -1,5 +1,6 @@
 import pytest
 import argparse
+from unittest.mock import patch, MagicMock
 
 
 class TestCLIArgumentParsing:
@@ -59,3 +60,31 @@ class TestCLIArgumentDefaults:
         
         args = parser.parse_args([])
         assert args.verbose == False
+
+
+class TestCLINoVerifyRegression:
+    def test_no_verify_does_not_crash_on_missing_format_check(self, tmp_path):
+        from agentcore.cli.main import main
+        from agentcore import AgentConfig
+
+        mock_result = {
+            "task": {"task_id": "t1", "current_state": "COMPLETED", "selected_skills": [], "user_request": "test"},
+            "verification": {
+                "overall_passed": True,
+                "skipped": True,
+            },
+            "success": True,
+            "tools_used": 0,
+        }
+
+        with patch("agentcore.cli.main.Agent") as MockAgent, \
+             patch("agentcore.cli.main.ConfigLoader") as MockConfig, \
+             patch("agentcore.cli.main.MemoryManager"), \
+             patch("agentcore.cli.main.create_hermes_runtime"), \
+             patch("agentcore.cli.main.create_agent"):
+            MockConfig.discover.return_value = MagicMock()
+            MockConfig.discover.return_value.to_agent_config.return_value = AgentConfig(enable_verification=False)
+            MockAgent.return_value.execute.return_value = mock_result
+
+            ret = main(["--no-verify", "test request"])
+            assert ret == 0

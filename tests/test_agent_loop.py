@@ -109,6 +109,15 @@ class TestAgentWithMockRuntime:
         result = agent.execute("Test without verification")
         
         assert result["success"] == True
+        assert "verification" in result
+        verification = result["verification"]
+        assert verification["overall_passed"] is True
+        assert verification["format_check"] is None
+        assert verification["build_check"] is None
+        assert verification["test_results"] is None
+        assert verification["git_diff_check"] is None
+        assert verification["failures"] == []
+        assert verification.get("skipped") is True
 
     def test_verification_enabled_with_failures(self, tmp_path):
         runtime = MockRuntime(responses=["Analysis done"])

@@ -817,7 +817,15 @@ class Agent:
         })
         if not self.config.enable_verification:
             self._emit(EventType.VERIFICATION_COMPLETED, data={"passed": True, "skipped": True})
-            return {"overall_passed": True}
+            return {
+                "overall_passed": True,
+                "format_check": None,
+                "build_check": None,
+                "test_results": None,
+                "git_diff_check": None,
+                "failures": [],
+                "skipped": True,
+            }
 
         report = self._verifier.verify_all(
             run_format=self.config.run_format_check,
