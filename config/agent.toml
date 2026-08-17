@@ -1,0 +1,28 @@
+[agent]
+default_runtime = "hermes"
+
+[skill_paths]
+primary = "~/.agentcore/skills"
+
+[memory]
+backend = "db_obsidian"
+db_path = "~/.agentcore/memory.db"
+
+[project_discovery]
+max_context_files = 50
+exclude_patterns = ["*.pyc", "*.pyo", "__pycache__", ".git", "*.egg-info", "node_modules", ".venv", "venv"]
+
+[tool_limits]
+max_iterations = 10
+max_tool_calls = 20
+timeout_seconds = 300
+timeout = 300
+
+[verification]
+run_format_check = true
+run_build_check = true
+run_tests = true
+
+[logging]
+level = "INFO"
+format = "json"
