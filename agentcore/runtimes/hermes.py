@@ -169,12 +169,15 @@ class HermesRuntime(RuntimeAdapter):
 
     def capabilities(self) -> dict[str, Any]:
         return {
+            "text_generation": True,
+            "tool_calls": False,
+            "external_tool_execution": False,
+            "streaming": False,
+            "cancellation": False,
+            "adapter": "hermes",
             "model": self.model,
             "provider": self.provider,
             "timeout": self.timeout,
-            "supports_tool_calls": True,
-            "supports_streaming": False,
-            "adapter": "hermes",
         }
 
     def cancel(self) -> None:

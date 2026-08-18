@@ -99,8 +99,11 @@ class MockRuntime(RuntimeAdapter):
     def capabilities(self) -> dict[str, Any]:
         return {
             "adapter": "mock",
-            "supports_tool_calls": True,
-            "supports_streaming": False,
+            "text_generation": True,
+            "tool_calls": True,
+            "external_tool_execution": True,
+            "streaming": False,
+            "cancellation": False,
         }
 
     def cancel(self) -> None:

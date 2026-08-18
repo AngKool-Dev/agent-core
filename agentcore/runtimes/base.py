@@ -1,7 +1,21 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, List, Optional, TypedDict
 from dataclasses import dataclass, field
+
+
+class RuntimeCapabilities(TypedDict, total=False):
+    """
+    Standardized capability contract for runtime adapters.
+
+    All fields are optional. Runtimes should advertise only the capabilities
+    they actually support.
+    """
+    text_generation: bool
+    tool_calls: bool
+    external_tool_execution: bool
+    streaming: bool
+    cancellation: bool
 
 
 @dataclass

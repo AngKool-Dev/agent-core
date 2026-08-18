@@ -61,7 +61,14 @@ class RecorderRuntime(RuntimeAdapter):
         return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
 
     def capabilities(self):
-        return {"adapter": "recorder"}
+        return {
+            "adapter": "recorder",
+            "text_generation": True,
+            "tool_calls": True,
+            "external_tool_execution": True,
+            "streaming": False,
+            "cancellation": False,
+        }
 
     def cancel(self):
         self.cancelled = True
@@ -254,7 +261,14 @@ class TestCancellation:
                 return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
 
             def capabilities(self):
-                return {"adapter": "slow"}
+                return {
+                    "adapter": "slow",
+                    "text_generation": True,
+                    "tool_calls": True,
+                    "external_tool_execution": True,
+                    "streaming": False,
+                    "cancellation": False,
+                }
 
             def cancel(self):
                 pass

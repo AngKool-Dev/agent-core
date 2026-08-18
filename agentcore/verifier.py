@@ -2,7 +2,7 @@ import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 
 @dataclass
@@ -66,17 +66,18 @@ class Verifier:
         else:
             return "unknown"
 
-    def run_format_check(self) -> CheckResult:
+    def run_format_check(self, changed_files: Optional[List[str]] = None) -> CheckResult:
         if self.project_type == "rust":
-            return self._run_rust_fmt()
+            return self._run_rust_fmt(changed_files=changed_files)
         elif self.project_type == "python":
-            return self._run_python_fmt()
+            return self._run_python_fmt(changed_files=changed_files)
         elif self.project_type == "javascript":
-            return self._run_js_fmt()
+            return self._run_js_fmt(changed_files=changed_files)
         return CheckResult(name="format", passed=True, output="No format check applicable")
 
-    def _run_rust_fmt(self) -> CheckResult:
-        result = self._shell("cargo fmt --check")
+    def _run_rust_fmt(self, changed_files: Optional[List[str]] = None) -> CheckResult:
+        cmd = "cargo fmt --check"
+        result = self._shell(cmd)
         return CheckResult(
             name="rust_fmt",
             passed=result["success"],
@@ -84,8 +85,11 @@ class Verifier:
             error=result["stderr"],
         )
 
-    def _run_python_fmt(self) -> CheckResult:
-        result = self._shell("ruff format --check")
+    def _run_python_fmt(self, changed_files: Optional[List[str]] = None) -> CheckResult:
+        cmd = "ruff format --check"
+        if changed_files:
+            cmd = f"{cmd} {' '.join(changed_files)}"
+        result = self._shell(cmd)
         return CheckResult(
             name="python_fmt",
             passed=result["success"],
@@ -93,8 +97,9 @@ class Verifier:
             error=result["stderr"],
         )
 
-    def _run_js_fmt(self) -> CheckResult:
-        result = self._shell("npx prettier --check '**/*.{js,ts,jsx,tsx,json,css,md}' 2>/dev/null || echo 'No files checked'")
+    def _run_js_fmt(self, changed_files: Optional[List[str]] = None) -> CheckResult:
+        cmd = "npx prettier --check '**/*.{js,ts,jsx,tsx,json,css,md}' 2>/dev/null || echo 'No files checked'"
+        result = self._shell(cmd)
         return CheckResult(
             name="js_fmt",
             passed=result["success"],
@@ -190,14 +195,14 @@ class Verifier:
             error=result["stderr"],
         )
 
-    def verify_all(self, run_tests: bool = True, run_format: bool = True, run_build: bool = True) -> VerificationReport:
+    def verify_all(self, run_tests: bool = True, run_format: bool = True, run_build: bool = True, changed_files: Optional[List[str]] = None) -> VerificationReport:
         format_check = CheckResult(name="format", passed=True, output="Skipped")
         build_check = CheckResult(name="build", passed=True, output="Skipped")
         test_results = CheckResult(name="tests", passed=True, output="Skipped")
         git_check = CheckResult(name="git_diff", passed=True, output="Skipped")
 
         if run_format:
-            format_check = self.run_format_check()
+            format_check = self.run_format_check(changed_files=changed_files)
 
         if run_build:
             build_check = self.run_build_check()

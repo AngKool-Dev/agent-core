@@ -88,8 +88,11 @@ class DeterministicRuntime(RuntimeAdapter):
     def capabilities(self) -> Dict[str, Any]:
         return {
             "adapter": "deterministic",
-            "supports_tool_calls": True,
-            "supports_streaming": False,
+            "text_generation": True,
+            "tool_calls": True,
+            "external_tool_execution": True,
+            "streaming": False,
+            "cancellation": False,
         }
 
     def cancel(self) -> None:

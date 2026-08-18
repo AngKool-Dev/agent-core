@@ -64,6 +64,29 @@ AgentCore is a universal AI coding-agent framework with pluggable runtime adapte
 - Project-type aware checks
 - Format, build, and test verification
 - Failure classification
+- Verification scope controls which files are considered for file-scoped checks, while check flags control which checks run at all
+
+#### Verification Scope vs Check Scope
+
+AgentCore distinguishes between two orthogonal concepts:
+
+| Concept | Controls | Values |
+|---|---|---|
+| **Verification scope** | Which files are in scope for file-scoped checks | `"project"` (default), `"changed-files"` |
+| **Check scope** | Which verification checks are enabled | `run_format_check`, `run_build_check`, `run_tests` |
+
+**Verification scope** determines the set of files a check operates against:
+- `"project"`: checks run against the entire repository (default)
+- `"changed-files"`: checks run only against files changed during the task, computed as the delta from the task-start Git state
+
+**Check scope** determines which checks execute:
+- `run_format_check`: format/lint check
+- `run_build_check`: build/compile check
+- `run_tests`: test suite
+
+Under `"changed-files"` scope, only the **format check** is file-scoped. Build and test checks remain project-wide because they validate repository-wide correctness. The `git diff --check` check always validates the entire repository for whitespace errors regardless of scope.
+
+If Git is unavailable or snapshot capture fails, the verifier falls back to project-wide verification rather than silently skipping checks.
 
 ## Directory Structure
 

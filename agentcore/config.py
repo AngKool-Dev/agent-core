@@ -123,6 +123,7 @@ class AgentCoreConfig:
     run_format_check: bool = True
     run_build_check: bool = True
     run_tests: bool = True
+    verification_scope: str = "project"
 
     # Project discovery
     max_context_files: int = 50
@@ -145,6 +146,7 @@ class AgentCoreConfig:
             run_format_check=self.run_format_check,
             run_build_check=self.run_build_check,
             run_tests=self.run_tests,
+            verification_scope=self.verification_scope,
         )
 
     @classmethod
@@ -325,6 +327,7 @@ class ConfigLoader:
             config.run_format_check = verify_data.get("run_format_check", config.run_format_check)
             config.run_build_check = verify_data.get("run_build_check", config.run_build_check)
             config.run_tests = verify_data.get("run_tests", config.run_tests)
+            config.verification_scope = verify_data.get("verification_scope", config.verification_scope)
 
         # Project discovery
         discovery_data = data.get("project_discovery", {})

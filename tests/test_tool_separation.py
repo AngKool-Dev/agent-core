@@ -244,3 +244,13 @@ class TestHermesRuntimeNoToolDuplication:
         assert "execute_tool" not in caps
         assert "shell" not in caps
         assert "read_file" not in caps
+
+    def test_hermes_runtime_capabilities_standardized_keys(self):
+        """Hermes capabilities must include standardized capability keys."""
+        rt = HermesRuntime()
+        caps = rt.capabilities()
+        assert caps["text_generation"] is True
+        assert caps["tool_calls"] is False
+        assert caps["external_tool_execution"] is False
+        assert caps["streaming"] is False
+        assert caps["cancellation"] is False

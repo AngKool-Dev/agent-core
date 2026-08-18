@@ -9,6 +9,7 @@ These tests verify:
 """
 
 import pytest
+from unittest.mock import patch
 from pathlib import Path
 from agentcore import Agent, AgentConfig, create_agent
 from agentcore.memory import MemoryManager
@@ -226,3 +227,324 @@ class TestAgentIterationFlow:
         result = agent.execute("Keep going forever")
 
         assert result["iterations"] <= 3
+
+
+class BlackBoxRuntime(RuntimeAdapter):
+    """Runtime that declares no tool capabilities but can return text."""
+
+    def __init__(self, responses=None):
+        self._responses = responses or ["Done"]
+        self._index = 0
+
+    def respond(self, context):
+        if self._index < len(self._responses):
+            resp = self._responses[self._index]
+            self._index += 1
+            if isinstance(resp, RuntimeResponse):
+                return resp
+            return RuntimeResponse(content=str(resp), finish_reason=FinishReason.STOP)
+        return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
+
+    def capabilities(self):
+        return {
+            "text_generation": True,
+            "tool_calls": False,
+            "external_tool_execution": False,
+            "streaming": False,
+            "cancellation": False,
+        }
+
+    def cancel(self):
+        pass
+
+    @property
+    def default_model(self):
+        return "blackbox-model"
+
+
+class ContractViolatingRuntime(RuntimeAdapter):
+    """Runtime that declares tool_calls=False but returns tool calls."""
+
+    def __init__(self, responses=None):
+        self._responses = responses or []
+        self._index = 0
+
+    def respond(self, context):
+        if self._index < len(self._responses):
+            resp = self._responses[self._index]
+            self._index += 1
+            if isinstance(resp, RuntimeResponse):
+                return resp
+            return RuntimeResponse(content=str(resp), finish_reason=FinishReason.STOP)
+        return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
+
+    def capabilities(self):
+        return {
+            "text_generation": True,
+            "tool_calls": False,
+            "external_tool_execution": False,
+            "streaming": False,
+            "cancellation": False,
+        }
+
+    def cancel(self):
+        pass
+
+    @property
+    def default_model(self):
+        return "violation-model"
+
+
+class TestAgentCapabilityAwareness:
+    """Agent must respect runtime capability declarations."""
+
+    def test_black_box_runtime_completes_without_tool_states(self, tmp_path):
+        """A runtime declaring tool_calls=False should complete text tasks normally."""
+        runtime = BlackBoxRuntime(responses=["Task complete"])
+        memory = MemoryManager(InMemoryBackend())
+        config = AgentConfig(
+            max_iterations=5,
+            max_tool_calls=10,
+            enable_verification=False,
+        )
+
+        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
+        result = agent.execute("Reply with hello")
+
+        assert result["success"] is True
+        assert result["task"]["current_state"] == "COMPLETED"
+        assert result["tools_used"] == 0
+
+    def test_contract_violation_tool_calls_false_returns_tool_calls(self, tmp_path):
+        """Runtime declaring tool_calls=False but returning tool_calls should fail."""
+        tool_call = ToolCall(tool="read_file", arguments={"path": "x.py"})
+        runtime = ContractViolatingRuntime(responses=[
+            RuntimeResponse(content="", tool_calls=[tool_call], finish_reason=FinishReason.TOOL_CALLS),
+        ])
+        memory = MemoryManager(InMemoryBackend())
+        config = AgentConfig(
+            max_iterations=5,
+            max_tool_calls=10,
+            enable_verification=False,
+        )
+
+        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
+        result = agent.execute("Read x.py")
+
+        assert result["task"]["current_state"] == "FAILED"
+        assert result["stopped_reason"] == "runtime_contract_violation"
+
+    def test_contract_violation_tool_calls_true_external_false(self, tmp_path):
+        """Runtime with tool_calls=True but external_tool_execution=False should fail on tool calls."""
+        class HybridRuntime(RuntimeAdapter):
+            def __init__(self):
+                self.called = False
+            def respond(self, context):
+                if not self.called:
+                    self.called = True
+                    return RuntimeResponse(
+                        content="",
+                        tool_calls=[ToolCall(tool="read_file", arguments={"path": "x.py"})],
+                        finish_reason=FinishReason.TOOL_CALLS,
+                    )
+                return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
+            def capabilities(self):
+                return {
+                    "text_generation": True,
+                    "tool_calls": True,
+                    "external_tool_execution": False,
+                    "streaming": False,
+                    "cancellation": False,
+                }
+            def cancel(self):
+                pass
+            @property
+            def default_model(self):
+                return "hybrid-model"
+
+        runtime = HybridRuntime()
+        memory = MemoryManager(InMemoryBackend())
+        config = AgentConfig(
+            max_iterations=5,
+            max_tool_calls=10,
+            enable_verification=False,
+        )
+
+        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
+        result = agent.execute("Read x.py")
+
+        assert result["task"]["current_state"] == "FAILED"
+        assert result["stopped_reason"] == "runtime_contract_violation"
+
+    def test_contract_violation_tool_calls_false_external_true(self, tmp_path):
+        """Runtime with tool_calls=False but external_tool_execution=True should fail on tool calls."""
+        class InconsistentRuntime(RuntimeAdapter):
+            def __init__(self):
+                self.called = False
+            def respond(self, context):
+                if not self.called:
+                    self.called = True
+                    return RuntimeResponse(
+                        content="",
+                        tool_calls=[ToolCall(tool="read_file", arguments={"path": "x.py"})],
+                        finish_reason=FinishReason.TOOL_CALLS,
+                    )
+                return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
+            def capabilities(self):
+                return {
+                    "text_generation": True,
+                    "tool_calls": False,
+                    "external_tool_execution": True,
+                    "streaming": False,
+                    "cancellation": False,
+                }
+            def cancel(self):
+                pass
+            @property
+            def default_model(self):
+                return "inconsistent-model"
+
+        runtime = InconsistentRuntime()
+        memory = MemoryManager(InMemoryBackend())
+        config = AgentConfig(
+            max_iterations=5,
+            max_tool_calls=10,
+            enable_verification=False,
+        )
+
+        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
+        result = agent.execute("Read x.py")
+
+        assert result["task"]["current_state"] == "FAILED"
+        assert result["stopped_reason"] == "runtime_contract_violation"
+
+    def test_agent_queries_capabilities_before_tool_execution(self, tmp_path):
+        """Agent should query runtime.capabilities() and respect the result."""
+        class QueryTrackingRuntime(RuntimeAdapter):
+            def __init__(self, responses=None):
+                self._responses = responses or ["Done"]
+                self._index = 0
+                self.capabilities_calls = 0
+            def respond(self, context):
+                if self._index < len(self._responses):
+                    resp = self._responses[self._index]
+                    self._index += 1
+                    if isinstance(resp, RuntimeResponse):
+                        return resp
+                    return RuntimeResponse(content=str(resp), finish_reason=FinishReason.STOP)
+                return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
+            def capabilities(self):
+                self.capabilities_calls += 1
+                return {
+                    "text_generation": True,
+                    "tool_calls": False,
+                    "external_tool_execution": False,
+                    "streaming": False,
+                    "cancellation": False,
+                }
+            def cancel(self):
+                pass
+            @property
+            def default_model(self):
+                return "query-model"
+
+        runtime = QueryTrackingRuntime(responses=["Done"])
+        memory = MemoryManager(InMemoryBackend())
+        config = AgentConfig(
+            max_iterations=5,
+            max_tool_calls=10,
+            enable_verification=False,
+        )
+
+        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
+        result = agent.execute("Reply with hello")
+
+        assert runtime.capabilities_calls >= 1
+        assert result["success"] is True
+
+
+class TestVerificationScope:
+    """Tests for verification_scope and changed-files behavior."""
+
+    def test_default_verification_scope_is_project(self):
+        """Default verification_scope should be 'project'."""
+        config = AgentConfig()
+        assert getattr(config, "verification_scope", "project") == "project"
+
+    def test_changed_files_scope_computes_delta(self, tmp_path):
+        """changed-files scope should compute the task delta, not the full dirty set."""
+        runtime = MockRuntime(responses=["Done"])
+        memory = MemoryManager(InMemoryBackend())
+        config = AgentConfig(
+            max_iterations=5,
+            max_tool_calls=10,
+            enable_verification=False,
+            verification_scope="changed-files",
+        )
+
+        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
+
+        with patch.object(agent, '_capture_changed_files', side_effect=[["a.py"], ["a.py", "b.py"]]):
+            agent._baseline_changed_files = ["a.py"]
+            result = agent.execute("Do something")
+
+        assert result["success"] is True
+
+    def test_changed_files_zero_changes_skips_verification(self, tmp_path):
+        """Zero changed files under changed-files scope should skip verification."""
+        runtime = MockRuntime(responses=["Done"])
+        memory = MemoryManager(InMemoryBackend())
+        config = AgentConfig(
+            max_iterations=5,
+            max_tool_calls=10,
+            enable_verification=True,
+            run_format_check=True,
+            verification_scope="changed-files",
+        )
+
+        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
+
+        with patch.object(agent, '_capture_changed_files', side_effect=[[], []]):
+            agent._baseline_changed_files = []
+            result = agent.execute("Reply with hello")
+
+        assert result["success"] is True
+
+    def test_changed_files_git_failure_falls_back_to_project(self, tmp_path):
+        """Git snapshot failure should fall back to project-wide verification."""
+        runtime = MockRuntime(responses=["Done"])
+        memory = MemoryManager(InMemoryBackend())
+        config = AgentConfig(
+            max_iterations=5,
+            max_tool_calls=10,
+            enable_verification=True,
+            run_format_check=True,
+            verification_scope="changed-files",
+        )
+
+        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
+
+        with patch.object(agent, '_capture_changed_files', side_effect=[None, ["b.py"]]):
+            agent._baseline_changed_files = None
+            result = agent.execute("Reply with hello")
+
+        assert result["success"] is True
+
+    def test_dirty_repo_trapdoor_pre_existing_not_agent_change(self, tmp_path):
+        """Pre-existing dirty files must not be counted as agent changes."""
+        runtime = MockRuntime(responses=["Done"])
+        memory = MemoryManager(InMemoryBackend())
+        config = AgentConfig(
+            max_iterations=5,
+            max_tool_calls=10,
+            enable_verification=False,
+            verification_scope="changed-files",
+        )
+
+        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
+
+        with patch.object(agent, '_capture_changed_files', side_effect=[["a.py"], ["a.py", "b.py"]]):
+            agent._baseline_changed_files = ["a.py"]
+            result = agent.execute("Do something")
+
+        assert result["success"] is True

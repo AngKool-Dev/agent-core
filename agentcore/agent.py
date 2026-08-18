@@ -1,4 +1,5 @@
 import logging
+import subprocess
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -34,6 +35,7 @@ class AgentConfig:
     run_format_check: bool = True
     run_build_check: bool = True
     run_tests: bool = True
+    verification_scope: str = "project"
     max_replans: int = 3
 
 
@@ -244,6 +246,7 @@ class Agent:
         self._start_time = 0
         self._cancelled = False
         self._replan_count = 0
+        self._baseline_changed_files: Optional[List[str]] = None
 
     def _emit(self, event_type: EventType, data: Optional[Dict[str, Any]] = None, metadata: Optional[Dict[str, Any]] = None) -> None:
         if self._event_bus.subscriber_count > 0:
@@ -308,6 +311,8 @@ class Agent:
 
         memory_results = self._load_memory_context()
         self._current_task.memory_context = {"results": memory_results, "count": len(memory_results)}
+
+        self._baseline_changed_files = self._capture_changed_files()
 
         try:
             self._current_task.transition(TaskState.ROUTING)
@@ -383,6 +388,7 @@ class Agent:
             "success": final_state == TaskState.COMPLETED,
             "tools_used": self._tools_used,
             "iterations": self._iterations,
+            "stopped_reason": results.get("stopped_reason"),
         }
 
     def _handle_verification_failure(self, verification: Dict[str, Any]) -> TaskState:
@@ -452,6 +458,22 @@ class Agent:
             logger.warning(f"Memory search failed: {e}")
             return []
 
+    def _capture_changed_files(self) -> Optional[List[str]]:
+        if not (self.project_path / ".git").exists():
+            return []
+        try:
+            result = subprocess.run(
+                ["git", "diff", "--name-only"],
+                cwd=self.project_path,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            return [f for f in result.stdout.strip().split("\n") if f]
+        except Exception as e:
+            logger.debug(f"Failed to capture changed files: {e}")
+            return None
+
     def _route_skills(self, prompt: str, context: Dict[str, Any]) -> RoutingResult:
         skill_paths = resolve_skill_paths(self._agentcore_config)
         registry = SkillRegistry(skill_paths)
@@ -520,6 +542,10 @@ class Agent:
 
         plan = [PlanStep.from_dict(s) if isinstance(s, dict) else s for s in initial_plan]
         tool_results: List[ToolResult] = []
+
+        capabilities = self.runtime.capabilities()
+        supports_tool_calls = capabilities.get("tool_calls", False)
+        supports_external_execution = capabilities.get("external_tool_execution", False)
 
         while self._iterations < self.config.max_iterations:
             if self._cancelled:
@@ -600,7 +626,7 @@ class Agent:
                     finish_reason=FinishReason.STOP,
                 )
 
-            if response.tool_calls:
+            if response.tool_calls and supports_tool_calls and supports_external_execution:
                 try:
                     if self._current_task:
                         self._current_task.transition(TaskState.WAITING_FOR_TOOL, reason="tool_calls_requested")
@@ -695,6 +721,29 @@ class Agent:
                 except InvalidStateTransitionError:
                     pass
                 continue
+
+            elif response.tool_calls:
+                logger.error(
+                    f"Runtime {type(self.runtime).__name__} returned tool_calls "
+                    f"but capabilities declare tool_calls={supports_tool_calls}, "
+                    f"external_tool_execution={supports_external_execution}. "
+                    f"Failing task as contract violation."
+                )
+                self._emit(EventType.RUNTIME_ERROR, data={
+                    "error": "runtime_contract_violation",
+                    "runtime": type(self.runtime).__name__,
+                    "tool_calls_capability": supports_tool_calls,
+                    "external_tool_execution_capability": supports_external_execution,
+                    "tool_calls_count": len(response.tool_calls),
+                })
+                results["stopped_reason"] = "runtime_contract_violation"
+                if self._current_task:
+                    try:
+                        self._current_task.transition(TaskState.FAILED, reason="runtime_contract_violation")
+                        self._emit_state_changed(self._current_task.current_state, TaskState.FAILED, reason="runtime_contract_violation")
+                    except InvalidStateTransitionError:
+                        pass
+                break
 
             if response.is_complete:
                 self._emit(EventType.ITERATION_COMPLETED, data={
@@ -827,10 +876,36 @@ class Agent:
                 "skipped": True,
             }
 
+        scope = getattr(self.config, "verification_scope", "project")
+        changed_files: Optional[List[str]] = None
+
+        if scope == "changed-files":
+            current_changed = self._capture_changed_files()
+            if current_changed is None or self._baseline_changed_files is None:
+                logger.warning("Failed to capture changed files; falling back to project-wide verification")
+                scope = "project"
+            else:
+                delta = [f for f in current_changed if f not in self._baseline_changed_files]
+                changed_files = delta if delta else []
+
+        if scope == "changed-files" and not changed_files:
+            self._emit(EventType.VERIFICATION_COMPLETED, data={"passed": True, "skipped": True, "reason": "no_changes"})
+            return {
+                "overall_passed": True,
+                "format_check": None,
+                "build_check": None,
+                "test_results": None,
+                "git_diff_check": None,
+                "failures": [],
+                "skipped": True,
+                "reason": "no_changes",
+            }
+
         report = self._verifier.verify_all(
             run_format=self.config.run_format_check,
             run_build=self.config.run_build_check,
             run_tests=self.config.run_tests,
+            changed_files=changed_files,
         )
 
         failures = report.to_dict()["failures"]

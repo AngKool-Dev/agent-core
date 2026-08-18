@@ -159,8 +159,14 @@ class TestRuntimeAdapterConformance:
         rt = HermesRuntime(model="claude-sonnet-4", provider="anthropic")
         caps = rt.capabilities()
         assert caps["adapter"] == "hermes"
-        assert caps["supports_tool_calls"] is True
+        assert caps["tool_calls"] is False
+        assert caps["external_tool_execution"] is False
+        assert caps["text_generation"] is True
+        assert caps["streaming"] is False
+        assert caps["cancellation"] is False
         assert caps["model"] == "claude-sonnet-4"
+        assert caps["provider"] == "anthropic"
+        assert caps["timeout"] == 300
 
     def test_hermes_runtime_cancel_is_noop(self):
         rt = HermesRuntime()
@@ -177,6 +183,38 @@ class TestRuntimeAdapterConformance:
     def test_hermes_runtime_default_model_none(self):
         rt = HermesRuntime()
         assert rt.default_model is None
+
+    def test_hermes_capability_contract_booleans(self):
+        rt = HermesRuntime()
+        caps = rt.capabilities()
+        for key in ("text_generation", "tool_calls", "external_tool_execution", "streaming", "cancellation"):
+            assert key in caps
+            assert isinstance(caps[key], bool)
+
+    def test_hermes_capability_contract_text_generation(self):
+        rt = HermesRuntime()
+        caps = rt.capabilities()
+        assert caps["text_generation"] is True
+
+    def test_hermes_capability_contract_tool_calls(self):
+        rt = HermesRuntime()
+        caps = rt.capabilities()
+        assert caps["tool_calls"] is False
+
+    def test_hermes_capability_contract_external_tool_execution(self):
+        rt = HermesRuntime()
+        caps = rt.capabilities()
+        assert caps["external_tool_execution"] is False
+
+    def test_black_box_runtime_response_is_valid(self):
+        resp = RuntimeResponse(
+            content="Done",
+            tool_calls=[],
+            finish_reason=FinishReason.STOP,
+        )
+        assert resp.has_tool_calls is False
+        assert resp.is_complete is True
+        assert resp.finish_reason == FinishReason.STOP
 
 
 class TestRuntimeResponseMalformedHandling:
