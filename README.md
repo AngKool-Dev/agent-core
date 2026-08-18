@@ -155,9 +155,32 @@ exclude_patterns = ["*.pyc", "__pycache__", ".git", "node_modules"]
 # Install with dev dependencies
 pip install -e ".[dev]"
 
-# Run tests
-pytest tests/
+# Run default test suite (fast, deterministic)
+pytest tests/ -q
 ```
+
+### Test Tiers
+
+| Tier | Runtime | Default? |
+|------|---------|----------|
+| Unit | Mocked | ✅ |
+| Integration | Deterministic/mock | ✅ |
+| Real runtime | Hermes/Kilo/OpenCode | ❌ |
+
+The default `pytest -q` suite runs only unit and deterministic integration tests. It does **not** require Hermes, Kilo, or OpenCode to be installed.
+
+To run real-runtime tests:
+
+```bash
+# PowerShell
+$env:AGENTCORE_REAL_RUNTIME="1"
+pytest -m real_runtime -q
+
+# Bash
+AGENTCORE_REAL_RUNTIME=1 pytest -m real_runtime -q
+```
+
+Real-runtime tests invoke actual subprocesses against installed binaries and are explicitly opt-in to avoid slowing down CI or requiring external dependencies during normal development.
 
 ## Future Roadmap
 
