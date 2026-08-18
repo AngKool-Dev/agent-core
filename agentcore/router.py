@@ -5,7 +5,10 @@ from dataclasses import dataclass, field
 from agentcore.skills.models import Skill
 
 
-TRIGGER_KEYWORDS = {
+# Fallback keywords for skills that don't define trigger_keywords.
+# Skills loaded via SkillRegistry should populate trigger_keywords from
+# their SKILL.md frontmatter or description.
+_FALLBACK_KEYWORDS: Dict[str, List[str]] = {
     "debugging-and-error-recovery": ["debug", "bug", "error", "fail", "crash", "traceback", "broken", "not working", "fix"],
     "test-driven-development": ["test", "tdd", "pytest", "jest", "verify", "test failure", "test passes", "test"],
     "spec-driven-development": ["spec", "specification", "requirements", "acceptance criteria", "define", "plan"],
@@ -75,7 +78,8 @@ class SkillRouter:
 
     def _build_keyword_index(self) -> Dict[str, str]:
         index = {}
-        for skill_name, keywords in TRIGGER_KEYWORDS.items():
+        for skill_name, skill in self.skills.items():
+            keywords = skill.trigger_keywords or _FALLBACK_KEYWORDS.get(skill_name, [])
             for kw in keywords:
                 index[kw.lower()] = skill_name
         return index
@@ -86,7 +90,8 @@ class SkillRouter:
         
         project_type = project_context.get("language") if project_context else None
         
-        for skill_name, keywords in TRIGGER_KEYWORDS.items():
+        for skill_name, skill in self.skills.items():
+            keywords = skill.trigger_keywords or _FALLBACK_KEYWORDS.get(skill_name, [])
             score = self._score_skill(skill_name, keywords, prompt_lower, project_type)
             if score > 0:
                 matched_skills.append(SkillMatch(

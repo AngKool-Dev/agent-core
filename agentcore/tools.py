@@ -44,6 +44,40 @@ class ToolManager:
     def __init__(self, project_path: Optional[str | Path] = None):
         self.project_path = Path(project_path) if project_path else Path.cwd()
         self._last_diff: Optional[str] = None
+        self._custom_tools: Dict[str, callable] = {}
+        self._register_default_tools()
+
+    # ------------------------------------------------------------------
+    # Tool registration
+    # ------------------------------------------------------------------
+
+    def register_tool(self, name: str, handler: callable) -> None:
+        """
+        Register a custom tool handler.
+
+        The handler receives the tool arguments dict and must return a ToolResult.
+
+        Example:
+            def my_tool(args: dict) -> ToolResult:
+                ...
+            manager.register_tool("my_tool", my_tool)
+        """
+        self._custom_tools[name] = handler
+
+    def _register_default_tools(self) -> None:
+        """Register the built-in tool handlers."""
+        self._custom_tools.update({
+            "read_file": self._tool_read_file,
+            "write_file": self._tool_write_file,
+            "search_files": self._tool_search_files,
+            "run_command": self._tool_run_command,
+            "git_status": self._tool_git_status,
+            "git_diff": self._tool_git_diff,
+            "git_diff_check": self._tool_git_diff_check,
+            "run_tests": self._tool_run_tests,
+            "check_format": self._tool_check_format,
+            "check_build": self._tool_check_build,
+        })
 
     # ------------------------------------------------------------------
     # Unified dispatch: Agent calls this for every ToolCall from the runtime
@@ -61,97 +95,19 @@ class ToolManager:
         start = time.time()
         work_dir = cwd if cwd is not None else self.project_path
 
+        handler = self._custom_tools.get(tool_name)
+        if handler is None:
+            return ToolResult(
+                success=False,
+                tool=tool_name,
+                output="",
+                error=f"Unknown tool: {tool_name}",
+                exit_code=1,
+                duration=time.time() - start,
+            )
+
         try:
-            if tool_name == "read_file":
-                result = self.read_file(args.get("path", ""))
-                return ToolResult(
-                    success=result.exists,
-                    tool=tool_name,
-                    output=result.content,
-                    error=result.error or ("File not found" if not result.exists else ""),
-                    exit_code=0 if result.exists else 1,
-                    duration=time.time() - start,
-                )
-
-            elif tool_name == "write_file":
-                result = self.write_file(args.get("path", ""), args.get("content", ""))
-                return ToolResult(
-                    success=result.success,
-                    tool=tool_name,
-                    output=f"Wrote {result.bytes_written} bytes to {result.path}",
-                    error=result.error or "",
-                    exit_code=0 if result.success else 1,
-                    duration=time.time() - start,
-                )
-
-            elif tool_name == "search_files":
-                results = self.search_files(
-                    args.get("query", ""),
-                    path=args.get("path"),
-                    include=args.get("include"),
-                )
-                output = "\n".join(f"{r.path}:{r.line}: {r.content}" for r in results)
-                return ToolResult(
-                    success=True,
-                    tool=tool_name,
-                    output=output,
-                    error="",
-                    exit_code=0,
-                    duration=time.time() - start,
-                    metadata={"result_count": len(results)},
-                )
-
-            elif tool_name == "run_command":
-                cmd = args.get("command", "")
-                timeout = int(args.get("timeout", 30))
-                return self.shell(cmd, cwd=work_dir, timeout=timeout)
-
-            elif tool_name == "git_status":
-                output = self.git_status()
-                return ToolResult(
-                    success=True,
-                    tool=tool_name,
-                    output=output,
-                    duration=time.time() - start,
-                )
-
-            elif tool_name == "git_diff":
-                output = self.git_diff(staged=args.get("staged", False))
-                return self._last_diff_to_result(tool_name, output, start)
-
-            elif tool_name == "git_diff_check":
-                errors = self.git_diff_check()
-                return ToolResult(
-                    success=len(errors) == 0,
-                    tool=tool_name,
-                    output="\n".join(errors) if errors else "No whitespace errors",
-                    error="\n".join(errors) if errors else "",
-                    duration=time.time() - start,
-                    metadata={"error_count": len(errors)},
-                )
-
-            elif tool_name == "run_tests":
-                return self.run_tests(
-                    test_pattern=args.get("test_pattern"),
-                    verbose=args.get("verbose", False),
-                )
-
-            elif tool_name == "check_format":
-                return self.check_format()
-
-            elif tool_name == "check_build":
-                return self.check_build()
-
-            else:
-                return ToolResult(
-                    success=False,
-                    tool=tool_name,
-                    output="",
-                    error=f"Unknown tool: {tool_name}",
-                    exit_code=1,
-                    duration=time.time() - start,
-                )
-
+            return handler(args, work_dir, start)
         except Exception as e:
             return ToolResult(
                 success=False,
@@ -171,6 +127,90 @@ class ToolManager:
             exit_code=0,
             duration=time.time() - start,
         )
+
+    # ------------------------------------------------------------------
+    # Tool handler wrappers (called by registered tool callables)
+    # ------------------------------------------------------------------
+
+    def _tool_read_file(self, args: dict, work_dir: Path, start: float) -> ToolResult:
+        result = self.read_file(args.get("path", ""))
+        return ToolResult(
+            success=result.exists,
+            tool="read_file",
+            output=result.content,
+            error=result.error or ("File not found" if not result.exists else ""),
+            exit_code=0 if result.exists else 1,
+            duration=time.time() - start,
+        )
+
+    def _tool_write_file(self, args: dict, work_dir: Path, start: float) -> ToolResult:
+        result = self.write_file(args.get("path", ""), args.get("content", ""))
+        return ToolResult(
+            success=result.success,
+            tool="write_file",
+            output=f"Wrote {result.bytes_written} bytes to {result.path}",
+            error=result.error or "",
+            exit_code=0 if result.success else 1,
+            duration=time.time() - start,
+        )
+
+    def _tool_search_files(self, args: dict, work_dir: Path, start: float) -> ToolResult:
+        results = self.search_files(
+            args.get("query", ""),
+            path=args.get("path"),
+            include=args.get("include"),
+        )
+        output = "\n".join(f"{r.path}:{r.line}: {r.content}" for r in results)
+        return ToolResult(
+            success=True,
+            tool="search_files",
+            output=output,
+            error="",
+            exit_code=0,
+            duration=time.time() - start,
+            metadata={"result_count": len(results)},
+        )
+
+    def _tool_run_command(self, args: dict, work_dir: Path, start: float) -> ToolResult:
+        cmd = args.get("command", "")
+        timeout = int(args.get("timeout", 30))
+        return self.shell(cmd, cwd=work_dir, timeout=timeout)
+
+    def _tool_git_status(self, args: dict, work_dir: Path, start: float) -> ToolResult:
+        output = self.git_status()
+        return ToolResult(
+            success=True,
+            tool="git_status",
+            output=output,
+            duration=time.time() - start,
+        )
+
+    def _tool_git_diff(self, args: dict, work_dir: Path, start: float) -> ToolResult:
+        output = self.git_diff(staged=args.get("staged", False))
+        return self._last_diff_to_result("git_diff", output, start)
+
+    def _tool_git_diff_check(self, args: dict, work_dir: Path, start: float) -> ToolResult:
+        errors = self.git_diff_check()
+        return ToolResult(
+            success=len(errors) == 0,
+            tool="git_diff_check",
+            output="\n".join(errors) if errors else "No whitespace errors",
+            error="\n".join(errors) if errors else "",
+            duration=time.time() - start,
+            metadata={"error_count": len(errors)},
+        )
+
+    def _tool_run_tests(self, args: dict, work_dir: Path, start: float) -> ToolResult:
+        return self.run_tests(
+            test_pattern=args.get("test_pattern"),
+            verbose=args.get("verbose", False),
+        )
+
+    def _tool_check_format(self, args: dict, work_dir: Path, start: float) -> ToolResult:
+        return self.check_format()
+
+    def _tool_check_build(self, args: dict, work_dir: Path, start: float) -> ToolResult:
+        return self.check_build()
 
     # ------------------------------------------------------------------
     # Filesystem tools

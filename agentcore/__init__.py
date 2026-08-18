@@ -1,3 +1,5 @@
+__version__ = "0.1.0"
+
 from .agent import Agent, AgentConfig, create_agent
 from .task import Task, TaskState, Hypothesis
 from .router import SkillRouter, RoutingResult, SkillMatch
@@ -11,8 +13,9 @@ from .memory import (
 )
 from .verifier import Verifier, VerificationReport, CheckResult
 from .tools import ToolManager, ToolResult, FileReadResult, FileWriteResult, SearchResult
-from .runtimes.base import RuntimeAdapter, RuntimeResponse, ToolCall, FinishReason
+from .runtimes.base import RuntimeAdapter, RuntimeResponse, ToolCall, FinishReason, RuntimeCapabilities
 from .runtimes.hermes import HermesRuntime, create_hermes_runtime
+from .runtimes.registry import RuntimeRegistry, get_default_registry
 from .planner import Planner
 from .task import PlanStep
 from .config import (
@@ -22,9 +25,6 @@ from .config import (
     MemoryConfig,
     ToolLimits,
     VerificationConfig,
-    user_config_dir,
-    user_data_dir,
-    resolve_skill_paths,
 )
 from .events import (
     AgentEvent,
@@ -64,6 +64,7 @@ from .agentcore import (
 )
 
 __all__ = [
+    "__version__",
     "Agent",
     "AgentConfig",
     "AgentCoreConfig",
@@ -98,8 +99,11 @@ __all__ = [
     "RuntimeResponse",
     "ToolCall",
     "FinishReason",
+    "RuntimeCapabilities",
     "HermesRuntime",
     "create_hermes_runtime",
+    "RuntimeRegistry",
+    "get_default_registry",
     "Planner",
     "PlanStep",
     "create_agent",
@@ -107,9 +111,6 @@ __all__ = [
     "MemoryConfig",
     "ToolLimits",
     "VerificationConfig",
-    "user_config_dir",
-    "user_data_dir",
-    "resolve_skill_paths",
     "PersistenceBackend",
     "InMemoryPersistenceBackend",
     "FilesystemPersistenceBackend",

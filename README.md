@@ -1,4 +1,4 @@
-# AgentCore V0.1
+# AgentCore
 
 Universal AI coding-agent framework with pluggable runtime adapters.
 
@@ -6,12 +6,24 @@ Universal AI coding-agent framework with pluggable runtime adapters.
 
 **THE AGENT BRAIN IS SEPARATE FROM THE AGENT RUNTIME.**
 
-Hermes is the first runtime. Kilo and OpenCode can be added later as interchangeable engines underneath the same system.
+AgentCore provides the orchestration layer: task state management, skill routing,
+project context, memory, planning, verification, and tool execution.
+
+Runtimes are interchangeable plug-ins. Hermes is the first runtime. Kilo and
+OpenCode can be added later without changing AgentCore's core logic.
 
 ## Installation
 
 ```bash
-pip install -e .
+pip install agentcore
+```
+
+For development:
+
+```bash
+git clone https://github.com/agentcore/agent-core.git
+cd agent-core
+pip install -e ".[dev]"
 ```
 
 ## Quick Start
@@ -23,131 +35,126 @@ agent "Fix the launcher crash"
 # Use a specific project
 agent -p /path/to/project "Why does launch fail?"
 
-# Use a specific runtime/model
+# Use a specific runtime
 agent -r hermes -m claude-sonnet-4 "Implement X"
+
+# List available runtimes
+agent --list-runtimes
 ```
 
-## Components
-
-| Component | Purpose |
-|-----------|---------|
-| `agent.py` | Main orchestrator - runs the agent loop |
-| `task.py` | Task model with states and serialization |
-| `router.py` | Automatic skill routing |
-| `context.py` | Project context discovery |
-| `memory.py` | Memory abstraction layer |
-| `verifier.py` | Project-appropriate verification |
-| `tools.py` | Controlled tool execution |
-| `config.py` | Configuration loading and typed config |
-| `runtimes/base.py` | Abstract runtime interface |
-| `runtimes/hermes.py` | Hermes runtime adapter |
-| `skills/` | Skill registry and loader |
-
-## Architecture
-
-```
-User → AgentCore → Runtime Adapter (Hermes) → Tools
-```
-
-The agent brain owns:
-- Task state
-- Skill routing
-- Project context
-- Memory
-- Planning
-- Verification
-
-The runtime adapter owns:
-- Model invocation
-- Tool definition
-- Session management
-
-## Skill System
-
-Skills are discovered from configurable directories. By default, AgentCore searches:
-- A `skills/` directory in the project
-- A user-level skills directory (`~/.agentcore/skills/` on Linux/macOS,
-  `%LOCALAPPDATA%\agentcore\skills` on Windows)
-
-You can override skill discovery with the `AGENTCORE_SKILLS_PATH` environment
-variable (use the OS path separator, `:` on Linux/macOS, `;` on Windows, to
-list multiple directories):
-
-```bash
-export AGENTCORE_SKILLS_PATH="/custom/skills:/more/skills"
-agent "Fix the crash"
-```
-
-Or configure paths in `config/agent.toml`:
-
-```toml
-[skill_paths]
-primary = "~/.agentcore/skills"
-extra = ["/path/to/more/skills"]
-```
-
-Available skills include:
-- `debugging-and-error-recovery` - Systematic bug fixing
-- `test-driven-development` - Test-driven development
-- `documentation-and-adrs` - Documentation and architecture decisions
-- `code-review-and-quality` - Code review guidance
-- And many more...
-
-## Memory Integration
-
-AgentCore uses DB-Obsidian for persistent memory via a clean abstraction:
+## Python API
 
 ```python
-from agentcore.memory import MemoryManager
-from agentcore.adapters.memory_dbobsidian import DBObsidianBackend
+from agentcore import Agent, AgentConfig
 
-backend = DBObsidianBackend(db_path="~/.agentcore/memory.db")
-memory = MemoryManager(backend)
+config = AgentConfig(max_iterations=10, enable_verification=True)
+agent = Agent(runtime=my_runtime, memory=my_memory, config=config)
+result = agent.execute("Fix the failing tests")
+```
 
-# Search memories
-results = memory.search("decision", project="my-project")
+## Runtime Discovery
 
-# Store information
-memory.store_decision("Use async patterns", project="my-project")
+AgentCore ships with a runtime registry. List available runtimes:
+
+```bash
+agent --list-runtimes
+```
+
+Output:
+
+```
+Available runtimes:
+
+  hermes
+    description: Hermes CLI runtime (hermes -z)
+    capabilities:
+      text generation:       yes
+      structured tool calls: no
+      external tool exec:    no
+      streaming:             no
+      cancellation:          no
 ```
 
 ## Configuration
 
-AgentCore loads configuration from TOML files in a deterministic order
-(first match wins):
+AgentCore loads configuration from TOML files in priority order:
 
-1. Explicit config via CLI: `agent --config path/to/agentcore.toml`
+1. Explicit config: `agent --config path/to/agentcore.toml`
 2. Project-local: `./agentcore.toml` or `./config/agentcore.toml`
 3. User-level: `{user_config_dir}/agentcore.toml`
 4. Built-in defaults
 
-Full example (`config/agent.toml`):
+Example `agentcore.toml`:
 
 ```toml
 [agent]
-default_runtime = "hermes"
+runtime = "hermes"
+model = "auto"
+
+[verification]
+scope = "project"
+run_format_check = true
+run_build_check = true
+run_tests = true
 
 [skill_paths]
 primary = "~/.agentcore/skills"
 
 [memory]
-backend = "db_obsidian"
-db_path = "~/.agentcore/memory.db"
-
-[tool_limits]
-max_iterations = 10
-max_tool_calls = 20
-timeout = 300
-
-[verification]
-run_format_check = true
-run_build_check = true
-run_tests = true
-
-[project_discovery]
-max_context_files = 50
-exclude_patterns = ["*.pyc", "__pycache__", ".git", "node_modules"]
+backend = "in_memory"
 ```
+
+## Extending AgentCore
+
+### Custom Runtime
+
+```python
+from agentcore.runtimes.base import RuntimeAdapter, RuntimeResponse, FinishReason
+
+class MyRuntime(RuntimeAdapter):
+    def respond(self, context):
+        return RuntimeResponse(
+            content="Hello from my runtime",
+            finish_reason=FinishReason.STOP,
+        )
+
+    def capabilities(self):
+        return {
+            "text_generation": True,
+            "tool_calls": False,
+            "external_tool_execution": False,
+            "streaming": False,
+            "cancellation": False,
+        }
+```
+
+Register it:
+
+```python
+from agentcore.runtimes import get_default_registry
+
+registry = get_default_registry()
+registry.register("my-runtime", lambda **kw: MyRuntime())
+```
+
+### Custom Tool
+
+```python
+from agentcore.tools import ToolManager, ToolResult
+
+def my_tool(args: dict, work_dir, start: float) -> ToolResult:
+    # Your tool logic here
+    return ToolResult(success=True, tool="my_tool", output="done")
+
+manager = ToolManager(project_path=".")
+manager.register_tool("my_tool", my_tool)
+```
+
+## Examples
+
+- `examples/basic_agent.py` — Minimal agent with an echo runtime
+- `examples/custom_runtime.py` — Implementing a RuntimeAdapter
+- `examples/custom_tool.py` — Registering a custom tool
 
 ## Development
 
@@ -157,6 +164,9 @@ pip install -e ".[dev]"
 
 # Run default test suite (fast, deterministic)
 pytest tests/ -q
+
+# Run real-runtime tests (requires Hermes installed)
+AGENTCORE_REAL_RUNTIME=1 pytest -m real_runtime -q
 ```
 
 ### Test Tiers
@@ -167,28 +177,12 @@ pytest tests/ -q
 | Integration | Deterministic/mock | ✅ |
 | Real runtime | Hermes/Kilo/OpenCode | ❌ |
 
-The default `pytest -q` suite runs only unit and deterministic integration tests. It does **not** require Hermes, Kilo, or OpenCode to be installed.
+The default `pytest -q` suite runs only unit and deterministic integration tests. Real-runtime tests are explicitly opt-in.
 
-To run real-runtime tests:
+## Documentation
 
-```bash
-# PowerShell
-$env:AGENTCORE_REAL_RUNTIME="1"
-pytest -m real_runtime -q
-
-# Bash
-AGENTCORE_REAL_RUNTIME=1 pytest -m real_runtime -q
-```
-
-Real-runtime tests invoke actual subprocesses against installed binaries and are explicitly opt-in to avoid slowing down CI or requiring external dependencies during normal development.
-
-## Future Roadmap
-
-- V0.2: Better planning, parallel tool execution
-- V0.3: Advanced memory, semantic retrieval
-- V0.4: Automatic lesson extraction
-- V0.5: Kilo and OpenCode runtime adapters
-- V1.0: Full autonomous coding workflow
+- `docs/architecture.md` — System architecture and design
+- `docs/runtime-adapters.md` — Runtime adapter interface and capability contract
 
 ## License
 

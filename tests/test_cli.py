@@ -80,11 +80,12 @@ class TestCLINoVerifyRegression:
         with patch("agentcore.cli.main.Agent") as MockAgent, \
              patch("agentcore.cli.main.ConfigLoader") as MockConfig, \
              patch("agentcore.cli.main.MemoryManager"), \
-             patch("agentcore.cli.main.create_hermes_runtime"), \
+             patch("agentcore.cli.main.get_default_registry") as mock_registry, \
              patch("agentcore.cli.main.create_agent"):
             MockConfig.discover.return_value = MagicMock()
             MockConfig.discover.return_value.to_agent_config.return_value = AgentConfig(enable_verification=False)
             MockAgent.return_value.execute.return_value = mock_result
+            mock_registry.return_value.create.return_value = MagicMock()
 
             ret = main(["--no-verify", "test request"])
             assert ret == 0

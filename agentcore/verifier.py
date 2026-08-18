@@ -76,7 +76,7 @@ class Verifier:
         return CheckResult(name="format", passed=True, output="No format check applicable")
 
     def _run_rust_fmt(self, changed_files: Optional[List[str]] = None) -> CheckResult:
-        cmd = "cargo fmt --check"
+        cmd = ["cargo", "fmt", "--check"]
         result = self._shell(cmd)
         return CheckResult(
             name="rust_fmt",
@@ -86,9 +86,9 @@ class Verifier:
         )
 
     def _run_python_fmt(self, changed_files: Optional[List[str]] = None) -> CheckResult:
-        cmd = "ruff format --check"
+        cmd = ["ruff", "format", "--check"]
         if changed_files:
-            cmd = f"{cmd} {' '.join(changed_files)}"
+            cmd.extend(changed_files)
         result = self._shell(cmd)
         return CheckResult(
             name="python_fmt",
@@ -98,8 +98,14 @@ class Verifier:
         )
 
     def _run_js_fmt(self, changed_files: Optional[List[str]] = None) -> CheckResult:
-        cmd = "npx prettier --check '**/*.{js,ts,jsx,tsx,json,css,md}' 2>/dev/null || echo 'No files checked'"
+        cmd = ["npx", "prettier", "--check"]
+        if changed_files:
+            cmd.extend(changed_files)
+        else:
+            cmd.extend(["**/*.{js,ts,jsx,tsx,json,css,md}"])
         result = self._shell(cmd)
+        if not result["success"] and "No files checked" in result["stderr"]:
+            return CheckResult(name="js_fmt", passed=True, output="No files checked", error="")
         return CheckResult(
             name="js_fmt",
             passed=result["success"],
@@ -117,7 +123,7 @@ class Verifier:
         return CheckResult(name="build", passed=True, output="No build check applicable")
 
     def _run_rust_check(self) -> CheckResult:
-        result = self._shell("cargo check")
+        result = self._shell(["cargo", "check"])
         return CheckResult(
             name="rust_check",
             passed=result["success"],
@@ -126,22 +132,31 @@ class Verifier:
         )
 
     def _run_python_check(self) -> CheckResult:
-        result = self._shell("python -c 'import py_compile; py_compile.compile(\".\", doraise=True)' 2>/dev/null || echo 'Check passed'")
-        return CheckResult(
-            name="python_check",
-            passed=True,
-            output=result["stdout"],
-            error=result["stderr"],
-        )
+        try:
+            result = self._shell([
+                "python", "-c",
+                "import py_compile; py_compile.compile('.', doraise=True)"
+            ])
+            return CheckResult(
+                name="python_check",
+                passed=result["success"],
+                output=result["stdout"],
+                error=result["stderr"],
+            )
+        except Exception:
+            return CheckResult(name="python_check", passed=True, output="Check passed", error="")
 
     def _run_js_build(self) -> CheckResult:
-        result = self._shell("npm run build 2>/dev/null || echo 'No build script'")
-        return CheckResult(
-            name="js_build",
-            passed=True,
-            output=result["stdout"],
-            error=result["stderr"],
-        )
+        try:
+            result = self._shell(["npm", "run", "build"])
+            return CheckResult(
+                name="js_build",
+                passed=result["success"],
+                output=result["stdout"],
+                error=result["stderr"],
+            )
+        except Exception:
+            return CheckResult(name="js_build", passed=True, output="No build script", error="")
 
     def run_tests(self, test_pattern: str | None = None) -> CheckResult:
         if self.project_type == "rust":
@@ -153,9 +168,9 @@ class Verifier:
         return CheckResult(name="tests", passed=True, output="No test framework detected")
 
     def _run_cargo_test(self, pattern: str | None = None) -> CheckResult:
-        cmd = "cargo test"
+        cmd = ["cargo", "test"]
         if pattern:
-            cmd = f"{cmd} {pattern}"
+            cmd.append(pattern)
         result = self._shell(cmd, timeout=120)
         return CheckResult(
             name="cargo_test",
@@ -165,9 +180,9 @@ class Verifier:
         )
 
     def _run_pytest(self, pattern: str | None = None) -> CheckResult:
-        cmd = "pytest"
+        cmd = ["pytest"]
         if pattern:
-            cmd = f"{cmd} -k {pattern}"
+            cmd.extend(["-k", pattern])
         result = self._shell(cmd, timeout=120)
         return CheckResult(
             name="pytest",
@@ -177,7 +192,7 @@ class Verifier:
         )
 
     def _run_npm_test(self, pattern: str | None = None) -> CheckResult:
-        cmd = "npm test"
+        cmd = ["npm", "test"]
         result = self._shell(cmd, timeout=120)
         return CheckResult(
             name="npm_test",
@@ -242,13 +257,16 @@ class Verifier:
             return self.FAILURE_STATUS_CURRENT_CHANGE
         return self.FAILURE_STATUS_UNKNOWN
 
-    def _shell(self, cmd: str, cwd: str | Path | None = None, timeout: int = 60) -> dict[str, Any]:
+    def _shell(self, cmd: str | list[str], cwd: str | Path | None = None, timeout: int = 60) -> dict[str, Any]:
         work_dir = Path(cwd) if cwd else self.project_path
+
+        if isinstance(cmd, str):
+            cmd = [cmd]
 
         try:
             result = subprocess.run(
                 cmd,
-                shell=True,
+                shell=False,
                 capture_output=True,
                 text=True,
                 cwd=work_dir,
@@ -261,6 +279,8 @@ class Verifier:
             }
         except subprocess.TimeoutExpired:
             return {"success": False, "stdout": "", "stderr": f"Command timed out after {timeout}s"}
+        except FileNotFoundError:
+            return {"success": False, "stdout": "", "stderr": f"Command not found: {cmd[0]}"}
         except Exception as e:
             return {"success": False, "stdout": "", "stderr": str(e)}
 

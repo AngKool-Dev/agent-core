@@ -191,11 +191,6 @@ def _default_skill_paths() -> List[str]:
     user_skills = user_data_dir() / "skills"
     paths.append(str(user_skills))
 
-    # Obsidian vault agent-skills (if it exists)
-    obsidian_skills = Path.home() / "ObsidianVault" / "agent-skills" / "skills"
-    if obsidian_skills.exists():
-        paths.append(str(obsidian_skills))
-
     return paths
 
 

@@ -16,8 +16,9 @@ from agentcore import (
     discover_project_context,
     ConfigLoader,
     AgentCoreConfig,
+    get_default_registry,
 )
-from agentcore.runtimes import HermesRuntime, create_hermes_runtime
+from agentcore.runtimes.base import RuntimeAdapter
 
 
 logger = logging.getLogger(__name__)
@@ -49,8 +50,12 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         "-r", "--runtime",
         type=str,
         default="hermes",
-        choices=["hermes", "kilo", "opencode"],
-        help="Runtime adapter to use (default: hermes)",
+        help="Runtime adapter to use (default: hermes). Use --list-runtimes to see available options.",
+    )
+    parser.add_argument(
+        "--list-runtimes",
+        action="store_true",
+        help="List available runtime adapters and exit",
     )
     parser.add_argument(
         "-m", "--model",
@@ -89,9 +94,28 @@ def main(args: Optional[argparse.Namespace] = None) -> int:
     setup_logging("DEBUG" if parsed_args.verbose else "INFO")
     project_path = Path(parsed_args.project) if parsed_args.project else Path.cwd()
 
+    registry = get_default_registry()
+
+    if parsed_args.list_runtimes:
+        print("Available runtimes:\n")
+        for name in registry.list_runtimes():
+            info = registry.get_info(name)
+            caps = info.get("capabilities", {})
+            print(f"  {name}")
+            print(f"    description: {info.get('description', 'No description')}")
+            print(f"    capabilities:")
+            print(f"      text generation:       {'yes' if caps.get('text_generation') else 'no'}")
+            print(f"      structured tool calls: {'yes' if caps.get('tool_calls') else 'no'}")
+            print(f"      external tool exec:    {'yes' if caps.get('external_tool_execution') else 'no'}")
+            print(f"      streaming:             {'yes' if caps.get('streaming') else 'no'}")
+            print(f"      cancellation:          {'yes' if caps.get('cancellation') else 'no'}")
+            print()
+        return 0
+
     if not parsed_args.request:
         print("Error: No request provided", file=sys.stderr)
         print("Usage: agent <request> [-p /path/to/project]", file=sys.stderr)
+        print("       agent --list-runtimes", file=sys.stderr)
         return 1
 
     # Load configuration
@@ -145,7 +169,16 @@ def main(args: Optional[argparse.Namespace] = None) -> int:
 
         memory_manager = MemoryManager(InMemoryBackend())
 
-    runtime = create_hermes_runtime(model=agent_config.model, provider=agent_config.provider)
+    try:
+        runtime = registry.create(
+            parsed_args.runtime,
+            model=agent_config.model,
+            provider=agent_config.provider,
+        )
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        print("Use --list-runtimes to see available options.", file=sys.stderr)
+        return 1
 
     agent = create_agent(
         runtime=runtime,
