@@ -7,6 +7,7 @@ These tests verify:
 - Tool failures return structured ToolResult, not exceptions
 """
 
+import time
 import pytest
 from pathlib import Path
 from agentcore.tools import ToolManager, FileReadResult, FileWriteResult, SearchResult
@@ -254,3 +255,100 @@ class TestHermesRuntimeNoToolDuplication:
         assert caps["external_tool_execution"] is False
         assert caps["streaming"] is False
         assert caps["cancellation"] is False
+
+
+class TestToolManagerTimeouts:
+    """ToolManager enforces configurable per-tool timeouts."""
+
+    def test_successful_tool_within_timeout(self, tmp_path):
+        """A tool that completes within the timeout should succeed."""
+        tm = ToolManager(project_path=tmp_path, tool_timeout=5)
+        tc = ToolCall(tool="read_file", arguments={"path": "hello.txt"})
+        (tmp_path / "hello.txt").write_text("fast")
+        result = tm.execute(tc, cwd=tmp_path)
+
+        assert result.success is True
+        assert result.exit_code == 0
+        assert "fast" in result.output
+
+    def test_timeout_failure_returns_structured_result(self, tmp_path):
+        """A tool exceeding the timeout should return a structured ToolResult failure."""
+        def slow_handler(args, work_dir, start):
+            time.sleep(10)
+            return ToolResult(success=True, tool="slow", output="done")
+
+        tm = ToolManager(project_path=tmp_path, tool_timeout=1)
+        tm.register_tool("slow_tool", slow_handler)
+        tc = ToolCall(tool="slow_tool", arguments={})
+        result = tm.execute(tc, cwd=tmp_path)
+
+        assert result.success is False
+        assert result.exit_code == 124
+        assert "timed out" in result.error.lower()
+        assert result.tool == "slow_tool"
+
+    def test_disabled_timeout_allows_slow_tool(self, tmp_path):
+        """With tool_timeout=None, a slow tool should complete normally."""
+        def slow_handler(args, work_dir, start):
+            time.sleep(0.5)
+            return ToolResult(success=True, tool="slow", output="done")
+
+        tm = ToolManager(project_path=tmp_path, tool_timeout=None)
+        tm.register_tool("slow_tool", slow_handler)
+        tc = ToolCall(tool="slow_tool", arguments={})
+        result = tm.execute(tc, cwd=tmp_path)
+
+        assert result.success is True
+        assert result.output == "done"
+
+    def test_timeout_propagates_through_agent(self, tmp_path):
+        """Agent should receive timeout ToolResult without crashing."""
+        from agentcore import Agent, AgentConfig
+        from agentcore.memory import MemoryManager, InMemoryBackend
+        from agentcore.runtimes.base import RuntimeAdapter, RuntimeResponse, FinishReason
+
+        class TimeoutRuntime(RuntimeAdapter):
+            def respond(self, context):
+                return RuntimeResponse(
+                    content="",
+                    tool_calls=[ToolCall(tool="slow_tool", arguments={})],
+                    finish_reason=FinishReason.TOOL_CALLS,
+                )
+
+            def capabilities(self):
+                return {
+                    "text_generation": True,
+                    "tool_calls": True,
+                    "external_tool_execution": True,
+                    "streaming": False,
+                    "cancellation": False,
+                }
+
+            def cancel(self):
+                pass
+
+            @property
+            def default_model(self):
+                return "timeout-model"
+
+        def slow_handler(args, work_dir, start):
+            time.sleep(10)
+            return ToolResult(success=True, tool="slow_tool", output="done")
+
+        runtime = TimeoutRuntime()
+        memory = MemoryManager(InMemoryBackend())
+        config = AgentConfig(
+            max_iterations=2,
+            max_tool_calls=10,
+            tool_timeout=1,
+            enable_verification=False,
+            max_replans=0,
+        )
+
+        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
+        agent._tool_manager.register_tool("slow_tool", slow_handler)
+
+        result = agent.execute("Run slow tool")
+
+        assert result["task"]["current_state"] == "FAILED"
+        assert result["tools_used"] >= 1

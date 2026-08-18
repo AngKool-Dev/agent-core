@@ -31,6 +31,7 @@ class AgentConfig:
     max_tool_calls: int = 50
     max_runtime_seconds: int = 300
     timeout: int = 300
+    tool_timeout: Optional[int] = None
     enable_verification: bool = True
     run_format_check: bool = True
     run_build_check: bool = True
@@ -229,7 +230,7 @@ class Agent:
         self._event_bus = event_bus or EventBus()
         self._persistence = persistence
 
-        self._tool_manager = ToolManager(self.project_path)
+        self._tool_manager = ToolManager(self.project_path, tool_timeout=self.config.tool_timeout)
         self._verifier = Verifier(self.project_path)
         self._planner = Planner()
 

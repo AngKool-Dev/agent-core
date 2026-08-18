@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -41,10 +42,11 @@ class ToolManager:
     implementing their own copies.
     """
 
-    def __init__(self, project_path: Optional[str | Path] = None):
+    def __init__(self, project_path: Optional[str | Path] = None, tool_timeout: Optional[int] = None):
         self.project_path = Path(project_path) if project_path else Path.cwd()
         self._last_diff: Optional[str] = None
         self._custom_tools: Dict[str, callable] = {}
+        self._tool_timeout = tool_timeout
         self._register_default_tools()
 
     # ------------------------------------------------------------------
@@ -107,7 +109,23 @@ class ToolManager:
             )
 
         try:
-            return handler(args, work_dir, start)
+            if self._tool_timeout is not None and self._tool_timeout > 0:
+                with ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(handler, args, work_dir, start)
+                    try:
+                        return future.result(timeout=self._tool_timeout)
+                    except FutureTimeoutError:
+                        duration = time.time() - start
+                        return ToolResult(
+                            success=False,
+                            tool=tool_name,
+                            output="",
+                            error=f"Tool timed out after {self._tool_timeout}s",
+                            exit_code=124,
+                            duration=duration,
+                        )
+            else:
+                return handler(args, work_dir, start)
         except Exception as e:
             return ToolResult(
                 success=False,
