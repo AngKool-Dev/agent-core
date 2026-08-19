@@ -28,6 +28,8 @@ dependencies = [
 dev = [
     "pytest>=8.0",
     "pytest-asyncio",
+    "ruff>=0.6",
+    "build>=1.0",
 ]
 db-obsidian = [
     "db-obsidian @ git+https://github.com/AngKool-Dev/db-obsidian",
