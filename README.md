@@ -1,23 +1,60 @@
 # AgentCore
 
-Universal AI coding-agent framework with pluggable runtime adapters.
+**Runtime-agnostic orchestration layer for AI coding agents.**
 
-**v0.1.0 — First public release**
+AgentCore is **not** Hermes, Kilo, OpenCode, Claude Code, or any other AI coding agent.
+It is the orchestration layer that sits *above* them:
 
-## The Principle
+```
+                    ┌─────────────────────────┐
+                    │       AGENTCORE          │
+                    │  Universal Orchestration │
+                    │          Layer            │
+                    ├─────────────────────────┤
+                    │  Task Lifecycle            │
+                    │  EventBus                  │
+                    │  Observations              │
+                    │  Memory Harvesting         │
+                    │  Confidence Scoring        │
+                    │  Persistence               │
+                    │  Runtime Adapters          │
+                    └────────────┬────────────┘
+                                 │
+             ┌───────────────────┼───────────────────┐
+             ▼                   ▼                   ▼
+         ┌────────┐          ┌────────┐          ┌──────────┐
+         │ Hermes │          │  Kilo  │          │ OpenCode │
+         └────────┘          └────────┘          └──────────┘
+             │                   │                   │
+             └───────────────────┼───────────────────┘
+                                 ▼
+                      Persistent Memory (DB-Obsidian)
+```
 
-**THE AGENT BRAIN IS SEPARATE FROM THE AGENT RUNTIME.**
+Plug in any coding agent runtime — Hermes today, Kilo and OpenCode tomorrow —
+without changing AgentCore's logic. AgentCore handles task lifecycle,
+memory, verification, and orchestration so your runtime doesn't have to.
 
-AgentCore provides the orchestration layer: task state management, skill routing,
-project context, memory, planning, verification, and tool execution.
+---
 
-Runtimes are interchangeable plug-ins. Hermes is the first runtime. Kilo and
-OpenCode can be added later without changing AgentCore's core logic.
+## Why AgentCore?
+
+| You have this... | AgentCore gives you... |
+|---|---|
+| A coding agent that manages tasks, memory, and verification | A clean separation: your runtime does the language model calls, AgentCore does everything else |
+| Hardcoded task persistence and memory logic in your CLI | Swappable backends (in-memory for testing, DB-Obsidian for production) |
+| No cross-session memory consolidation | Deterministic memory harvesting with confidence scoring |
+| No observability layer | `argus` CLI for inspecting tasks, observations, and memories |
+| No standardized runtime interface | `RuntimeAdapter` contract with capability flags |
+
+AgentCore is the orchestration layer that makes any coding agent production-ready.
+
+---
 
 ## Quick Start
 
 ```bash
-# Create a virtual environment
+# Create and activate a virtual environment
 python -m venv .venv
 
 # Windows:
@@ -26,86 +63,82 @@ python -m venv .venv
 # Linux/macOS:
 source .venv/bin/activate
 
-# Install AgentCore (no external dependencies required)
+# Install AgentCore — zero required dependencies
 pip install agentcore
 
-# Or install from source with dev tools:
-git clone https://github.com/agentcore/agent-core.git
-cd agent-core
-pip install -e ".[dev]"
-```
-
-Run a task:
-
-```bash
-# Requires Hermes runtime (optional - see Runtime Architecture)
+# Run a task (requires Hermes — see below)
 agent "Fix the launcher crash"
 
-# Use a specific project
-agent -p /path/to/project "Why does launch fail?"
+# Inspect results without a runtime
+argus task list
+```
 
-# Use a specific runtime
-agent -r hermes -m claude-sonnet-4 "Implement X"
+> **Python 3.11+** is required. AgentCore has **no required dependencies**.
+> Runtimes, memory backends, and tools are optional and loaded lazily.
 
-# List available runtimes
+### What's installed
+
+| Command | Description |
+|---|---|
+| `agent` | Run an AI coding agent (requires a runtime adapter) |
+| `argus` | Read-only observability CLI — works without any runtime |
+
+---
+
+## First Time Running a Task
+
+With Hermes Desktop installed:
+
+```bash
+# Run a task against the current project
+agent "Why does the login handler fail on edge cases?"
+
+# Target a specific project
+agent -p /path/to/project "Implement pagination in the results view"
+
+# Choose a model
+agent -r hermes -m claude-sonnet-4 "Refactor the auth module"
+
+# List installed runtimes
 agent --list-runtimes
 ```
 
-## Argus CLI
+AgentCore will:
+1. Discover project context (language, files, structure)
+2. Plan the task (investigate → implement → verify)
+3. Delegate to the Hermes runtime for language model calls
+4. Harvest memories with confidence scoring
+5. Verify results with format/build/test checks
+6. Persist everything for later inspection via `argus`
 
-The `argus` command provides read-only inspection of tasks, observations, and memory.
-It works without any runtime installed and does not require db-obsidian.
-
-```bash
-# List tasks (filters: --state, --source, --runtime, --json)
-argus task list
-
-# Show task details
-argus task show <task_id>          # human-readable
-argus task show <task_id> --json   # JSON output
-
-# Show observations for a task
-argus task events <task_id> [--limit N] [--full] [--json]
-
-# Show memories for a task
-argus task memories <task_id> [--min-confidence VERIFIED|0.7] [--type TYPE] [--limit N] [--json]
-
-# Search memories
-argus memory search <query> [--limit N] [--type TYPE] [--min-confidence F] [--json]
-
-# Show a specific memory
-argus memory show <memory_id> [--json]
-
-# Show confidence diagnostic for a memory
-argus memory confidence <memory_id> [--json]
-```
-
-See [Argus CLI Reference](docs/cli-reference.md) for full documentation.
+---
 
 ## Architecture
 
 ```
-                    USER
-                     │
-                     ▼
-            ┌─────────────┐
-            │  AgentCore  │   ← Task lifecycle, persistence, limits
-            └──────┬──────┘
-                   │
-        ┌──────────┼──────────┐
-        ▼          ▼          ▼
-     Context     Skills     Memory
-        │          │          │
-        └──────────┼──────────┘
-                   ▼
-               Planner
-                   │
-                   ▼
-            Runtime Adapter    ← Hermes, Kilo, OpenCode
-                   │
-                   ▼
-               Hermes CLI
+                USER
+                 │
+                 ▼
+        ┌──────────────┐
+        │   AgentCore   │   ← Task lifecycle, persistence, limits
+        └──────┬───────┘
+               │
+   ┌──────────┼──────────┐
+   ▼          ▼          ▼
+Context    Skills     Memory
+   │          │          │
+   └──────────┼──────────┘
+              ▼
+          Planner
+              │
+              ▼
+       Runtime Adapter    ← Hermes, Kilo, OpenCode
+              │
+              ▼
+            Hermes
 ```
+
+### Layer table
 
 | Layer | Responsibility |
 |---|---|
@@ -118,170 +151,168 @@ See [Argus CLI Reference](docs/cli-reference.md) for full documentation.
 | **Verifier** | Post-completion verification (format, build, tests) with scope control |
 | **Argus** | Read-only CLI for inspecting tasks, observations, and memory |
 
-### Runtime Architecture
-
-Runtimes are pluggable adapters implementing `RuntimeAdapter`. The default runtime
-is Hermes (via `hermes -z`). AgentCore requires no specific runtime to be installed —
-runtimes are loaded lazily and only when needed.
+### Data flow
 
 ```
-AgentCore                        Runtime Adapter
-   │                                    │
-   │  RuntimeCapabilities:              │  capabilities() returns:
-   │  text_generation                    │  text_generation: bool
-   │  tool_calls                         │  tool_calls: bool
-   │  external_tool_execution            │  external_tool_execution: bool
-   │  streaming                          │  streaming: bool
-   │  cancellation                       │  cancellation: bool
-   │                                    │
-   └──► respond(context) ──────────────►│
-   ├─── tool_calls (if enabled) ─◄──────┤
-   └──◄── content + finish_reason ───────┘
+AgentCore
+   │
+   ├── EventBus ──────────► ObservationCollector ──► ObservationStore
+   │                              │
+   │                              ▼
+   │                      MemoryHarvester ──► MemoryBackend
+   │
+   └── TaskPersistence ──► FilesystemPersistenceBackend
 ```
 
-**Tool execution ownership** is determined by capability flags:
+AgentCore does **not** introduce its own database. Task persistence is filesystem-based
+(JSON per task). Memory and observations use DB-Obsidian when available, falling back
+to in-memory backends.
+
+---
+
+## Runtimes
+
+AgentCore supports multiple runtimes through the `RuntimeAdapter` interface. Runtimes
+are **lazy** — they are not imported or required at install time.
+
+### Capability contract
+
+Runtimes declare what they support via `capabilities()`:
+
+| Key | Meaning |
+|---|---|
+| `text_generation` | Runtime can produce text responses |
+| `tool_calls` | Runtime exposes structured `ToolCall` objects to AgentCore |
+| `external_tool_execution` | AgentCore executes those tools via `ToolManager` |
+| `streaming` | Runtime supports streaming responses |
+| `cancellation` | Runtime supports cancellation |
+
+### Two runtime categories
 
 | Runtime type | `tool_calls` | `external_tool_execution` | Behavior |
 |---|---|---|---|
-| Tool-aware | `true` | `true` | AgentCore executes tools, observes results |
-| Black-box | `false` | `false` | Runtime handles tools internally |
+| **Tool-aware** | `true` | `true` | AgentCore executes tools, observes results |
+| **Black-box** | `false` | `false` | Runtime handles tools internally |
 
-Hermes v0.20+ in `-z` mode is a black-box runtime.
+Hermes v0.20+ in `-z` mode is a black-box runtime — AgentCore sees
+`tool_calls=[]` and skips the tool-execution state machine.
 
-### Argus Architecture
+### Built-in: Hermes Runtime
 
-Argus is the observability layer — a read-only CLI that inspects persisted state.
+```python
+from agentcore import HermesRuntime
 
-```
-argus CLI
-    │
-    ▼
-QueryService          ← assembles backends from config
-    │
-    ├── TaskRegistry     (from persistence)
-    ├── ObservationStore  (DBObsidianObservationStore or InMemory)
-    └── MemoryBackend     (DBObsidianBackend or InMemory)
+runtime = HermesRuntime(model="claude-sonnet-4", provider="anthropic")
+response = runtime.respond({"user_request": "Explain dependency injection"})
+# RuntimeResponse(content="...", finish_reason=FinishReason.STOP)
 ```
 
-Argus connects to the same DB-Obsidian databases that a running AgentCore session
-writes to. If db-obsidian is not installed, Argus falls back to in-memory backends
-(will report no tasks or memories until AgentCore writes them).
+See [`docs/runtime-adapters.md`](docs/runtime-adapters.md) for the full adapter
+contract and how to integrate Kilo, OpenCode, or your own runtime.
 
-### Hermes Desktop Integration
+---
 
-AgentCore integrates with [Hermes Desktop](https://github.com/hermes-desktop/hermes-desktop)
-as the default execution runtime. This integration is:
+## Memory & Observability
 
-- **Lazy**: Hermes is not imported or required at AgentCore install time
-- **Optional**: AgentCore works without Hermes; Hermes is only needed to execute tasks
-- **One-way**: AgentCore observes and controls through explicit Hermes interfaces
+### Argus CLI (read-only, no runtime required)
 
-The identity model maps each execution to provenance metadata:
+```bash
+# List tasks
+argus task list --state running
 
-| Field | Source | Used for |
-|---|---|---|
-| `session_id` | Hermes session UUID | Deduplication, task grouping |
-| `task_id` | Hermes turn task ID | Argus task ID prefix (`hermes-`) |
-| `turn_id` | Hermes turn UUID | Per-turn observation tracking |
-| `session_key` | Hermes session key | Cross-reference with Hermes UI |
+# Show task details
+argus task show hermes-abc123-task456
 
-One Hermes session can produce multiple Argus tasks when a single session request
-spawns sub-tasks or parallel investigations — each gets a distinct task ID.
+# Show observations/events for a task
+argus task events hermes-abc123-task456 --limit 50
 
-### Memory Architecture
+# Show harvested memories
+argus task memories hermes-abc123-task456 --min-confidence VERIFIED
 
-```
-Agent → ObservationCollector → ObservationStore
-                    │
-                    ▼
-            MemoryHarvester
-                    │
-                    ▼
-            MemoryCandidate  ← deterministic ID (SHA-256 of content+context)
-                    │
-                    ▼
-            MemoryBackend
-                    │
-                    ├── DBObsidianBackend   (persistent, requires db-obsidian)
-                    └── InMemoryBackend      (ephemeral, default)
+# Search memories
+argus memory search "authentication error" --limit 10 --json
+
+# Show memory confidence diagnostic
+argus memory confidence mem-a1b2c3d4e5f6
 ```
 
-Confident memories are stored as `MemoryRecord` with a confidence level:
+See [`docs/cli-reference.md`](docs/cli-reference.md) for the full reference.
+
+### Memory system
+
+Memory is harvested from task observations with deterministic IDs and
+confidence levels:
 
 | Level | Score | Meaning |
 |---|---|---|
 | `UNKNOWN` | 0.3 | Inferred from observation; no explicit claim |
 | `INFERRED` | 0.5 | Derived from task execution patterns |
-| `CLAIMED` | 0.7 | Explicitly stated by the model in an observation |
+| `CLAIMED` | 0.7 | Explicitly stated by the model |
 | `VERIFIED` | 1.0 | Matches a verified tool outcome |
 
-Confidence classification is deterministic in v0.1.0.
-
-## Configuration
-
-AgentCore loads configuration from TOML files in priority order:
-
-1. Explicit config: `agent --config path/to/agentcore.toml`
-2. Project-local: `./agentcore.toml` or `./config/agentcore.toml`
-3. User-level: `{user_config_dir}/agentcore/agentcore.toml`
-4. Built-in defaults
-
-| Setting | Default | Description |
-|---|---|---|
-| `default_runtime` | `"hermes"` | Runtime adapter name |
-| `model` | `null` | Override model (e.g. `"claude-sonnet-4"`) |
-| `memory_backend` | `"in_memory"` | `"in_memory"` or `"db_obsidian"` |
-| `memory_db_path` | `""` | Explicit DB path (empty = auto-detect) |
-| `harvesting_enabled` | `true` | Enable memory harvesting during tasks |
-| `max_iterations` | `10` | Max agent loop iterations per task |
-| `max_tool_calls` | `50` | Max tool calls per task |
-| `timeout` | `300` | Per-request timeout (seconds) |
-| `run_format_check` | `true` | Run format check on verification |
-| `run_build_check` | `true` | Run build check on verification |
-| `run_tests` | `true` | Run test suite on verification |
-| `verification_scope` | `"project"` | `"project"` or `"changed-files"` |
-| `max_context_files` | `50` | Max files for project context |
-| `exclude_patterns` | see config | Glob patterns to exclude from context |
-
-### Memory Backend
-
-AgentCore supports two memory backends:
+### Memory backends
 
 | Backend | Persistent | Dependencies |
 |---|---|---|
-| `in_memory` (default) | No | None — built in |
-| `db_obsidian` | Yes (SQLite + Obsidian vault) | `pip install agentcore[db-obsidian]` |
+| `in_memory` (default) | No | None |
+| `db_obsidian` | Yes (SQLite + Obsidian) | `pip install agentcore[db-obsidian]` |
 
-`db-obsidian` is an **optional**, separate package available from
-[AngKool-Dev/db-obsidian on GitHub](https://github.com/AngKool-Dev/db-obsidian).
-It is not currently published to PyPI. If it is not installed, AgentCore
-automatically falls back to `InMemoryBackend` at startup. To enable persistent
-memory:
-
-```bash
-pip install git+https://github.com/AngKool-Dev/db-obsidian
-```
-
-Or via the extras syntax (requires PyPI access to `agentcore`):
+If `db-obsidian` is not installed, AgentCore automatically falls back to
+`InMemoryBackend`. To enable persistent memory:
 
 ```bash
 pip install agentcore[db-obsidian]
 ```
 
-Then configure:
+Or from GitHub:
 
-```toml
-[memory]
-backend = "db_obsidian"
-db_path = "~/.agentcore/memory.db"
+```bash
+pip install git+https://github.com/AngKool-Dev/db-obsidian
 ```
+
+See [`docs/memory.md`](docs/memory.md) for the full memory architecture and
+[`docs/hermes-integration.md`](docs/hermes-integration.md) for Hermes Desktop
+integration details.
+
+---
+
+## Installation
+
+### From PyPI
+
+```bash
+pip install agentcore
+```
+
+### With optional extras
+
+```bash
+# Development tools (pytest, ruff, build)
+pip install agentcore[dev]
+
+# Persistent memory backend
+pip install agentcore[db-obsidian]
+
+# All extras
+pip install agentcore[dev,db-obsidian]
+```
+
+### From source
+
+```bash
+git clone https://github.com/AngKool-Dev/agent-core.git
+cd agent-core
+pip install -e ".[dev]"
+```
+
+---
 
 ## Python API
 
 ```python
 from agentcore import Agent, AgentConfig, AgentCoreConfig, create_agent, create_agent_core
 
-# Create AgentCore facade (task lifecycle, persistence)
+# Create the AgentCore facade (task lifecycle, persistence)
 core = create_agent_core(config=AgentCoreConfig(default_runtime="hermes"))
 
 # Create an agent with a runtime and memory backend
@@ -295,13 +326,10 @@ agent = Agent(runtime=runtime, memory=memory, config=config)
 result = agent.execute("Fix the failing tests")
 ```
 
-## Extending AgentCore
-
-### Custom Runtime
+### Custom runtime
 
 ```python
 from agentcore.runtimes.base import RuntimeAdapter, RuntimeResponse, FinishReason
-
 
 class MyRuntime(RuntimeAdapter):
     def respond(self, context):
@@ -318,36 +346,67 @@ class MyRuntime(RuntimeAdapter):
             "streaming": False,
             "cancellation": False,
         }
-```
 
-Register it:
-
-```python
+# Register it
 from agentcore.runtimes import get_default_registry
-
 registry = get_default_registry()
 registry.register("my-runtime", lambda **kw: MyRuntime())
 ```
 
-### Custom Tool
+### Custom tool
 
 ```python
+from pathlib import Path
 from agentcore.tools import ToolManager, ToolResult
 
-
-def my_tool(args: dict, work_dir, start: float) -> ToolResult:
+def my_tool(args: dict, work_dir: Path, start: float) -> ToolResult:
     return ToolResult(success=True, tool="my_tool", output="done")
-
 
 manager = ToolManager(project_path=".")
 manager.register_tool("my_tool", my_tool)
 ```
 
-## Examples
-
+See `examples/` for working examples:
 - `examples/basic_agent.py` — Minimal agent with an echo runtime
-- `examples/custom_runtime.py` — Implementing a RuntimeAdapter
+- `examples/custom_runtime.py` — Implementing a `RuntimeAdapter`
 - `examples/custom_tool.py` — Registering a custom tool
+
+---
+
+## Configuration
+
+AgentCore loads configuration from TOML files in priority order:
+
+1. Explicit: `agent --config path/to/agentcore.toml`
+2. Project-local: `./agentcore.toml` or `./config/agentcore.toml`
+3. User-level: `{user_config_dir}/agentcore/agentcore.toml`
+4. Built-in defaults
+
+```toml
+[agent]
+default_runtime = "hermes"     # Runtime adapter to use
+model = "claude-sonnet-4"      # Model override (optional)
+
+[memory]
+backend = "in_memory"          # "in_memory" or "db_obsidian"
+db_path = "~/.agentcore/memory.db"
+
+[limits]
+max_iterations = 10            # Max agent loop iterations per task
+max_tool_calls = 50            # Max tool calls per task
+timeout = 300                  # Per-request timeout (seconds)
+
+[verification]
+run_format_check = true
+run_build_check = true
+run_tests = true
+scope = "project"              # "project" or "changed-files"
+
+[context]
+max_context_files = 50
+```
+
+---
 
 ## Development
 
@@ -355,14 +414,14 @@ manager.register_tool("my_tool", my_tool)
 # Install with dev dependencies
 pip install -e ".[dev]"
 
-# Run default test suite (fast, deterministic)
+# Run default test suite (fast, deterministic — no runtime needed)
 pytest tests/ -q
 
-# Run real-runtime tests (requires Hermes installed)
+# Run real-runtime tests (requires Hermes Desktop)
 AGENTCORE_REAL_RUNTIME=1 pytest -m real_runtime -q
 ```
 
-### Test Tiers
+### Test tiers
 
 | Tier | Runtime | Default? |
 |---|---|---|
@@ -370,14 +429,14 @@ AGENTCORE_REAL_RUNTIME=1 pytest -m real_runtime -q
 | Integration | Deterministic/mock | Yes |
 | Real runtime | Hermes/Kilo/OpenCode | No |
 
-The default `pytest -q` suite runs only unit and deterministic integration tests.
-Real-runtime tests are explicitly opt-in via the `AGENTCORE_REAL_RUNTIME`
-environment variable and the `real_runtime` marker.
+The default `pytest -q` suite runs unit and deterministic integration tests only.
+Real-runtime tests are opt-in via the `AGENTCORE_REAL_RUNTIME` environment variable
+and the `real_runtime` marker.
 
-### Validation Commands
+### Validation commands
 
 ```bash
-# Full release gate
+# Release gate
 ruff check .
 ruff format --check .
 pytest tests/ -q
@@ -385,38 +444,36 @@ git diff --check
 python -m build
 ```
 
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for development guidelines.
+
+---
+
 ## Documentation
 
-- `docs/architecture.md` — System architecture and design
-- `docs/cli-reference.md` — Argus CLI command reference
-- `docs/runtime-adapters.md` — Runtime adapter interface and capability contract
-- `docs/hermes-integration.md` — Hermes Desktop integration and identity model
-- `docs/memory.md` — Memory harvesting, confidence, and backends
+| Doc | Description |
+|---|---|
+| [`docs/architecture.md`](docs/architecture.md) | System architecture and design |
+| [`docs/cli-reference.md`](docs/cli-reference.md) | Argus CLI command reference |
+| [`docs/runtime-adapters.md`](docs/runtime-adapters.md) | Runtime adapter interface and capability contract |
+| [`docs/hermes-integration.md`](docs/hermes-integration.md) | Hermes Desktop integration and identity model |
+| [`docs/memory.md`](docs/memory.md) | Memory harvesting, confidence, and backends |
+
+---
 
 ## Current Limitations
 
-- v0.1.0 is a **framework release**, not a turnkey product. Integration with
-  Hermes Desktop requires a running Hermes Desktop session.
+- **v0.1.0 is a framework release**, not a turnkey product. Integration with Hermes
+  Desktop requires a running Hermes Desktop session.
 - `db-obsidian` is not auto-installed or published to PyPI. Users must install it
-  from GitHub for persistent memory:
-  `pip install git+https://github.com/AngKool-Dev/db-obsidian`
+  from GitHub for persistent memory: `pip install git+https://github.com/AngKool-Dev/db-obsidian`
   or `pip install agentcore[db-obsidian]` (when available on PyPI).
-- Memory harvesting is deterministic but minimal. Advanced memory
-  consolidation (eviction, promotion, clustering) is planned for future releases.
+- Memory harvesting is deterministic but minimal. Advanced memory consolidation
+  (eviction, promotion, clustering) is planned for future releases.
 - The verifier runs format/build/test checks but does not auto-apply fixes.
 - Real-runtime tests require Hermes Desktop to be installed on the host system.
+- Confidence classification is rule-based, not learned.
 
-## Roadmap
-
-| Phase | Focus | Status |
-|---|---|---|
-| 6A | Training dataset v016 | Complete |
-| 6B | Release audit (lint, CI, packaging) | Complete |
-| 6C | Release candidate hardening | Complete |
-| 6D | Release documentation (this phase) | Complete |
-| 6E | GitHub release | Pending |
-| 7 | Advanced memory consolidation | Planned |
-| 8 | Multi-runtime orchestration | Planned |
+---
 
 ## License
 
