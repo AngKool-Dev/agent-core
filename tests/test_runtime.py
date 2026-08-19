@@ -1,6 +1,14 @@
-import pytest
 from typing import Any
-from agentcore.runtimes.base import RuntimeAdapter, ToolCall, ToolResult, RuntimeResponse, FinishReason
+
+import pytest
+
+from agentcore.runtimes.base import (
+    FinishReason,
+    RuntimeAdapter,
+    RuntimeResponse,
+    ToolCall,
+    ToolResult,
+)
 
 
 class TestToolCall:
@@ -8,23 +16,23 @@ class TestToolCall:
         call = ToolCall(
             tool="shell",
             arguments={"command": "echo test"},
-            thought="Running a simple echo command"
+            thought="Running a simple echo command",
         )
-        
+
         assert call.tool == "shell"
         assert call.arguments == {"command": "echo test"}
         assert call.thought == "Running a simple echo command"
 
     def test_tool_call_dataclass(self):
         call = ToolCall(tool="read_file", arguments={"path": "/etc/hosts"})
-        
+
         assert call.tool == "read_file"
         assert call.arguments["path"] == "/etc/hosts"
 
     def test_tool_call_to_dict(self):
         call = ToolCall(tool="shell", arguments={"command": "ls"}, thought="list files")
         data = call.to_dict()
-        
+
         assert data["tool"] == "shell"
         assert data["arguments"]["command"] == "ls"
         assert data["thought"] == "list files"
@@ -40,8 +48,8 @@ class TestToolResult:
             exit_code=0,
             duration=0.1,
         )
-        
-        assert result.success == True
+
+        assert result.success
         assert result.exit_code == 0
         assert result.tool == "shell"
 
@@ -54,8 +62,8 @@ class TestToolResult:
             exit_code=1,
             duration=0.05,
         )
-        
-        assert result.success == False
+
+        assert not result.success
         assert result.exit_code == 1
         assert result.tool == "read_file"
 
@@ -68,10 +76,10 @@ class TestToolResult:
             exit_code=0,
             duration=0.1,
         )
-        
+
         data = result.to_dict()
-        
-        assert data["success"] == True
+
+        assert data["success"]
         assert data["tool"] == "shell"
         assert data["output"] == "output"
         # backward-compat: stdout property aliases output
@@ -85,6 +93,7 @@ class TestRuntimeAdapterInterface:
 
     def test_runtime_adapter_requires_respond(self):
         """RuntimeAdapter requires implementations of respond and capabilities."""
+
         class Incomplete(RuntimeAdapter):
             pass
 
@@ -95,6 +104,7 @@ class TestRuntimeAdapterInterface:
         class OnlyCapabilities(RuntimeAdapter):
             def capabilities(self) -> dict[str, Any]:
                 return {}
+
             def respond(self, context: dict[str, Any]) -> RuntimeResponse:
                 return RuntimeResponse(content="ok")
 
@@ -104,11 +114,10 @@ class TestRuntimeAdapterInterface:
         assert result.finish_reason == FinishReason.STOP
 
 
-
 class TestHermesAPI:
     def test_build_prompt_structure(self):
         from agentcore.runtimes.base import HermesAPI
-        
+
         context = {
             "task": {
                 "user_request": "Fix bug",
@@ -120,9 +129,9 @@ class TestHermesAPI:
             "skills": ["debugging"],
             "user_request": "Fix the crash",
         }
-        
+
         prompt = HermesAPI.build_prompt(context)
-        
+
         assert "Task:" in prompt
         assert "Fix bug" in prompt
         assert "test-project" in prompt
@@ -131,7 +140,7 @@ class TestHermesAPI:
 class TestHermesAPIWithEmptyContext:
     def test_empty_context(self):
         from agentcore.runtimes.base import HermesAPI
-        
+
         prompt = HermesAPI.build_prompt({"user_request": "Do something"})
-        
+
         assert "USER: Do something" in prompt

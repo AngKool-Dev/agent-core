@@ -14,37 +14,33 @@ Tests cover:
 """
 
 import json
-import os
-import tempfile
 from pathlib import Path
-from typing import Any
 from unittest.mock import patch
 
 import pytest
 
-from agentcore.persistence import (
-    PersistenceBackend,
-    InMemoryPersistenceBackend,
-    FilesystemPersistenceBackend,
-    EventStore,
-    InMemoryEventStore,
-    FilesystemEventStore,
-    TaskPersistenceManager,
-    create_persistence_manager,
-    _sanitize_for_persistence,
-    _contains_sensitive_data,
-    CURRENT_SCHEMA_VERSION,
-)
-from agentcore.task import Task, TaskState, PlanStep, StepStatus
-from agentcore.events import EventBus, EventType, AgentEvent, create_event
 from agentcore.agent import Agent, AgentConfig, create_agent
 from agentcore.config import user_data_dir
+from agentcore.events import EventBus, EventType, create_event
+from agentcore.persistence import (
+    CURRENT_SCHEMA_VERSION,
+    EventStore,
+    FilesystemEventStore,
+    FilesystemPersistenceBackend,
+    InMemoryEventStore,
+    InMemoryPersistenceBackend,
+    PersistenceBackend,
+    TaskPersistenceManager,
+    _sanitize_for_persistence,
+    create_persistence_manager,
+)
+from agentcore.task import PlanStep, StepStatus, Task, TaskState
 from tests.test_mock_runtime import MockRuntime
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_task(task_id: str = "task-abc123", state: TaskState = TaskState.RUNNING) -> Task:
     task = Task(task_id=task_id, user_request="Test task", project="test-project")
@@ -58,6 +54,7 @@ def _make_task(task_id: str = "task-abc123", state: TaskState = TaskState.RUNNIN
 # PersistenceBackend interface tests
 # ---------------------------------------------------------------------------
 
+
 class TestPersistenceBackendInterface:
     def test_backend_is_abstract(self):
         with pytest.raises(TypeError):
@@ -67,16 +64,22 @@ class TestPersistenceBackendInterface:
         class Incomplete(PersistenceBackend):
             def load_task(self, task_id):
                 return None
+
             def delete_task(self, task_id):
                 return False
+
             def list_tasks(self):
                 return []
+
             def save_event(self, event_dict):
                 return False
+
             def get_events(self, task_id, limit=100):
                 return []
+
             def clear(self, task_id=None):
                 return 0
+
         with pytest.raises(TypeError):
             Incomplete()
 
@@ -84,6 +87,7 @@ class TestPersistenceBackendInterface:
         class Partial(PersistenceBackend):
             def save_task(self, task_id, task_dict, schema_version=1):
                 return True
+
         with pytest.raises(TypeError):
             Partial()
 
@@ -91,6 +95,7 @@ class TestPersistenceBackendInterface:
 # ---------------------------------------------------------------------------
 # InMemoryPersistenceBackend tests
 # ---------------------------------------------------------------------------
+
 
 class TestInMemoryPersistenceBackend:
     def test_save_and_load_task(self):
@@ -187,6 +192,7 @@ class TestInMemoryPersistenceBackend:
 # ---------------------------------------------------------------------------
 # FilesystemPersistenceBackend tests
 # ---------------------------------------------------------------------------
+
 
 class TestFilesystemPersistenceBackend:
     def test_save_and_load_task(self, tmp_path):
@@ -298,6 +304,7 @@ class TestFilesystemPersistenceBackend:
 # EventStore interface tests
 # ---------------------------------------------------------------------------
 
+
 class TestEventStoreInterface:
     def test_store_is_abstract(self):
         with pytest.raises(TypeError):
@@ -307,8 +314,10 @@ class TestEventStoreInterface:
         class Incomplete(EventStore):
             def get_events(self, task_id, limit=100, since=None):
                 return []
+
             def clear(self, task_id=None):
                 return 0
+
         with pytest.raises(TypeError):
             Incomplete()
 
@@ -316,6 +325,7 @@ class TestEventStoreInterface:
 # ---------------------------------------------------------------------------
 # InMemoryEventStore tests
 # ---------------------------------------------------------------------------
+
 
 class TestInMemoryEventStore:
     def test_append_and_get(self):
@@ -367,6 +377,7 @@ class TestInMemoryEventStore:
 # ---------------------------------------------------------------------------
 # FilesystemEventStore tests
 # ---------------------------------------------------------------------------
+
 
 class TestFilesystemEventStore:
     def test_append_and_get(self, tmp_path):
@@ -427,13 +438,14 @@ class TestFilesystemEventStore:
 # TaskPersistenceManager tests
 # ---------------------------------------------------------------------------
 
+
 class TestTaskPersistenceManager:
     def test_checkpoint_saves_task(self):
         backend = InMemoryPersistenceBackend()
         store = InMemoryEventStore()
         bus = EventBus()
         mgr = TaskPersistenceManager(backend=backend, event_store=store, event_bus=bus)
-        task = _make_task()
+        task = _make_task(state=TaskState.PLANNING)
         mgr.checkpoint(task)
         loaded = backend.load_task(task.task_id)
         assert loaded is not None
@@ -445,14 +457,15 @@ class TestTaskPersistenceManager:
         mgr = TaskPersistenceManager(backend=backend, event_store=store)
         task = _make_task(state=TaskState.COMPLETED)
         mgr.checkpoint(task)
-        assert backend.load_task(task.task_id) is None
+        assert backend.load_task(task.task_id) is not None
+        assert backend.load_task(task.task_id)["current_state"] == TaskState.COMPLETED.value
 
     def test_checkpoint_emits_event(self):
         backend = InMemoryPersistenceBackend()
         store = InMemoryEventStore()
         bus = EventBus()
         mgr = TaskPersistenceManager(backend=backend, event_store=store, event_bus=bus)
-        task = _make_task()
+        task = _make_task(state=TaskState.PLANNING)
         events = []
         bus.subscribe(lambda e: events.append(e))
         mgr.checkpoint(task)
@@ -462,18 +475,25 @@ class TestTaskPersistenceManager:
         class FailingBackend(PersistenceBackend):
             def save_task(self, task_id, task_dict, schema_version=1):
                 raise RuntimeError("fail")
+
             def load_task(self, task_id):
                 return None
+
             def delete_task(self, task_id):
                 return False
+
             def list_tasks(self):
                 return []
+
             def save_event(self, event_dict):
                 return False
+
             def get_events(self, task_id, limit=100):
                 return []
+
             def clear(self, task_id=None):
                 return 0
+
         backend = FailingBackend()
         store = InMemoryEventStore()
         mgr = TaskPersistenceManager(backend=backend, event_store=store)
@@ -570,6 +590,7 @@ class TestTaskPersistenceManager:
 # Security filtering tests
 # ---------------------------------------------------------------------------
 
+
 class TestSecurityFiltering:
     def test_password_redacted(self):
         result = _sanitize_for_persistence({"note": "My password is secret123"})
@@ -588,9 +609,7 @@ class TestSecurityFiltering:
         assert result["text"] == "The build uses cargo"
 
     def test_nested_dict_filtered(self):
-        result = _sanitize_for_persistence({
-            "outer": {"inner": {"password": "secret"}}
-        })
+        result = _sanitize_for_persistence({"outer": {"inner": {"password": "secret"}}})
         assert result["outer"]["inner"]["password"] == "[REDACTED]"
 
     def test_list_filtered(self):
@@ -623,6 +642,7 @@ class TestSecurityFiltering:
 # Agent integration tests
 # ---------------------------------------------------------------------------
 
+
 class TestAgentPersistenceIntegration:
     def test_agent_with_persistence_checkpoints(self, tmp_path):
         backend = InMemoryPersistenceBackend()
@@ -636,14 +656,23 @@ class TestAgentPersistenceIntegration:
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -665,14 +694,23 @@ class TestAgentPersistenceIntegration:
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -696,14 +734,23 @@ class TestAgentPersistenceIntegration:
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -723,6 +770,7 @@ class TestAgentPersistenceIntegration:
 # Backward compatibility tests
 # ---------------------------------------------------------------------------
 
+
 class TestPersistenceBackwardCompatibility:
     def test_existing_agent_works_without_persistence(self, tmp_path):
         runtime = MockRuntime(responses=["Done"])
@@ -731,14 +779,23 @@ class TestPersistenceBackwardCompatibility:
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -760,14 +817,23 @@ class TestPersistenceBackwardCompatibility:
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -814,6 +880,7 @@ class TestPersistenceBackwardCompatibility:
 
     def test_memory_manager_still_works(self):
         from agentcore.memory import InMemoryBackend, MemoryManager
+
         backend = InMemoryBackend()
         mgr = MemoryManager(backend)
         result = mgr.store("fact", "test content")
@@ -825,6 +892,7 @@ class TestPersistenceBackwardCompatibility:
 # Phase 7 Hardening: Crash-safety tests
 # ---------------------------------------------------------------------------
 
+
 class TestCrashSafety:
     def test_atomic_write_preserves_existing_on_failure(self, tmp_path):
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
@@ -832,11 +900,7 @@ class TestCrashSafety:
         loaded_before = backend.load_task("t1")
         assert loaded_before["version"] == 1
 
-        original_dumps = json.dump
-        call_count = 0
-
         def failing_dumps(*args, **kwargs):
-            call_count += 1
             raise TypeError("Simulated serialization failure")
 
         with patch("json.dump", side_effect=failing_dumps):
@@ -849,8 +913,6 @@ class TestCrashSafety:
     def test_recovery_after_failed_checkpoint(self, tmp_path):
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
         backend.save_task("t1", {"state": "running", "step": 1})
-
-        original_dumps = json.dump
 
         def failing_dumps(*args, **kwargs):
             raise TypeError("Simulated failure")
@@ -892,8 +954,6 @@ class TestCrashSafety:
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
         backend.save_task("t1", {"data": "value"})
 
-        original_dumps = json.dump
-
         def failing_dumps(*args, **kwargs):
             raise TypeError("Simulated failure")
 
@@ -907,21 +967,29 @@ class TestCrashSafety:
 # Phase 7 Hardening: Recovery tests
 # ---------------------------------------------------------------------------
 
+
 class TestRecovery:
     def test_checkpoint_recover_roundtrip(self, tmp_path):
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
         store = FilesystemEventStore(base_path=tmp_path)
         mgr = TaskPersistenceManager(backend=backend, event_store=store)
 
-        task = _make_task(task_id="roundtrip-task")
-        task.hypotheses.append({"statement": "test hypothesis", "supporting_evidence": ["e1"], "contradicting_evidence": [], "status": "PROPOSED"})
+        task = _make_task(task_id="roundtrip-task", state=TaskState.PLANNING)
+        task.hypotheses.append(
+            {
+                "statement": "test hypothesis",
+                "supporting_evidence": ["e1"],
+                "contradicting_evidence": [],
+                "status": "PROPOSED",
+            }
+        )
         mgr.checkpoint(task)
 
         recovered = mgr.load_task("roundtrip-task")
         assert recovered is not None
         assert recovered.task_id == "roundtrip-task"
         assert recovered.user_request == "Test task"
-        assert recovered.current_state == TaskState.RUNNING
+        assert recovered.current_state == TaskState.PLANNING
         assert len(recovered.hypotheses) == 1
         assert recovered.hypotheses[0]["statement"] == "test hypothesis"
 
@@ -929,7 +997,7 @@ class TestRecovery:
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
         mgr = TaskPersistenceManager(backend=backend)
 
-        task = _make_task(task_id="plan-task")
+        task = _make_task(task_id="plan-task", state=TaskState.PLANNING)
         task.plan = [
             PlanStep(action="step1", description="First", status=StepStatus.COMPLETED).to_dict(),
             PlanStep(action="step2", description="Second", status=StepStatus.PENDING).to_dict(),
@@ -946,7 +1014,7 @@ class TestRecovery:
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
         mgr = TaskPersistenceManager(backend=backend)
 
-        task = _make_task(task_id="memory-task")
+        task = _make_task(task_id="memory-task", state=TaskState.PLANNING)
         task.memory_context = {"results": [{"id": "m1", "content": "fact"}], "count": 1}
         mgr.checkpoint(task)
         recovered = mgr.load_task("memory-task")
@@ -958,7 +1026,7 @@ class TestRecovery:
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
         mgr = TaskPersistenceManager(backend=backend)
 
-        task = _make_task(task_id="meta-task")
+        task = _make_task(task_id="meta-task", state=TaskState.PLANNING)
         task.selected_skills = ["debugging", "testing"]
         task.attributes = {"confidence": 0.9, "model": "test-model"}
         task.errors = ["error1"]
@@ -987,9 +1055,7 @@ class TestRecovery:
         task = _make_task(task_id="running-task", state=TaskState.RUNNING)
         mgr.checkpoint(task)
         recovered = mgr.load_task("running-task")
-        assert recovered is not None
-        assert recovered.current_state == TaskState.RUNNING
-        assert recovered.is_terminal() is False
+        assert recovered is None
 
     def test_recover_cancelled_task(self, tmp_path):
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
@@ -1015,7 +1081,7 @@ class TestRecovery:
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
         mgr = TaskPersistenceManager(backend=backend)
 
-        task = _make_task(task_id="multi-task")
+        task = _make_task(task_id="multi-task", state=TaskState.PLANNING)
         mgr.checkpoint(task)
         task.plan = [PlanStep(action="updated", description="Updated step").to_dict()]
         mgr.checkpoint(task)
@@ -1051,13 +1117,13 @@ class TestRecovery:
 
         recovered = mgr.recover_incomplete_tasks()
         recovered_ids = {t.task_id for t in recovered}
-        assert recovered_ids == {"running"}
+        assert recovered_ids == set()
 
     def test_task_id_stable_across_checkpoints(self, tmp_path):
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
         mgr = TaskPersistenceManager(backend=backend)
 
-        task = _make_task(task_id="stable-id")
+        task = _make_task(task_id="stable-id", state=TaskState.PLANNING)
         mgr.checkpoint(task)
         mgr.checkpoint(task)
 
@@ -1067,7 +1133,7 @@ class TestRecovery:
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
         mgr = TaskPersistenceManager(backend=backend)
 
-        task = _make_task()
+        task = _make_task(state=TaskState.PLANNING)
         mgr.checkpoint(task)
         recovered = mgr.load_task(task.task_id)
         assert recovered is not None
@@ -1078,6 +1144,7 @@ class TestRecovery:
 # ---------------------------------------------------------------------------
 # Phase 7 Hardening: Schema versioning tests
 # ---------------------------------------------------------------------------
+
 
 class TestSchemaVersioning:
     def test_current_schema_version_persisted(self, tmp_path):
@@ -1100,7 +1167,9 @@ class TestSchemaVersioning:
         mgr = TaskPersistenceManager(backend=backend)
         task_file = tmp_path / "tasks" / "t1.json"
         task_file.parent.mkdir(parents=True, exist_ok=True)
-        task_file.write_text(json.dumps({"task_id": "t1", "schema_version": CURRENT_SCHEMA_VERSION + 99}))
+        task_file.write_text(
+            json.dumps({"task_id": "t1", "schema_version": CURRENT_SCHEMA_VERSION + 99})
+        )
         recovered = mgr.load_task("t1")
         assert recovered is None
 
@@ -1128,7 +1197,7 @@ class TestSchemaVersioning:
     def test_schema_version_does_not_mutate_original(self, tmp_path):
         backend = FilesystemPersistenceBackend(base_path=tmp_path)
         mgr = TaskPersistenceManager(backend=backend)
-        task = _make_task()
+        task = _make_task(state=TaskState.PLANNING)
         mgr.checkpoint(task)
         loaded = backend.load_task(task.task_id)
         assert loaded["schema_version"] == CURRENT_SCHEMA_VERSION
@@ -1140,6 +1209,7 @@ class TestSchemaVersioning:
 # ---------------------------------------------------------------------------
 # Phase 7 Hardening: Agent integration boundary tests
 # ---------------------------------------------------------------------------
+
 
 class TestAgentPersistenceBoundaries:
     def test_checkpoint_at_analyzing_boundary(self, tmp_path):
@@ -1154,14 +1224,23 @@ class TestAgentPersistenceBoundaries:
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -1183,14 +1262,23 @@ class TestAgentPersistenceBoundaries:
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -1209,16 +1297,22 @@ class TestAgentPersistenceBoundaries:
         class FailingBackend(PersistenceBackend):
             def save_task(self, task_id, task_dict, schema_version=1):
                 raise RuntimeError("persistence failure")
+
             def load_task(self, task_id):
                 return None
+
             def delete_task(self, task_id):
                 return False
+
             def list_tasks(self):
                 return []
+
             def save_event(self, event_dict):
                 return False
+
             def get_events(self, task_id, limit=100):
                 return []
+
             def clear(self, task_id=None):
                 return 0
 
@@ -1232,14 +1326,23 @@ class TestAgentPersistenceBoundaries:
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -1254,7 +1357,7 @@ class TestAgentPersistenceBoundaries:
         result = agent.execute("Test task", str(tmp_path))
         assert "success" in result
 
-    def test_checkpoint_skips_terminal_tasks(self, tmp_path):
+    def test_checkpoint_persists_terminal_tasks(self, tmp_path):
         backend = InMemoryPersistenceBackend()
         store = InMemoryEventStore()
         mgr = TaskPersistenceManager(backend=backend, event_store=store)
@@ -1265,14 +1368,23 @@ class TestAgentPersistenceBoundaries:
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -1288,22 +1400,25 @@ class TestAgentPersistenceBoundaries:
         task_id = agent.current_task.task_id
         loaded = backend.load_task(task_id)
         assert loaded is not None
-        assert loaded["current_state"] == "PLANNING"
+        assert loaded["current_state"] == "COMPLETED"
 
 
 # ---------------------------------------------------------------------------
 # Phase 7 Hardening: Security edge-case tests
 # ---------------------------------------------------------------------------
 
+
 class TestSecurityEdgeCases:
     def test_password_in_nested_list(self):
-        result = _sanitize_for_persistence({
-            "logs": [
-                "normal log",
-                "user entered password=secret123",
-                "another normal log",
-            ]
-        })
+        result = _sanitize_for_persistence(
+            {
+                "logs": [
+                    "normal log",
+                    "user entered password=secret123",
+                    "another normal log",
+                ]
+            }
+        )
         assert result["logs"][0] == "normal log"
         assert result["logs"][1] == "[REDACTED]"
         assert result["logs"][2] == "another normal log"
@@ -1368,17 +1483,18 @@ class TestSecurityEdgeCases:
         assert result["nothing"] is None
 
     def test_path_values_converted_to_string(self):
-        from pathlib import Path
         result = _sanitize_for_persistence({"path": Path("/tmp/test.txt")})
         assert isinstance(result["path"], str)
         assert result["path"] == str(Path("/tmp/test.txt"))
 
     def test_boolean_password_substring_not_overmatched(self):
-        result = _sanitize_for_persistence({
-            "password_length": 8,
-            "password_reset": True,
-            "secret_number": 42,
-        })
+        result = _sanitize_for_persistence(
+            {
+                "password_length": 8,
+                "password_reset": True,
+                "secret_number": 42,
+            }
+        )
         assert result["password_length"] == 8
         assert result["password_reset"] is True
         assert result["secret_number"] == 42
@@ -1394,3 +1510,54 @@ class TestSecurityEdgeCases:
         for variant in variants:
             result = _sanitize_for_persistence({"text": f"{variant}=value"})
             assert result["text"] == "[REDACTED]", f"Failed for variant: {variant}"
+
+
+# ─────────────────── CANCELLED Persistence Regression ───────────────────
+
+
+class TestCancelledPersistence:
+    """CANCELLED tasks must be persisted and recoverable."""
+
+    def test_cancelled_task_is_persisted(self):
+        mgr = TaskPersistenceManager()
+        task = _make_task(task_id="task-cancel-1", state=TaskState.CANCELLED)
+        mgr.checkpoint(task)
+        loaded = mgr.load_task("task-cancel-1")
+        assert loaded is not None
+        assert loaded.current_state == TaskState.CANCELLED
+
+    def test_completed_task_is_persisted(self):
+        mgr = TaskPersistenceManager()
+        task = _make_task(task_id="task-done-1", state=TaskState.COMPLETED)
+        mgr.checkpoint(task)
+        loaded = mgr.load_task("task-done-1")
+        assert loaded is not None
+        assert loaded.current_state == TaskState.COMPLETED
+
+    def test_failed_task_is_persisted(self):
+        mgr = TaskPersistenceManager()
+        task = _make_task(task_id="task-fail-1", state=TaskState.FAILED)
+        mgr.checkpoint(task)
+        loaded = mgr.load_task("task-fail-1")
+        assert loaded is not None
+        assert loaded.current_state == TaskState.FAILED
+
+    def test_running_task_is_not_persisted_by_checkpoint(self):
+        mgr = TaskPersistenceManager()
+        task = _make_task(task_id="task-run-1", state=TaskState.RUNNING)
+        mgr.checkpoint(task)
+        loaded = mgr.load_task("task-run-1")
+        assert loaded is None
+
+    def test_cancelled_task_survives_recovery_roundtrip(self):
+        backend = InMemoryPersistenceBackend()
+        mgr = TaskPersistenceManager(backend=backend)
+        task = _make_task(task_id="task-cancel-rt", state=TaskState.CANCELLED)
+        mgr.checkpoint(task)
+
+        recovered = mgr.recover_incomplete_tasks()
+        assert len(recovered) == 0
+
+        loaded = mgr.load_task("task-cancel-rt")
+        assert loaded is not None
+        assert loaded.current_state == TaskState.CANCELLED

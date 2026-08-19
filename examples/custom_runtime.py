@@ -4,7 +4,7 @@ Custom runtime adapter example.
 Demonstrates how to implement a RuntimeAdapter for a new model backend.
 """
 
-from agentcore.runtimes.base import RuntimeAdapter, RuntimeResponse, ToolCall, FinishReason
+from agentcore.runtimes.base import FinishReason, RuntimeAdapter, RuntimeResponse, ToolCall
 
 
 class MyCustomRuntime(RuntimeAdapter):

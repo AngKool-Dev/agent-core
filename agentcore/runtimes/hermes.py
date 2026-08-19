@@ -1,19 +1,15 @@
-import json
-import os
 import re
 import subprocess
-from pathlib import Path
-from typing import Any, List, Optional
+import threading
+from typing import Any
 
 from .base import (
+    FinishReason,
+    HermesAPI,
     RuntimeAdapter,
     RuntimeResponse,
     ToolCall,
-    ToolResult,
-    FinishReason,
-    HermesAPI,
 )
-
 
 TOOL_CALL_PATTERN = re.compile(
     r"TOOL_CALL:\s*(\w+)\s*\{([^}]*)\}",
@@ -41,11 +37,14 @@ class HermesRuntime(RuntimeAdapter):
     ToolManager, orchestrated by the Agent.
     """
 
-    def __init__(self, model: Optional[str] = None, provider: Optional[str] = None, timeout: int = 300):
+    def __init__(self, model: str | None = None, provider: str | None = None, timeout: int = 300):
         self.model = model
         self.provider = provider
         self.timeout = timeout
-        self._last_response: Optional[RuntimeResponse] = None
+        self._last_response: RuntimeResponse | None = None
+        self._active_process: subprocess.Popen | None = None
+        self._process_lock = threading.Lock()
+        self._cancelled = False
 
     def respond(self, context: dict[str, Any]) -> RuntimeResponse:
         """Send a context to the Hermes CLI and return a structured response."""
@@ -57,21 +56,25 @@ class HermesRuntime(RuntimeAdapter):
         if self.provider:
             hermes_args.extend(["--provider", self.provider])
 
+        self._cancelled = False
         try:
-            result = subprocess.run(
-                hermes_args + [full_prompt],
-                capture_output=True,
+            process = subprocess.Popen(
+                [*hermes_args, full_prompt],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
-                timeout=self.timeout,
             )
-            response_text = result.stdout.strip() if result.stdout else ""
-            stderr_text = result.stderr.strip() if result.stderr else ""
-
-            parsed = self._parse_response(response_text, stderr_text, result.returncode)
-            self._last_response = parsed
-            return parsed
-
+            with self._process_lock:
+                self._active_process = process
+            try:
+                stdout, stderr = process.communicate(timeout=self.timeout)
+                returncode = process.returncode
+            finally:
+                with self._process_lock:
+                    if self._active_process is process:
+                        self._active_process = None
         except subprocess.TimeoutExpired:
+            self._cancel_in_flight()
             response = RuntimeResponse(
                 content="",
                 tool_calls=[],
@@ -80,7 +83,6 @@ class HermesRuntime(RuntimeAdapter):
             )
             self._last_response = response
             return response
-
         except FileNotFoundError:
             response = RuntimeResponse(
                 content="",
@@ -90,7 +92,6 @@ class HermesRuntime(RuntimeAdapter):
             )
             self._last_response = response
             return response
-
         except Exception as e:
             response = RuntimeResponse(
                 content="",
@@ -101,9 +102,51 @@ class HermesRuntime(RuntimeAdapter):
             self._last_response = response
             return response
 
-    def _parse_response(
-        self, stdout: str, stderr: str, returncode: int
-    ) -> RuntimeResponse:
+        if self._cancelled:
+            response = RuntimeResponse(
+                content="",
+                tool_calls=[],
+                finish_reason=FinishReason.CANCELLED,
+                metadata={"stderr": "Hermes call was cancelled"},
+            )
+            self._last_response = response
+            return response
+
+        response_text = stdout.strip() if stdout else ""
+        stderr_text = stderr.strip() if stderr else ""
+
+        parsed = self._parse_response(response_text, stderr_text, returncode)
+        self._last_response = parsed
+        return parsed
+
+    def cancel(self) -> None:
+        """Terminate the in-flight Hermes subprocess if one is running."""
+        self._cancelled = True
+        self._cancel_in_flight()
+
+    def _cancel_in_flight(self) -> None:
+        """Terminate the active subprocess if one is running."""
+        with self._process_lock:
+            process = self._active_process
+            if process is None:
+                return
+            self._active_process = None
+
+        try:
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        pass
+        except Exception:
+            pass
+
+    def _parse_response(self, stdout: str, stderr: str, returncode: int) -> RuntimeResponse:
         """
         Parse the raw Hermes CLI output into a RuntimeResponse.
 
@@ -113,7 +156,7 @@ class HermesRuntime(RuntimeAdapter):
         - COMPLETE marker indicating the model is done
         """
         content = stdout
-        tool_calls: List[ToolCall] = []
+        tool_calls: list[ToolCall] = []
 
         for match in TOOL_CALL_PATTERN.finditer(stdout):
             tool_name = match.group(1)
@@ -173,19 +216,15 @@ class HermesRuntime(RuntimeAdapter):
             "tool_calls": False,
             "external_tool_execution": False,
             "streaming": False,
-            "cancellation": False,
+            "cancellation": True,
             "adapter": "hermes",
             "model": self.model,
             "provider": self.provider,
             "timeout": self.timeout,
         }
 
-    def cancel(self) -> None:
-        """Cancellation is handled by subprocess timeout; no persistent process to kill."""
-        pass
-
     @property
-    def default_model(self) -> Optional[str]:
+    def default_model(self) -> str | None:
         return self.model
 
     # Backward-compatibility helpers
@@ -199,11 +238,11 @@ class HermesRuntime(RuntimeAdapter):
             return self._last_response.is_complete
         return False
 
-    def get_pending_tool_calls(self) -> List[ToolCall]:
+    def get_pending_tool_calls(self) -> list[ToolCall]:
         if self._last_response:
             return self._last_response.tool_calls
         return []
 
 
-def create_hermes_runtime(model: Optional[str] = None, provider: Optional[str] = None) -> HermesRuntime:
+def create_hermes_runtime(model: str | None = None, provider: str | None = None) -> HermesRuntime:
     return HermesRuntime(model=model, provider=provider)

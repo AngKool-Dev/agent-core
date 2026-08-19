@@ -1,6 +1,3 @@
-import re
-from typing import Optional
-
 from .models import Skill
 
 
@@ -21,7 +18,7 @@ class SkillLoader:
         self._loaded_skills[skill.name] = content
         return content
 
-    def get_loaded(self, name: str) -> Optional[str]:
+    def get_loaded(self, name: str) -> str | None:
         return self._loaded_skills.get(name)
 
     def is_loaded(self, name: str) -> bool:

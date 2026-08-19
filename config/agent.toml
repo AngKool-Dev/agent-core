@@ -5,7 +5,7 @@ default_runtime = "hermes"
 primary = "~/.agentcore/skills"
 
 [memory]
-backend = "db_obsidian"
+backend = "in_memory"
 db_path = "~/.agentcore/memory.db"
 
 [project_discovery]

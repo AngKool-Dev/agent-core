@@ -1,8 +1,7 @@
-import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
 
 
 @dataclass
@@ -24,10 +23,10 @@ class CheckResult:
 @dataclass
 class VerificationReport:
     overall_passed: bool
-    format_check: Optional[CheckResult] = None
-    build_check: Optional[CheckResult] = None
-    test_results: Optional[CheckResult] = None
-    git_diff_check: Optional[CheckResult] = None
+    format_check: CheckResult | None = None
+    build_check: CheckResult | None = None
+    test_results: CheckResult | None = None
+    git_diff_check: CheckResult | None = None
     failures: list[str] = None
 
     def __post_init__(self):
@@ -59,14 +58,16 @@ class Verifier:
     def _detect_project_type(self) -> str:
         if (self.project_path / "Cargo.toml").exists():
             return "rust"
-        elif (self.project_path / "pyproject.toml").exists() or (self.project_path / "setup.py").exists():
+        elif (self.project_path / "pyproject.toml").exists() or (
+            self.project_path / "setup.py"
+        ).exists():
             return "python"
         elif (self.project_path / "package.json").exists():
             return "javascript"
         else:
             return "unknown"
 
-    def run_format_check(self, changed_files: Optional[List[str]] = None) -> CheckResult:
+    def run_format_check(self, changed_files: list[str] | None = None) -> CheckResult:
         if self.project_type == "rust":
             return self._run_rust_fmt(changed_files=changed_files)
         elif self.project_type == "python":
@@ -75,7 +76,7 @@ class Verifier:
             return self._run_js_fmt(changed_files=changed_files)
         return CheckResult(name="format", passed=True, output="No format check applicable")
 
-    def _run_rust_fmt(self, changed_files: Optional[List[str]] = None) -> CheckResult:
+    def _run_rust_fmt(self, changed_files: list[str] | None = None) -> CheckResult:
         cmd = ["cargo", "fmt", "--check"]
         result = self._shell(cmd)
         return CheckResult(
@@ -85,7 +86,7 @@ class Verifier:
             error=result["stderr"],
         )
 
-    def _run_python_fmt(self, changed_files: Optional[List[str]] = None) -> CheckResult:
+    def _run_python_fmt(self, changed_files: list[str] | None = None) -> CheckResult:
         cmd = ["ruff", "format", "--check"]
         if changed_files:
             cmd.extend(changed_files)
@@ -97,7 +98,7 @@ class Verifier:
             error=result["stderr"],
         )
 
-    def _run_js_fmt(self, changed_files: Optional[List[str]] = None) -> CheckResult:
+    def _run_js_fmt(self, changed_files: list[str] | None = None) -> CheckResult:
         cmd = ["npx", "prettier", "--check"]
         if changed_files:
             cmd.extend(changed_files)
@@ -133,10 +134,9 @@ class Verifier:
 
     def _run_python_check(self) -> CheckResult:
         try:
-            result = self._shell([
-                "python", "-c",
-                "import py_compile; py_compile.compile('.', doraise=True)"
-            ])
+            result = self._shell(
+                ["python", "-c", "import py_compile; py_compile.compile('.', doraise=True)"]
+            )
             return CheckResult(
                 name="python_check",
                 passed=result["success"],
@@ -210,7 +210,13 @@ class Verifier:
             error=result["stderr"],
         )
 
-    def verify_all(self, run_tests: bool = True, run_format: bool = True, run_build: bool = True, changed_files: Optional[List[str]] = None) -> VerificationReport:
+    def verify_all(
+        self,
+        run_tests: bool = True,
+        run_format: bool = True,
+        run_build: bool = True,
+        changed_files: list[str] | None = None,
+    ) -> VerificationReport:
         format_check = CheckResult(name="format", passed=True, output="Skipped")
         build_check = CheckResult(name="build", passed=True, output="Skipped")
         test_results = CheckResult(name="tests", passed=True, output="Skipped")
@@ -257,7 +263,9 @@ class Verifier:
             return self.FAILURE_STATUS_CURRENT_CHANGE
         return self.FAILURE_STATUS_UNKNOWN
 
-    def _shell(self, cmd: str | list[str], cwd: str | Path | None = None, timeout: int = 60) -> dict[str, Any]:
+    def _shell(
+        self, cmd: str | list[str], cwd: str | Path | None = None, timeout: int = 60
+    ) -> dict[str, Any]:
         work_dir = Path(cwd) if cwd else self.project_path
 
         if isinstance(cmd, str):

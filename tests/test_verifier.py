@@ -1,22 +1,20 @@
-import pytest
-from pathlib import Path
-from agentcore.verifier import Verifier, VerificationReport, CheckResult
+from agentcore.verifier import CheckResult, VerificationReport, Verifier
 
 
 class TestCheckResult:
     def test_check_result_to_dict(self):
         result = CheckResult(name="test", passed=True, output="ok")
         data = result.to_dict()
-        
+
         assert data["name"] == "test"
-        assert data["passed"] == True
+        assert data["passed"]
         assert data["output"] == "ok"
 
     def test_check_result_with_error(self):
         result = CheckResult(name="test", passed=False, output="", error="Failed")
         data = result.to_dict()
-        
-        assert data["passed"] == False
+
+        assert not data["passed"]
         assert data["error"] == "Failed"
 
 
@@ -27,8 +25,8 @@ class TestVerificationReport:
             format_check=CheckResult(name="fmt", passed=True, output=""),
             build_check=CheckResult(name="build", passed=True, output=""),
         )
-        
-        assert report.overall_passed == True
+
+        assert report.overall_passed
         assert len(report.failures) == 0
 
     def test_report_with_failures(self):
@@ -36,14 +34,14 @@ class TestVerificationReport:
             overall_passed=False,
             failures=["Format check failed"],
         )
-        
-        assert report.overall_passed == False
+
+        assert not report.overall_passed
         assert "Format check failed" in report.failures
 
     def test_to_dict(self):
         report = VerificationReport(overall_passed=True)
         data = report.to_dict()
-        
+
         assert "overall_passed" in data
         assert "failures" in data
 
@@ -51,19 +49,19 @@ class TestVerificationReport:
 class TestVerifier:
     def test_detect_project_type_rust(self, tmp_path):
         (tmp_path / "Cargo.toml").write_text("[package]\n")
-        
+
         verifier = Verifier(tmp_path)
         assert verifier.project_type == "rust"
 
     def test_detect_project_type_python(self, tmp_path):
         (tmp_path / "pyproject.toml").write_text("[project]\n")
-        
+
         verifier = Verifier(tmp_path)
         assert verifier.project_type == "python"
 
     def test_detect_project_type_js(self, tmp_path):
         (tmp_path / "package.json").write_text("{}")
-        
+
         verifier = Verifier(tmp_path)
         assert verifier.project_type == "javascript"
 
@@ -73,10 +71,10 @@ class TestVerifier:
 
     def test_verify_all_skips_for_unknown(self, tmp_path):
         verifier = Verifier(tmp_path)
-        
+
         report = verifier.verify_all(run_tests=False, run_format=False, run_build=False)
-        
-        assert report.overall_passed == True
+
+        assert report.overall_passed
 
 
 class TestVerifierFailureClassification:

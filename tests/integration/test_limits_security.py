@@ -3,7 +3,7 @@ Production limits and security validation tests for AgentCore.
 """
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 
@@ -12,15 +12,13 @@ from agentcore import (
     AgentConfig,
     AgentCore,
     AgentCoreLimits,
-    create_agent,
     EventBus,
-    EventType,
 )
 from agentcore.errors import ConfigurationError
 from agentcore.memory import MemoryBackend, MemoryManager
 from agentcore.persistence import (
-    InMemoryPersistenceBackend,
     InMemoryEventStore,
+    InMemoryPersistenceBackend,
     TaskPersistenceManager,
 )
 from agentcore.task import Task
@@ -29,12 +27,16 @@ from tests.integration.runtimes import DeterministicRuntime, bug_fix_lifecycle
 
 class DeterministicMemoryBackend(MemoryBackend):
     def __init__(self):
-        self._records: Dict[str, Dict[str, Any]] = {}
+        self._records: dict[str, dict[str, Any]] = {}
 
-    def search(self, query: str, project: Optional[str] = None, limit: int = 20) -> List[Dict[str, Any]]:
+    def search(
+        self, query: str, project: str | None = None, limit: int = 20
+    ) -> list[dict[str, Any]]:
         return []
 
-    def store(self, type: str, content: str, project: Optional[str] = None, importance: float = 0.5) -> Dict[str, Any]:
+    def store(
+        self, type: str, content: str, project: str | None = None, importance: float = 0.5
+    ) -> dict[str, Any]:
         record = {
             "id": f"mem-{len(self._records)}",
             "type": type,
@@ -46,13 +48,15 @@ class DeterministicMemoryBackend(MemoryBackend):
         self._records[record["id"]] = record
         return record
 
-    def update(self, memory_id: str, content: str) -> Dict[str, Any]:
+    def update(self, memory_id: str, content: str) -> dict[str, Any]:
         if memory_id in self._records:
             self._records[memory_id]["content"] = content
             return dict(self._records[memory_id])
         return {}
 
-    def list(self, project: Optional[str] = None, type: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    def list(
+        self, project: str | None = None, type: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
         return list(self._records.values())[:limit]
 
 
@@ -65,7 +69,16 @@ class TestLimits:
             project_path=tmp_path,
         )
         for i in range(3):
-            task = type('Task', (), {'task_id': f't{i}', 'user_request': 'test', 'project': 'proj', 'current_state': None})()
+            task = type(
+                "Task",
+                (),
+                {
+                    "task_id": f"t{i}",
+                    "user_request": "test",
+                    "project": "proj",
+                    "current_state": None,
+                },
+            )()
             core.registry.register(task)
         active = core.registry.list_active()
         assert len(active) == 3
@@ -96,7 +109,9 @@ class TestSecurity:
         store = InMemoryEventStore()
         persistence = TaskPersistenceManager(backend=backend, event_store=store)
 
-        task = Task(task_id="sensitive", user_request="test with password=secret123", project="proj")
+        task = Task(
+            task_id="sensitive", user_request="test with password=secret123", project="proj"
+        )
         persistence.checkpoint(task)
 
         loaded = backend.load_task("sensitive")

@@ -1,11 +1,11 @@
-import os
 import re
 import subprocess
+import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeoutError
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 from agentcore.runtimes.base import ToolCall, ToolResult
 
@@ -15,7 +15,7 @@ class FileReadResult:
     path: str
     content: str
     exists: bool
-    error: Optional[str] = None
+    error: str | None = None
 
 
 @dataclass
@@ -23,7 +23,7 @@ class FileWriteResult:
     path: str
     bytes_written: int
     success: bool
-    error: Optional[str] = None
+    error: str | None = None
 
 
 @dataclass
@@ -42,11 +42,13 @@ class ToolManager:
     implementing their own copies.
     """
 
-    def __init__(self, project_path: Optional[str | Path] = None, tool_timeout: Optional[int] = None):
+    def __init__(self, project_path: str | Path | None = None, tool_timeout: int | None = None):
         self.project_path = Path(project_path) if project_path else Path.cwd()
-        self._last_diff: Optional[str] = None
-        self._custom_tools: Dict[str, callable] = {}
+        self._last_diff: str | None = None
+        self._custom_tools: dict[str, callable] = {}
         self._tool_timeout = tool_timeout
+        self._active_process: subprocess.Popen | None = None
+        self._process_lock = threading.Lock()
         self._register_default_tools()
 
     # ------------------------------------------------------------------
@@ -68,24 +70,26 @@ class ToolManager:
 
     def _register_default_tools(self) -> None:
         """Register the built-in tool handlers."""
-        self._custom_tools.update({
-            "read_file": self._tool_read_file,
-            "write_file": self._tool_write_file,
-            "search_files": self._tool_search_files,
-            "run_command": self._tool_run_command,
-            "git_status": self._tool_git_status,
-            "git_diff": self._tool_git_diff,
-            "git_diff_check": self._tool_git_diff_check,
-            "run_tests": self._tool_run_tests,
-            "check_format": self._tool_check_format,
-            "check_build": self._tool_check_build,
-        })
+        self._custom_tools.update(
+            {
+                "read_file": self._tool_read_file,
+                "write_file": self._tool_write_file,
+                "search_files": self._tool_search_files,
+                "run_command": self._tool_run_command,
+                "git_status": self._tool_git_status,
+                "git_diff": self._tool_git_diff,
+                "git_diff_check": self._tool_git_diff_check,
+                "run_tests": self._tool_run_tests,
+                "check_format": self._tool_check_format,
+                "check_build": self._tool_check_build,
+            }
+        )
 
     # ------------------------------------------------------------------
     # Unified dispatch: Agent calls this for every ToolCall from the runtime
     # ------------------------------------------------------------------
 
-    def execute(self, tool_call: ToolCall, cwd: Optional[Path] = None) -> ToolResult:
+    def execute(self, tool_call: ToolCall, cwd: Path | None = None) -> ToolResult:
         """
         Dispatch a ToolCall to the appropriate handler and return a ToolResult.
 
@@ -115,6 +119,7 @@ class ToolManager:
                     try:
                         return future.result(timeout=self._tool_timeout)
                     except FutureTimeoutError:
+                        self._cancel_in_flight()
                         duration = time.time() - start
                         return ToolResult(
                             success=False,
@@ -135,6 +140,37 @@ class ToolManager:
                 exit_code=1,
                 duration=time.time() - start,
             )
+
+    def cancel_in_flight(self) -> bool:
+        """Request cancellation of any in-flight subprocess tool execution.
+
+        Returns True if a subprocess was terminated, False if none was active.
+        """
+        return self._cancel_in_flight()
+
+    def _cancel_in_flight(self) -> bool:
+        """Terminate the active subprocess if one is running."""
+        with self._process_lock:
+            process = self._active_process
+            if process is None:
+                return False
+            self._active_process = None
+
+        try:
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        pass
+                return True
+        except Exception:
+            pass
+        return False
 
     def _last_diff_to_result(self, tool_name: str, output: str, start: float) -> ToolResult:
         return ToolResult(
@@ -262,9 +298,13 @@ class ToolManager:
                 success=True,
             )
         except Exception as e:
-            return FileWriteResult(path=str(full_path), bytes_written=0, success=False, error=str(e))
+            return FileWriteResult(
+                path=str(full_path), bytes_written=0, success=False, error=str(e)
+            )
 
-    def search_files(self, query: str, path: Optional[str] = None, include: Optional[str] = None) -> List[SearchResult]:
+    def search_files(
+        self, query: str, path: str | None = None, include: str | None = None
+    ) -> list[SearchResult]:
         search_path = self.project_path if path is None else Path(path)
         if not search_path.exists():
             search_path = self.project_path
@@ -274,7 +314,7 @@ class ToolManager:
 
         for file_path in search_path.rglob("*"):
             if file_path.is_file():
-                if include and not file_path.suffix.lstrip(".") in include:
+                if include and file_path.suffix.lstrip(".") not in include:
                     continue
                 if ".git" in str(file_path) or "node_modules" in str(file_path):
                     continue
@@ -283,11 +323,13 @@ class ToolManager:
                     content = file_path.read_text(encoding="utf-8", errors="ignore")
                     for i, line in enumerate(content.split("\n"), 1):
                         if pattern.search(line):
-                            results.append(SearchResult(
-                                path=str(file_path.relative_to(self.project_path)),
-                                line=i,
-                                content=line[:200],
-                            ))
+                            results.append(
+                                SearchResult(
+                                    path=str(file_path.relative_to(self.project_path)),
+                                    line=i,
+                                    content=line[:200],
+                                )
+                            )
                 except Exception:
                     continue
 
@@ -300,28 +342,47 @@ class ToolManager:
     # Shell
     # ------------------------------------------------------------------
 
-    def shell(self, command: str, cwd: Optional[str | Path] = None, timeout: int = 30) -> ToolResult:
+    def shell(self, command: str, cwd: str | Path | None = None, timeout: int = 30) -> ToolResult:
+        """Execute a shell command string.
+
+        Contract: ``command`` is a shell-interpreted command string.  The tool
+        intentionally uses ``shell=True`` because legitimate agent commands
+        routinely rely on shell features (globs, pipes, redirects, env-var
+        expansion, and shell builtins).  Callers should treat ``command`` as
+        untrusted model output and rely on the surrounding AgentCore security
+        boundary rather than trying to sanitize individual command strings here.
+        """
         start = time.time()
         work_dir = Path(cwd) if cwd else self.project_path
 
         try:
-            result = subprocess.run(
+            process = subprocess.Popen(
                 command,
                 shell=True,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
                 cwd=work_dir,
-                timeout=timeout,
             )
+            with self._process_lock:
+                self._active_process = process
+            try:
+                stdout, stderr = process.communicate(timeout=timeout)
+                returncode = process.returncode
+            finally:
+                with self._process_lock:
+                    if self._active_process is process:
+                        self._active_process = None
             return ToolResult(
-                success=result.returncode == 0,
+                success=returncode == 0,
                 tool="shell",
-                output=result.stdout,
-                error=result.stderr,
-                exit_code=result.returncode,
+                output=stdout,
+                error=stderr,
+                exit_code=returncode,
                 duration=time.time() - start,
             )
         except subprocess.TimeoutExpired:
+            self._cancel_in_flight()
             return ToolResult(
                 success=False,
                 tool="shell",
@@ -331,6 +392,7 @@ class ToolManager:
                 duration=time.time() - start,
             )
         except Exception as e:
+            self._cancel_in_flight()
             return ToolResult(
                 success=False,
                 tool="shell",
@@ -354,7 +416,7 @@ class ToolManager:
         self._last_diff = result.output if result.success else ""
         return self._last_diff
 
-    def git_diff_check(self) -> List[str]:
+    def git_diff_check(self) -> list[str]:
         result = self.shell("git diff --check")
         errors = []
         if result.output:
@@ -363,7 +425,7 @@ class ToolManager:
             errors.extend(result.error.strip().split("\n"))
         return [e for e in errors if e]
 
-    def get_git_changed_files(self) -> List[str]:
+    def get_git_changed_files(self) -> list[str]:
         result = self.shell("git diff --name-only")
         return [f for f in result.output.strip().split("\n") if f]
 
@@ -371,11 +433,13 @@ class ToolManager:
     # Test / build / format tools
     # ------------------------------------------------------------------
 
-    def run_tests(self, test_pattern: Optional[str] = None, verbose: bool = False) -> ToolResult:
+    def run_tests(self, test_pattern: str | None = None, verbose: bool = False) -> ToolResult:
         cmd = ""
         if (self.project_path / "Cargo.toml").exists():
             cmd = "cargo test"
-        elif (self.project_path / "pyproject.toml").exists() or (self.project_path / "setup.py").exists():
+        elif (self.project_path / "pyproject.toml").exists() or (
+            self.project_path / "setup.py"
+        ).exists():
             cmd = "pytest"
         elif (self.project_path / "package.json").exists():
             cmd = "npm test"
@@ -412,7 +476,14 @@ class ToolManager:
             check_cmd = "npx prettier --check '**/*.{js,ts,jsx,tsx,json,css,md}'"
 
         if not check_cmd:
-            return ToolResult(success=True, tool="check_format", output="", error="No format checker found", exit_code=0, duration=0)
+            return ToolResult(
+                success=True,
+                tool="check_format",
+                output="",
+                error="No format checker found",
+                exit_code=0,
+                duration=0,
+            )
 
         return self.shell(check_cmd)
 
@@ -426,10 +497,12 @@ class ToolManager:
             build_cmd = "npm run build"
 
         if not build_cmd:
-            return ToolResult(success=True, tool="check_build", output="", error="", exit_code=0, duration=0)
+            return ToolResult(
+                success=True, tool="check_build", output="", error="", exit_code=0, duration=0
+            )
 
         return self.shell(build_cmd)
 
 
-def create_tool_manager(project_path: Optional[str | Path] = None) -> ToolManager:
+def create_tool_manager(project_path: str | Path | None = None) -> ToolManager:
     return ToolManager(project_path)

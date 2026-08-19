@@ -10,26 +10,21 @@ Tests cover:
 """
 
 import os
-import tempfile
 import textwrap
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
+from agentcore import Agent, create_agent
 from agentcore.config import (
+    SKILLS_ENV_VAR,
     AgentCoreConfig,
     ConfigLoader,
-    SkillConfig,
-    MemoryConfig,
-    ToolLimits,
-    VerificationConfig,
+    resolve_skill_paths,
     user_config_dir,
     user_data_dir,
-    resolve_skill_paths,
-    SKILLS_ENV_VAR,
 )
-from agentcore import Agent, AgentConfig, create_agent
 
 
 class TestConfigLoading:
@@ -37,7 +32,8 @@ class TestConfigLoading:
 
     def test_load_valid_toml(self, tmp_path):
         config_file = tmp_path / "agentcore.toml"
-        config_file.write_text(textwrap.dedent("""
+        config_file.write_text(
+            textwrap.dedent("""
             [agent]
             default_runtime = "hermes"
             model = "claude-sonnet-4"
@@ -45,7 +41,9 @@ class TestConfigLoading:
             [tool_limits]
             max_iterations = 20
             max_tool_calls = 15
-        """), encoding="utf-8")
+        """),
+            encoding="utf-8",
+        )
 
         config = ConfigLoader.load(config_file)
         assert config.default_runtime == "hermes"
@@ -68,12 +66,15 @@ class TestConfigLoading:
     def test_discover_explicit_config_path(self, tmp_path):
         """Config passed explicitly takes priority."""
         config_file = tmp_path / "agentcore.toml"
-        config_file.write_text(textwrap.dedent("""
+        config_file.write_text(
+            textwrap.dedent("""
             [agent]
             default_runtime = "kilo"
             [tool_limits]
             max_iterations = 5
-        """), encoding="utf-8")
+        """),
+            encoding="utf-8",
+        )
 
         config = ConfigLoader.load(config_file)
         assert config.default_runtime == "kilo"
@@ -82,10 +83,13 @@ class TestConfigLoading:
     def test_discover_project_config(self, tmp_path):
         """Project-local config is discovered automatically."""
         config_file = tmp_path / "agentcore.toml"
-        config_file.write_text(textwrap.dedent("""
+        config_file.write_text(
+            textwrap.dedent("""
             [agent]
             default_runtime = "opencode"
-        """), encoding="utf-8")
+        """),
+            encoding="utf-8",
+        )
 
         config = ConfigLoader.discover(project_path=tmp_path)
         assert config.default_runtime == "opencode"
@@ -95,10 +99,13 @@ class TestConfigLoading:
         config_dir = tmp_path / "config"
         config_dir.mkdir()
         config_file = config_dir / "agentcore.toml"
-        config_file.write_text(textwrap.dedent("""
+        config_file.write_text(
+            textwrap.dedent("""
             [agent]
             default_runtime = "opencode"
-        """), encoding="utf-8")
+        """),
+            encoding="utf-8",
+        )
 
         config = ConfigLoader.discover(project_path=tmp_path)
         assert config.default_runtime == "opencode"
@@ -165,10 +172,13 @@ class TestAgentConfigMapping:
     def test_max_tool_calls_mapping_from_toml(self, tmp_path):
         """The TOML uses max_tool_calls — verify it maps correctly."""
         config_file = tmp_path / "agentcore.toml"
-        config_file.write_text(textwrap.dedent("""
+        config_file.write_text(
+            textwrap.dedent("""
             [tool_limits]
             max_tool_calls = 7
-        """), encoding="utf-8")
+        """),
+            encoding="utf-8",
+        )
 
         config = ConfigLoader.load(config_file)
         assert config.max_tool_calls == 7
@@ -178,10 +188,13 @@ class TestAgentConfigMapping:
     def test_max_tools_per_task_legacy_alias(self, tmp_path):
         """max_tools_per_task in TOML should map to max_tool_calls."""
         config_file = tmp_path / "agentcore.toml"
-        config_file.write_text(textwrap.dedent("""
+        config_file.write_text(
+            textwrap.dedent("""
             [tool_limits]
             max_tools_per_task = 12
-        """), encoding="utf-8")
+        """),
+            encoding="utf-8",
+        )
 
         config = ConfigLoader.load(config_file)
         assert config.max_tool_calls == 12
@@ -189,11 +202,14 @@ class TestAgentConfigMapping:
     def test_memory_db_path_from_toml(self, tmp_path):
         db_path = tmp_path / "memory.db"
         config_file = tmp_path / "agentcore.toml"
-        config_file.write_text(textwrap.dedent(f"""
+        config_file.write_text(
+            textwrap.dedent(f"""
             [memory]
             backend = "db_obsidian"
             db_path = "{db_path.as_posix()}"
-        """), encoding="utf-8")
+        """),
+            encoding="utf-8",
+        )
 
         config = ConfigLoader.load(config_file)
         assert config.memory_backend == "db_obsidian"
@@ -311,7 +327,6 @@ class TestCrossPlatformPaths:
 
     def test_user_config_dir_is_portable(self):
         """user_config_dir should use Path.home(), not hardcoded paths."""
-        import platform
         path = user_config_dir()
         assert isinstance(path, Path)
         # Should not contain /home/era
@@ -341,6 +356,7 @@ class TestCrossPlatformPaths:
     def test_default_skill_paths_no_hardcoded(self):
         """_default_skill_paths should not hardcode /home/era."""
         from agentcore.config import _default_skill_paths
+
         paths = _default_skill_paths()
         assert not any("/home/era" in p for p in paths)
 
@@ -350,24 +366,33 @@ class TestAgentWithConfig:
 
     def test_agent_uses_config_for_max_tool_calls(self, tmp_path):
         """AgentConfig.max_tool_calls from TOML should reach the Agent."""
-        from tests.test_mock_runtime import MockRuntime
         from agentcore.memory import MemoryBackend, MemoryManager
+        from tests.test_mock_runtime import MockRuntime
 
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return [m for m in self._store if query.lower() in m.get("content", "").lower()]
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 for m in self._store:
                     if m["id"] == memory_id:
                         m["content"] = content
                         return m
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -393,41 +418,53 @@ class TestAgentWithConfig:
     def test_agent_no_hardcoded_skill_paths(self):
         """Agent source should not contain /home/era paths."""
         import inspect
+
         source = inspect.getsource(Agent)
-        assert "/home/era" not in source, \
-            "Agent source must not contain hardcoded /home/era paths"
+        assert "/home/era" not in source, "Agent source must not contain hardcoded /home/era paths"
 
     def test_create_agent_loads_config(self, tmp_path):
         """create_agent should discover and load config."""
-        from tests.test_mock_runtime import MockRuntime
         from agentcore.memory import MemoryBackend, MemoryManager
+        from tests.test_mock_runtime import MockRuntime
 
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return [m for m in self._store if query.lower() in m.get("content", "").lower()]
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 for m in self._store:
                     if m["id"] == memory_id:
                         m["content"] = content
                         return m
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
         # Create a project-level config
         config_file = tmp_path / "agentcore.toml"
-        config_file.write_text(textwrap.dedent("""
+        config_file.write_text(
+            textwrap.dedent("""
             [agent]
             model = "custom-model"
             [tool_limits]
             max_iterations = 15
-        """), encoding="utf-8")
+        """),
+            encoding="utf-8",
+        )
 
         runtime = MockRuntime(responses=["Done"])
         memory = MemoryManager(InMemoryBackend())
@@ -448,22 +485,27 @@ class TestCLIconfigIntegration:
 
     def test_cli_parse_config_arg(self):
         from agentcore.cli.main import parse_args
+
         args = parse_args(["--config", "/custom/config.toml", "do a thing"])
         assert args.config == "/custom/config.toml"
         assert args.request == "do a thing"
 
     def test_cli_config_arg_optional(self):
         from agentcore.cli.main import parse_args
+
         args = parse_args(["do a thing"])
         assert args.config is None
 
     def test_cli_uses_config_for_limits(self, tmp_path):
         """CLI should build AgentConfig from loaded config."""
         config_file = tmp_path / "agentcore.toml"
-        config_file.write_text(textwrap.dedent("""
+        config_file.write_text(
+            textwrap.dedent("""
             [tool_limits]
             max_iterations = 42
-        """), encoding="utf-8")
+        """),
+            encoding="utf-8",
+        )
 
         core_config = ConfigLoader.load(config_file)
         agent_config = core_config.to_agent_config()

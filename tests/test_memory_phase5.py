@@ -15,22 +15,22 @@ Tests cover:
 Does NOT require DB-Obsidian to be installed.
 """
 
-import pytest
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any
 
+import pytest
+
+from agentcore.events import EventBus
 from agentcore.memory import (
+    InMemoryBackend,
     MemoryBackend,
     MemoryManager,
-    InMemoryBackend,
     MemoryRecord,
     MemoryType,
 )
-from agentcore.events import EventBus, EventType, AgentEvent
-
 
 # ──────────────────────────── Test Backend ────────────────────────────
+
 
 class RecordingBackend(MemoryBackend):
     """Backend that records all operations for test inspection."""
@@ -56,7 +56,9 @@ class RecordingBackend(MemoryBackend):
         return sorted(results, key=lambda x: x.get("importance", 0), reverse=True)[:limit]
 
     def store(self, type, content, project=None, importance=0.5):
-        self.store_calls.append({"type": type, "content": content, "project": project, "importance": importance})
+        self.store_calls.append(
+            {"type": type, "content": content, "project": project, "importance": importance}
+        )
         if self.fail_store:
             raise RuntimeError("Backend store failure")
         record = {
@@ -65,7 +67,7 @@ class RecordingBackend(MemoryBackend):
             "content": content,
             "project": project,
             "importance": importance,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
         }
         self._records[record["id"]] = record
         return record
@@ -108,6 +110,7 @@ class RecordingBackend(MemoryBackend):
 
 # ──────────────────────── MemoryBackend Tests ─────────────────────────
 
+
 class TestMemoryBackendInterface:
     """Test the abstract MemoryBackend interface."""
 
@@ -117,22 +120,26 @@ class TestMemoryBackendInterface:
 
     def test_backend_requires_search(self):
         """A backend must implement all abstract methods to be instantiable."""
+
         class Incomplete(MemoryBackend):
             def search(self, query, project=None, limit=20):
                 return []
+
             # Missing: store, update, list — should fail
+
         with pytest.raises(TypeError):
             Incomplete()
 
     def test_backend_optional_methods_default(self):
         """Optional methods (delete, clear, close) have safe defaults."""
         backend = RecordingBackend()
-        assert backend.delete("nonexistent") == False
+        assert not backend.delete("nonexistent")
         assert backend.clear() == 0
         backend.close()  # should not raise
 
 
 # ──────────────────────── MemoryRecord Tests ──────────────────────────
+
 
 class TestMemoryRecord:
     """Test the MemoryRecord dataclass."""
@@ -181,11 +188,22 @@ class TestMemoryRecord:
 
 # ──────────────────────── MemoryType Tests ────────────────────────────
 
+
 class TestMemoryType:
     """Test the MemoryType enum."""
 
     def test_all_types_exist(self):
-        expected = {"task", "project", "conversation", "decision", "fact", "error", "learning"}
+        expected = {
+            "task",
+            "project",
+            "conversation",
+            "decision",
+            "fact",
+            "error",
+            "learning",
+            "preference",
+            "outcome",
+        }
         actual = {t.value for t in MemoryType}
         assert expected == actual
 
@@ -205,6 +223,7 @@ class TestMemoryType:
 
 # ──────────────────────── MemoryManager Tests ─────────────────────────
 
+
 class TestMemoryManagerStore:
     """Test MemoryManager.store and convenience methods."""
 
@@ -221,7 +240,7 @@ class TestMemoryManagerStore:
         mgr = MemoryManager(backend)
         mgr.store("task", "Fixed the bug", project="test-project")
         assert len(backend._records) == 1
-        assert backend._records[list(backend._records.keys())[0]]["project"] == "test-project"
+        assert backend._records[next(iter(backend._records.keys()))]["project"] == "test-project"
 
     def test_store_decision(self):
         backend = RecordingBackend()
@@ -430,6 +449,7 @@ class TestInMemoryBackend:
 
 # ──────────────────────── Security Tests ──────────────────────────────
 
+
 class TestSecurityFiltering:
     """Test that memory storage filters sensitive data."""
 
@@ -459,6 +479,7 @@ class TestSecurityFiltering:
 
 
 # ──────────────────────── Memory Events Tests ─────────────────────────
+
 
 class TestMemoryEvents:
     """Test memory-related events via EventBus."""
@@ -536,6 +557,7 @@ class TestMemoryEvents:
         bus = EventBus()
 
         import json
+
         mgr.set_event_bus(bus)
         events = []
         bus.subscribe(lambda e: events.append(e))
@@ -550,6 +572,7 @@ class TestMemoryEvents:
 
 # ──────────────────────── Agent Integration Tests ─────────────────────
 
+
 class TestAgentMemoryIntegration:
     """Test memory integration with the Agent lifecycle."""
 
@@ -558,19 +581,23 @@ class TestAgentMemoryIntegration:
 
     def test_memory_recalled_before_planning(self, tmp_path):
         """Memory is recalled and used before the plan is generated."""
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.runtimes.base import RuntimeResponse, FinishReason, ToolCall
         from agentcore.agent import Agent, AgentConfig
         from agentcore.config import AgentCoreConfig
+        from agentcore.runtimes.base import FinishReason, RuntimeResponse
+        from tests.test_mock_runtime import MockRuntime
 
         backend = self._make_in_memory_backend()
         # Pre-populate with relevant memory
         backend.store("fact", "Use cargo for building Rust projects", project=str(tmp_path))
 
-        runtime = MockRuntime(responses=[RuntimeResponse(
-            content="Done",
-            finish_reason=FinishReason.STOP,
-        )])
+        runtime = MockRuntime(
+            responses=[
+                RuntimeResponse(
+                    content="Done",
+                    finish_reason=FinishReason.STOP,
+                )
+            ]
+        )
         memory = MemoryManager(backend)
         bus = EventBus()
 
@@ -590,37 +617,41 @@ class TestAgentMemoryIntegration:
 
     def test_memory_included_in_context(self, tmp_path):
         """Memory results are included in the model-facing context."""
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.runtimes.base import RuntimeResponse, FinishReason
-        from agentcore.agent import Agent, AgentConfig, ContextBuilder
-        from agentcore.config import AgentCoreConfig
+        from agentcore.agent import ContextBuilder
 
         backend = self._make_in_memory_backend()
-        memory = MemoryManager(backend)
-        bus = EventBus()
+        MemoryManager(backend)
+        EventBus()
 
         from agentcore.task import Task
+
         task = Task(user_request="Test", project=str(tmp_path))
         task.project_context = {"language": "python"}
         task.selected_skills = []
 
-        memory_results = [{"id": "m1", "content": "Relevant fact", "type": "fact", "project": str(tmp_path)}]
+        memory_results = [
+            {"id": "m1", "content": "Relevant fact", "type": "fact", "project": str(tmp_path)}
+        ]
         context = ContextBuilder.build(task, [], memory_results, [])
         assert "memory_context" in context
         assert context["memory_context"]["count"] == 1
 
     def test_task_result_stored_after_completion(self, tmp_path):
         """Useful memory is stored after task completion."""
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.runtimes.base import RuntimeResponse, FinishReason
         from agentcore.agent import Agent, AgentConfig
         from agentcore.config import AgentCoreConfig
+        from agentcore.runtimes.base import FinishReason, RuntimeResponse
+        from tests.test_mock_runtime import MockRuntime
 
         backend = self._make_in_memory_backend()
-        runtime = MockRuntime(responses=[RuntimeResponse(
-            content="Done",
-            finish_reason=FinishReason.STOP,
-        )])
+        runtime = MockRuntime(
+            responses=[
+                RuntimeResponse(
+                    content="Done",
+                    finish_reason=FinishReason.STOP,
+                )
+            ]
+        )
         memory = MemoryManager(backend)
 
         # Set a project on the backend to track
@@ -646,16 +677,20 @@ class TestAgentMemoryIntegration:
 
     def test_memory_failure_does_not_crash_task(self, tmp_path):
         """If memory search fails, the task continues normally."""
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.runtimes.base import RuntimeResponse, FinishReason
         from agentcore.agent import Agent, AgentConfig
         from agentcore.config import AgentCoreConfig
+        from agentcore.runtimes.base import FinishReason, RuntimeResponse
+        from tests.test_mock_runtime import MockRuntime
 
         backend = RecordingBackend(fail_search=True)
-        runtime = MockRuntime(responses=[RuntimeResponse(
-            content="Done",
-            finish_reason=FinishReason.STOP,
-        )])
+        runtime = MockRuntime(
+            responses=[
+                RuntimeResponse(
+                    content="Done",
+                    finish_reason=FinishReason.STOP,
+                )
+            ]
+        )
         memory = MemoryManager(backend)
 
         agent = Agent(
@@ -672,16 +707,20 @@ class TestAgentMemoryIntegration:
 
     def test_memory_stored_with_correct_project(self, tmp_path):
         """Stored memory uses the task's project identifier."""
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.runtimes.base import RuntimeResponse, FinishReason
         from agentcore.agent import Agent, AgentConfig
         from agentcore.config import AgentCoreConfig
+        from agentcore.runtimes.base import FinishReason, RuntimeResponse
+        from tests.test_mock_runtime import MockRuntime
 
         backend = self._make_in_memory_backend()
-        runtime = MockRuntime(responses=[RuntimeResponse(
-            content="Done",
-            finish_reason=FinishReason.STOP,
-        )])
+        runtime = MockRuntime(
+            responses=[
+                RuntimeResponse(
+                    content="Done",
+                    finish_reason=FinishReason.STOP,
+                )
+            ]
+        )
         memory = MemoryManager(backend)
 
         agent = Agent(
@@ -700,16 +739,20 @@ class TestAgentMemoryIntegration:
 
     def test_memory_events_emitted_during_execution(self, tmp_path):
         """Memory events (recall/store) are emitted during agent execution."""
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.runtimes.base import RuntimeResponse, FinishReason
         from agentcore.agent import Agent, AgentConfig
         from agentcore.config import AgentCoreConfig
+        from agentcore.runtimes.base import FinishReason, RuntimeResponse
+        from tests.test_mock_runtime import MockRuntime
 
         backend = self._make_in_memory_backend()
-        runtime = MockRuntime(responses=[RuntimeResponse(
-            content="Done",
-            finish_reason=FinishReason.STOP,
-        )])
+        runtime = MockRuntime(
+            responses=[
+                RuntimeResponse(
+                    content="Done",
+                    finish_reason=FinishReason.STOP,
+                )
+            ]
+        )
         memory = MemoryManager(backend)
         bus = EventBus()
 
@@ -736,11 +779,13 @@ class TestAgentMemoryIntegration:
 
 # ──────────────────────── Context Architecture Tests ──────────────────
 
+
 class TestContextArchitecture:
     """Test the structured context representations."""
 
     def test_project_context_data(self, tmp_path):
         from agentcore.agent import ProjectContextData
+
         ctx = ProjectContextData(
             project_root=str(tmp_path),
             language="python",
@@ -754,13 +799,15 @@ class TestContextArchitecture:
 
     def test_project_context_git_truncation(self):
         from agentcore.agent import ProjectContextData
+
         ctx = ProjectContextData(git_diff="x" * 10000)
         d = ctx.to_dict()
         assert len(d["git"]["diff"]) <= 5000  # Truncated to 5000 chars
 
     def test_task_context_data(self):
         from agentcore.agent import TaskContextData
-        from agentcore.task import Task, TaskState
+        from agentcore.task import Task
+
         task = Task(user_request="Fix bug", project="proj")
         ctx = TaskContextData(
             user_request=task.user_request,
@@ -773,6 +820,7 @@ class TestContextArchitecture:
 
     def test_memory_context_data(self):
         from agentcore.agent import MemoryContextData
+
         results = [{"id": f"m{i}", "content": f"fact {i}", "type": "fact"} for i in range(20)]
         ctx = MemoryContextData(results=results, count=len(results))
         d = ctx.to_dict()
@@ -781,6 +829,7 @@ class TestContextArchitecture:
 
     def test_skill_context_data(self):
         from agentcore.agent import SkillContextData
+
         ctx = SkillContextData(
             selected=["bug-fix", "testing"],
             available=["bug-fix", "testing", "refactoring"],
@@ -792,6 +841,7 @@ class TestContextArchitecture:
 
     def test_runtime_context_data(self):
         from agentcore.agent import RuntimeContextData
+
         ctx = RuntimeContextData(runtime_name="hermes", model="claude-3")
         d = ctx.to_dict()
         assert d["runtime"] == "hermes"
@@ -860,13 +910,18 @@ class TestContextBuilderCombined:
 
 # ──────────────────────── DB-Obsidian Adapter Tests ───────────────────
 
+
 class TestDBObsidianAdapter:
     """Test the DB-Obsidian adapter conforms to MemoryBackend."""
 
     def test_adapter_exists(self):
         """The DB-Obsidian adapter should exist (if db_obsidian is installed)."""
         try:
-            from agentcore.adapters.memory_dbobsidian import DBObsidianBackend, create_memory_manager
+            from agentcore.adapters.memory_dbobsidian import (
+                DBObsidianBackend,
+                create_memory_manager,
+            )
+
             assert DBObsidianBackend is not None
             assert create_memory_manager is not None
         except ImportError:
@@ -900,11 +955,13 @@ class TestDBObsidianAdapter:
     def test_adapter_does_not_import_db_obsidian_at_module_level_in_memory(self):
         """agentcore.memory should not import db_obsidian."""
         import agentcore.memory as memory_module
+
         source = open(memory_module.__file__).read()
         assert "db_obsidian" not in source
 
 
 # ──────────────────────── Backward Compatibility Tests ───────────────
+
 
 class TestBackwardCompatibility:
     """Ensure backward compatibility with existing code."""
@@ -915,18 +972,27 @@ class TestBackwardCompatibility:
         class SimpleBackend(MemoryBackend):
             def __init__(self):
                 self.data = []
+
             def search(self, query, project=None, limit=20):
                 return [d for d in self.data if query in d.get("content", "")]
+
             def store(self, type, content, project=None, importance=0.5):
-                rec = {"id": str(len(self.data)), "type": type, "content": content, "project": project}
+                rec = {
+                    "id": str(len(self.data)),
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self.data.append(rec)
                 return rec
+
             def update(self, memory_id, content):
                 for d in self.data:
                     if d["id"] == memory_id:
                         d["content"] = content
                         return d
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self.data[:limit]
 

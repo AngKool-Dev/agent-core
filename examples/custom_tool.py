@@ -4,8 +4,9 @@ Custom tool registration example.
 Demonstrates how to add a custom tool to AgentCore's ToolManager.
 """
 
-from agentcore.tools import ToolManager, ToolResult
 from pathlib import Path
+
+from agentcore.tools import ToolManager, ToolResult
 
 
 def my_custom_tool(args: dict, work_dir: Path, start: float) -> ToolResult:
@@ -80,6 +81,7 @@ def main():
 
     # Execute the custom tool via the standard dispatch interface
     from agentcore.runtimes.base import ToolCall
+
     tool_call = ToolCall(tool="line_counter", arguments={"path": "README.md"})
     result = manager.execute(tool_call)
 

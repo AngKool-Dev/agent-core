@@ -2,24 +2,28 @@
 Tests for AgentCore task registry and locking (Phase 8).
 """
 
-import pytest
 from threading import Thread
 
-from agentcore.task_registry import (
-    TaskRegistry,
-    TaskRecord,
-    TaskRecordStatus,
-)
-from agentcore.task import Task, TaskState
-from agentcore.events import EventBus, EventType
+import pytest
+
 from agentcore.errors import (
     TaskAlreadyRunningError,
     TaskNotFoundError,
-    TaskLockError,
+)
+from agentcore.events import EventBus, EventType
+from agentcore.task import Task, TaskState
+from agentcore.task_registry import (
+    TaskRecordStatus,
+    TaskRegistry,
 )
 
 
-def _make_task(task_id: str = "task-1", user_request: str = "Test task", project: str = "test-project", state: TaskState = TaskState.CREATED) -> Task:
+def _make_task(
+    task_id: str = "task-1",
+    user_request: str = "Test task",
+    project: str = "test-project",
+    state: TaskState = TaskState.CREATED,
+) -> Task:
     task = Task(task_id=task_id, user_request=user_request, project=project)
     task.current_state = state
     return task

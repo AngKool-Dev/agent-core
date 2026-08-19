@@ -1,7 +1,7 @@
-import pytest
 from pathlib import Path
+
+from agentcore.router import RoutingResult, SkillRouter
 from agentcore.skills import Skill, SkillRegistry
-from agentcore.router import SkillRouter, RoutingResult
 
 
 def _create_temp_skills(tmp_path: Path, names: list[str]) -> Path:
@@ -98,19 +98,25 @@ class TestSkillRegistryDiscovery:
 
 class TestSkillRouter:
     def test_route_bug_fix(self):
-        skills = [Skill("debugging-and-error-recovery", "/path"), Skill("test-driven-development", "/path")]
+        skills = [
+            Skill("debugging-and-error-recovery", "/path"),
+            Skill("test-driven-development", "/path"),
+        ]
         router = SkillRouter(skills)
-        
+
         result = router.route("Fix the crash in the launcher")
-        
+
         assert "debugging-and-error-recovery" in result.selected_skills
 
     def test_route_testing_request(self):
-        skills = [Skill("test-driven-development", "/path"), Skill("debugging-and-error-recovery", "/path")]
+        skills = [
+            Skill("test-driven-development", "/path"),
+            Skill("debugging-and-error-recovery", "/path"),
+        ]
         router = SkillRouter(skills)
-        
+
         result = router.route("Write tests for the parser")
-        
+
         assert "test-driven-development" in result.selected_skills
 
     def test_route_with_multiple_keywords(self):
@@ -120,34 +126,34 @@ class TestSkillRouter:
             Skill("code-review-and-quality", "/path"),
         ]
         router = SkillRouter(skills)
-        
+
         result = router.route("Write tests and debug the failing build")
-        
+
         assert len(result.selected_skills) >= 1
         assert result.confidence > 0
 
     def test_confidence_calculation(self):
         skills = [Skill("debugging-and-error-recovery", "/path")]
         router = SkillRouter(skills)
-        
+
         result = router.route("debug the issue")
-        
+
         assert 0.0 <= result.confidence <= 1.0
 
     def test_no_matched_skills(self):
         skills = [Skill("unrelated-skill", "/path")]
         router = SkillRouter(skills)
-        
+
         result = router.route("some completely unrelated request")
-        
+
         assert len(result.selected_skills) == 0
 
     def test_routing_result_structure(self):
         skills = [Skill("debugging-and-error-recovery", "/path")]
         router = SkillRouter(skills)
-        
+
         result = router.route("Fix the bug")
-        
+
         assert isinstance(result, RoutingResult)
         assert hasattr(result, "selected_skills")
         assert hasattr(result, "explanation")

@@ -9,29 +9,21 @@ Replanning → Verification → Persistence/checkpoint → Task completion →
 Memory storage → Events/observability
 """
 
-import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-
-import pytest
+from typing import Any
 
 from agentcore import (
     Agent,
     AgentConfig,
     AgentCore,
-    AgentCoreLimits,
-    create_agent,
-    create_agent_core,
-    TaskRegistry,
-    TaskPersistenceManager,
-    MemoryManager,
     EventBus,
     EventType,
-    TaskState,
+    MemoryManager,
+    TaskPersistenceManager,
+    create_agent,
 )
-from agentcore.task import Task
-from agentcore.memory import MemoryBackend, InMemoryBackend
-from agentcore.persistence import InMemoryPersistenceBackend, InMemoryEventStore
+from agentcore.memory import MemoryBackend
+from agentcore.persistence import InMemoryEventStore, InMemoryPersistenceBackend
 from tests.integration.runtimes import DeterministicRuntime, bug_fix_lifecycle
 
 
@@ -39,15 +31,19 @@ class DeterministicMemoryBackend(MemoryBackend):
     """In-memory backend that tracks all operations for test assertions."""
 
     def __init__(self):
-        self._records: Dict[str, Dict[str, Any]] = {}
-        self._stored: List[Dict[str, Any]] = []
-        self._searched: List[str] = []
+        self._records: dict[str, dict[str, Any]] = {}
+        self._stored: list[dict[str, Any]] = []
+        self._searched: list[str] = []
 
-    def search(self, query: str, project: Optional[str] = None, limit: int = 20) -> List[Dict[str, Any]]:
+    def search(
+        self, query: str, project: str | None = None, limit: int = 20
+    ) -> list[dict[str, Any]]:
         self._searched.append(query)
         return []
 
-    def store(self, type: str, content: str, project: Optional[str] = None, importance: float = 0.5) -> Dict[str, Any]:
+    def store(
+        self, type: str, content: str, project: str | None = None, importance: float = 0.5
+    ) -> dict[str, Any]:
         record = {
             "id": f"mem-{len(self._stored)}",
             "type": type,
@@ -60,13 +56,15 @@ class DeterministicMemoryBackend(MemoryBackend):
         self._stored.append(record)
         return record
 
-    def update(self, memory_id: str, content: str) -> Dict[str, Any]:
+    def update(self, memory_id: str, content: str) -> dict[str, Any]:
         if memory_id in self._records:
             self._records[memory_id]["content"] = content
             return dict(self._records[memory_id])
         return {}
 
-    def list(self, project: Optional[str] = None, type: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    def list(
+        self, project: str | None = None, type: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
         return list(self._records.values())[:limit]
 
 
@@ -299,7 +297,7 @@ class TestCompleteLifecycle:
         agent.config.max_iterations = 5
         agent.config.max_tool_calls = 10
 
-        result = agent.execute("Fix the bug", str(tmp_path))
+        agent.execute("Fix the bug", str(tmp_path))
         core.registry.register(agent.current_task)
         assert not core.registry.is_locked(agent.current_task.task_id)
 

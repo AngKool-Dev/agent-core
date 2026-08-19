@@ -14,39 +14,38 @@ Validates:
 - Concurrent registration
 """
 
-from pathlib import Path
-from typing import Any, Dict, List, Optional
-
-import pytest
 from threading import Thread
+from typing import Any
 
 from agentcore import (
     Agent,
     AgentConfig,
     AgentCore,
-    create_agent,
     EventBus,
-    EventType,
     TaskState,
 )
-from agentcore.task import Task
 from agentcore.memory import MemoryBackend, MemoryManager
 from agentcore.persistence import (
-    InMemoryPersistenceBackend,
     InMemoryEventStore,
+    InMemoryPersistenceBackend,
     TaskPersistenceManager,
 )
-from tests.integration.runtimes import DeterministicRuntime, bug_fix_lifecycle, runtime_failure_lifecycle
+from agentcore.task import Task
+from tests.integration.runtimes import DeterministicRuntime, bug_fix_lifecycle
 
 
 class DeterministicMemoryBackend(MemoryBackend):
     def __init__(self):
-        self._records: Dict[str, Dict[str, Any]] = {}
+        self._records: dict[str, dict[str, Any]] = {}
 
-    def search(self, query: str, project: Optional[str] = None, limit: int = 20) -> List[Dict[str, Any]]:
+    def search(
+        self, query: str, project: str | None = None, limit: int = 20
+    ) -> list[dict[str, Any]]:
         return []
 
-    def store(self, type: str, content: str, project: Optional[str] = None, importance: float = 0.5) -> Dict[str, Any]:
+    def store(
+        self, type: str, content: str, project: str | None = None, importance: float = 0.5
+    ) -> dict[str, Any]:
         record = {
             "id": f"mem-{len(self._records)}",
             "type": type,
@@ -58,13 +57,15 @@ class DeterministicMemoryBackend(MemoryBackend):
         self._records[record["id"]] = record
         return record
 
-    def update(self, memory_id: str, content: str) -> Dict[str, Any]:
+    def update(self, memory_id: str, content: str) -> dict[str, Any]:
         if memory_id in self._records:
             self._records[memory_id]["content"] = content
             return dict(self._records[memory_id])
         return {}
 
-    def list(self, project: Optional[str] = None, type: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    def list(
+        self, project: str | None = None, type: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
         return list(self._records.values())[:limit]
 
 

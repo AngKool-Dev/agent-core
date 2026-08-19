@@ -8,12 +8,16 @@ These tests verify:
 """
 
 import time
-import pytest
-from pathlib import Path
-from agentcore.tools import ToolManager, FileReadResult, FileWriteResult, SearchResult
-from agentcore.runtimes.base import ToolCall, ToolResult, RuntimeResponse, FinishReason
+
+from agentcore.runtimes.base import (
+    FinishReason,
+    RuntimeAdapter,
+    RuntimeResponse,
+    ToolCall,
+    ToolResult,
+)
 from agentcore.runtimes.hermes import HermesRuntime
-from agentcore.runtimes.base import RuntimeAdapter
+from agentcore.tools import ToolManager
 
 
 class TestToolManagerFilesystem:
@@ -41,7 +45,9 @@ class TestToolManagerFilesystem:
 
     def test_write_file_success(self, tmp_path):
         tm = ToolManager(project_path=tmp_path)
-        tc = ToolCall(tool="write_file", arguments={"path": "output.txt", "content": "written content"})
+        tc = ToolCall(
+            tool="write_file", arguments={"path": "output.txt", "content": "written content"}
+        )
         result = tm.execute(tc, cwd=tmp_path)
 
         assert result.success is True
@@ -200,8 +206,9 @@ class TestHermesRuntimeNoToolDuplication:
     def test_hermes_runtime_has_no_execute_tool(self):
         """HermesRuntime should not have execute_tool method (was removed in Phase 2)."""
         rt = HermesRuntime()
-        assert not hasattr(rt, "execute_tool"), \
+        assert not hasattr(rt, "execute_tool"), (
             "HermesRuntime must not implement execute_tool — that's ToolManager's job"
+        )
 
     def test_hermes_runtime_has_no_get_pending_tool_call(self):
         """HermesRuntime should not expose get_pending_tool_call (singular)."""
@@ -217,8 +224,9 @@ class TestHermesRuntimeNoToolDuplication:
     def test_hermes_runtime_does_not_have_shell_method(self):
         """HermesRuntime should not have a shell() method — that's ToolManager's."""
         rt = HermesRuntime()
-        assert not hasattr(rt, "shell"), \
+        assert not hasattr(rt, "shell"), (
             "HermesRuntime must not implement shell() — that's ToolManager's job"
+        )
 
     def test_hermes_runtime_does_not_have_read_file_method(self):
         rt = HermesRuntime()
@@ -254,7 +262,7 @@ class TestHermesRuntimeNoToolDuplication:
         assert caps["tool_calls"] is False
         assert caps["external_tool_execution"] is False
         assert caps["streaming"] is False
-        assert caps["cancellation"] is False
+        assert caps["cancellation"] is True
 
 
 class TestToolManagerTimeouts:
@@ -273,6 +281,7 @@ class TestToolManagerTimeouts:
 
     def test_timeout_failure_returns_structured_result(self, tmp_path):
         """A tool exceeding the timeout should return a structured ToolResult failure."""
+
         def slow_handler(args, work_dir, start):
             time.sleep(10)
             return ToolResult(success=True, tool="slow", output="done")
@@ -289,6 +298,7 @@ class TestToolManagerTimeouts:
 
     def test_disabled_timeout_allows_slow_tool(self, tmp_path):
         """With tool_timeout=None, a slow tool should complete normally."""
+
         def slow_handler(args, work_dir, start):
             time.sleep(0.5)
             return ToolResult(success=True, tool="slow", output="done")
@@ -304,8 +314,8 @@ class TestToolManagerTimeouts:
     def test_timeout_propagates_through_agent(self, tmp_path):
         """Agent should receive timeout ToolResult without crashing."""
         from agentcore import Agent, AgentConfig
-        from agentcore.memory import MemoryManager, InMemoryBackend
-        from agentcore.runtimes.base import RuntimeAdapter, RuntimeResponse, FinishReason
+        from agentcore.memory import InMemoryBackend, MemoryManager
+        from agentcore.runtimes.base import RuntimeAdapter, RuntimeResponse
 
         class TimeoutRuntime(RuntimeAdapter):
             def respond(self, context):
@@ -352,3 +362,65 @@ class TestToolManagerTimeouts:
 
         assert result["task"]["current_state"] == "FAILED"
         assert result["tools_used"] >= 1
+
+
+# ─────────────────── Shell Contract & Subprocess Cancellation ──────────
+
+
+class TestShellContract:
+    """shell() is a shell-interpreted command tool."""
+
+    def test_simple_command_success(self, tmp_path):
+        tm = ToolManager(project_path=tmp_path)
+        result = tm.shell("echo hello")
+        assert result.success is True
+        assert result.exit_code == 0
+        assert "hello" in result.output
+
+    def test_command_with_spaces_in_argument(self, tmp_path):
+        tm = ToolManager(project_path=tmp_path)
+        result = tm.shell('echo "hello world"')
+        assert result.success is True
+        assert "hello world" in result.output
+
+    def test_command_failure_returns_nonzero_exit(self, tmp_path):
+        tm = ToolManager(project_path=tmp_path)
+        result = tm.shell("false")
+        assert result.success is False
+        assert result.exit_code != 0
+
+    def test_timeout_cancels_subprocess(self, tmp_path):
+        """A timed-out shell command must be actually terminated."""
+        tm = ToolManager(project_path=tmp_path)
+        result = tm.shell("sleep 60", timeout=2)
+        assert result.success is False
+        assert result.exit_code == 124
+        assert "timed out" in result.error.lower()
+        assert tm._active_process is None
+
+    def test_cancel_in_flight_kills_active_subprocess(self, tmp_path):
+        """cancel_in_flight() must terminate an active shell subprocess."""
+        tm = ToolManager(project_path=tmp_path)
+        import threading
+
+        started = threading.Event()
+        finished = threading.Event()
+
+        def run_sleep():
+            started.set()
+            res = tm.shell("sleep 60", timeout=60)
+            finished.set()
+            return res
+
+        thread = threading.Thread(target=run_sleep)
+        thread.start()
+        started.wait(timeout=5)
+        for _ in range(50):
+            if tm._active_process is not None:
+                break
+            time.sleep(0.1)
+        assert tm._active_process is not None
+        tm.cancel_in_flight()
+        finished.wait(timeout=5)
+        thread.join(timeout=5)
+        assert tm._active_process is None

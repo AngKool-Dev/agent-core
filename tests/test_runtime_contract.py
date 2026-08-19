@@ -7,15 +7,15 @@ These tests verify that:
 - RuntimeResponse handles normal responses, tool calls, and malformed input
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
+import threading
+import time
+from unittest.mock import MagicMock, patch
 
 from agentcore.runtimes.base import (
+    FinishReason,
     RuntimeAdapter,
     RuntimeResponse,
     ToolCall,
-    ToolResult,
-    FinishReason,
 )
 from agentcore.runtimes.hermes import HermesRuntime
 from tests.test_mock_runtime import MockRuntime
@@ -52,8 +52,13 @@ class TestRuntimeResponseContract:
         """is_complete should be True for STOP, ERROR, TIMEOUT — not TOOL_CALLS."""
         assert RuntimeResponse(content="done", finish_reason=FinishReason.STOP).is_complete is True
         assert RuntimeResponse(content="err", finish_reason=FinishReason.ERROR).is_complete is True
-        assert RuntimeResponse(content="err", finish_reason=FinishReason.TIMEOUT).is_complete is True
-        assert RuntimeResponse(tool_calls=[], finish_reason=FinishReason.TOOL_CALLS).is_complete is False
+        assert (
+            RuntimeResponse(content="err", finish_reason=FinishReason.TIMEOUT).is_complete is True
+        )
+        assert (
+            RuntimeResponse(tool_calls=[], finish_reason=FinishReason.TOOL_CALLS).is_complete
+            is False
+        )
 
     def test_runtime_response_to_dict(self):
         tc = ToolCall(tool="shell", arguments={"command": "ls"})
@@ -121,7 +126,11 @@ class TestRuntimeAdapterConformance:
         rt = HermesRuntime(timeout=1)
         import subprocess as sp
 
-        with patch("agentcore.runtimes.hermes.subprocess.run", side_effect=sp.TimeoutExpired(cmd="hermes", timeout=1)):
+        mock_process = MagicMock()
+        mock_process.communicate.side_effect = sp.TimeoutExpired(cmd="hermes", timeout=1)
+        mock_process.returncode = -1
+
+        with patch("agentcore.runtimes.hermes.subprocess.Popen", return_value=mock_process):
             resp = rt.respond({"user_request": "test"})
             assert resp.finish_reason == FinishReason.TIMEOUT
             assert resp.content == ""
@@ -130,7 +139,10 @@ class TestRuntimeAdapterConformance:
         """FileNotFoundError should produce an ERROR finish reason."""
         rt = HermesRuntime()
 
-        with patch("agentcore.runtimes.hermes.subprocess.run", side_effect=FileNotFoundError("hermes not found")):
+        with patch(
+            "agentcore.runtimes.hermes.subprocess.Popen",
+            side_effect=FileNotFoundError("hermes not found"),
+        ):
             resp = rt.respond({"user_request": "test"})
             assert resp.finish_reason == FinishReason.ERROR
 
@@ -163,7 +175,7 @@ class TestRuntimeAdapterConformance:
         assert caps["external_tool_execution"] is False
         assert caps["text_generation"] is True
         assert caps["streaming"] is False
-        assert caps["cancellation"] is False
+        assert caps["cancellation"] is True
         assert caps["model"] == "claude-sonnet-4"
         assert caps["provider"] == "anthropic"
         assert caps["timeout"] == 300
@@ -171,6 +183,39 @@ class TestRuntimeAdapterConformance:
     def test_hermes_runtime_cancel_is_noop(self):
         rt = HermesRuntime()
         rt.cancel()  # must not raise
+
+    def test_hermes_runtime_cancel_terminates_subprocess(self):
+        """cancel() terminates the in-flight Hermes subprocess; respond() returns CANCELLED."""
+        rt = HermesRuntime(timeout=300)
+
+        mock_process = MagicMock()
+        mock_process.poll.return_value = None
+        communicate_event = threading.Event()
+
+        def mock_communicate(timeout=None):
+            communicate_event.wait(timeout=timeout or 60)
+            return ("output", "")
+
+        mock_process.communicate.side_effect = mock_communicate
+        mock_process.returncode = 0
+
+        with patch("agentcore.runtimes.hermes.subprocess.Popen", return_value=mock_process):
+            result_holder = []
+
+            def run_respond():
+                result_holder.append(rt.respond({"user_request": "test"}))
+
+            thread = threading.Thread(target=run_respond)
+            thread.start()
+            time.sleep(0.05)
+            rt.cancel()
+            communicate_event.set()
+            thread.join(timeout=5)
+
+            assert len(result_holder) == 1
+            response = result_holder[0]
+            assert response.finish_reason == FinishReason.CANCELLED
+            mock_process.terminate.assert_called_once()
 
     def test_mock_runtime_cancel_is_noop(self):
         rt = MockRuntime(responses=["test"])
@@ -187,7 +232,13 @@ class TestRuntimeAdapterConformance:
     def test_hermes_capability_contract_booleans(self):
         rt = HermesRuntime()
         caps = rt.capabilities()
-        for key in ("text_generation", "tool_calls", "external_tool_execution", "streaming", "cancellation"):
+        for key in (
+            "text_generation",
+            "tool_calls",
+            "external_tool_execution",
+            "streaming",
+            "cancellation",
+        ):
             assert key in caps
             assert isinstance(caps[key], bool)
 
@@ -228,7 +279,7 @@ class TestRuntimeResponseMalformedHandling:
 
     def test_hermes_output_with_only_tool_call(self):
         rt = HermesRuntime()
-        resp = rt._parse_response("TOOL_CALL: shell { \"command\": \"ls -la\" }", "", 0)
+        resp = rt._parse_response('TOOL_CALL: shell { "command": "ls -la" }', "", 0)
         assert resp.finish_reason == FinishReason.TOOL_CALLS
         assert len(resp.tool_calls) == 1
         assert resp.tool_calls[0].tool == "shell"
@@ -244,3 +295,13 @@ class TestRuntimeResponseMalformedHandling:
         assert "content" in data
         assert "tool_calls" in data
         assert "finish_reason" in data
+
+    def test_registry_cancellation_matches_runtime(self):
+        """Registry metadata must agree with the runtime's own capabilities()."""
+        from agentcore.runtimes.registry import get_default_registry
+
+        registry = get_default_registry()
+        rt = HermesRuntime()
+        runtime_caps = rt.capabilities()
+        registry_caps = registry.get_capabilities("hermes")
+        assert registry_caps["cancellation"] == runtime_caps["cancellation"]

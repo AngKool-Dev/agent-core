@@ -10,12 +10,13 @@ Covers:
 """
 
 import pytest
+
 from agentcore.task import (
+    InvalidStateTransitionError,
+    PlanStep,
+    StepStatus,
     Task,
     TaskState,
-    StepStatus,
-    PlanStep,
-    InvalidStateTransitionError,
 )
 
 
@@ -265,6 +266,7 @@ class TestTaskStateMachineTransitions:
 class TestTaskStateChangeEvents:
     def test_state_changes_update_timestamp(self):
         import time
+
         task = Task()
         old_updated = task.updated_at
         time.sleep(0.01)

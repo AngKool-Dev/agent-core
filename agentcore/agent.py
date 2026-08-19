@@ -2,36 +2,34 @@ import logging
 import subprocess
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from .task import Task, TaskState, StepStatus, PlanStep, InvalidStateTransitionError
-from .router import SkillRouter, RoutingResult
-from .context import ProjectContext
-from .memory import MemoryManager
-from .verifier import Verifier, VerificationReport
-from .runtimes.base import RuntimeAdapter, RuntimeResponse, ToolCall, ToolResult, FinishReason
-from .tools import ToolManager
-from .planner import Planner
-from .skills import Skill, SkillRegistry
 from .config import AgentCoreConfig, ConfigLoader, resolve_skill_paths
-from .events import AgentEvent, EventType, EventBus, create_event
+from .context import ProjectContext
+from .events import EventBus, EventType, create_event
+from .memory import MemoryManager
 from .persistence import TaskPersistenceManager
-
+from .planner import Planner
+from .router import RoutingResult, SkillRouter
+from .runtimes.base import FinishReason, RuntimeAdapter, RuntimeResponse, ToolResult
+from .skills import Skill, SkillRegistry
+from .task import InvalidStateTransitionError, PlanStep, StepStatus, Task, TaskState
+from .tools import ToolManager
+from .verifier import Verifier
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class AgentConfig:
-    model: Optional[str] = None
-    provider: Optional[str] = None
+    model: str | None = None
+    provider: str | None = None
     max_iterations: int = 10
     max_tool_calls: int = 50
     max_runtime_seconds: int = 300
     timeout: int = 300
-    tool_timeout: Optional[int] = None
+    tool_timeout: int | None = None
     enable_verification: bool = True
     run_format_check: bool = True
     run_build_check: bool = True
@@ -43,16 +41,17 @@ class AgentConfig:
 @dataclass
 class ProjectContextData:
     """Structured facts discovered from the repository."""
+
     project_root: str = ""
-    language: Optional[str] = None
-    framework: Optional[str] = None
-    build_system: Optional[str] = None
-    package_manager: Optional[str] = None
+    language: str | None = None
+    framework: str | None = None
+    build_system: str | None = None
+    package_manager: str | None = None
     git_status: dict[str, Any] = field(default_factory=dict)
     git_diff: str = ""
     config_files: list[str] = field(default_factory=list)
     test_files: list[str] = field(default_factory=list)
-    readme: Optional[str] = None
+    readme: str | None = None
     documentation: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -76,6 +75,7 @@ class ProjectContextData:
 @dataclass
 class TaskContextData:
     """Information specific to the current task."""
+
     user_request: str = ""
     task_id: str = ""
     current_state: str = ""
@@ -103,6 +103,7 @@ class TaskContextData:
 @dataclass
 class MemoryContextData:
     """Relevant historical information recalled from MemoryBackend."""
+
     results: list[dict[str, Any]] = field(default_factory=list)
     count: int = 0
 
@@ -116,6 +117,7 @@ class MemoryContextData:
 @dataclass
 class SkillContextData:
     """Context about loaded/routed skills."""
+
     selected: list[str] = field(default_factory=list)
     available: list[str] = field(default_factory=list)
     attributes: dict[str, Any] = field(default_factory=dict)
@@ -131,8 +133,9 @@ class SkillContextData:
 @dataclass
 class RuntimeContextData:
     """Context about the runtime/provider."""
+
     runtime_name: str = ""
-    model: Optional[str] = None
+    model: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -153,7 +156,9 @@ class ContextBuilder:
     MAX_HYPOTHESES = 10
 
     @staticmethod
-    def build(task: Task, skills: List[Skill], memory_results: List[Dict], tool_results: List[Dict]) -> Dict[str, Any]:
+    def build(
+        task: Task, skills: list[Skill], memory_results: list[dict], tool_results: list[dict]
+    ) -> dict[str, Any]:
         project_data = ProjectContextData(
             project_root=task.project,
             language=task.project_context.get("language"),
@@ -169,7 +174,7 @@ class ContextBuilder:
         )
 
         memory_context = MemoryContextData(
-            results=memory_results[:ContextBuilder.MAX_MEMORY_RECORDS],
+            results=memory_results[: ContextBuilder.MAX_MEMORY_RECORDS],
             count=len(memory_results),
         )
 
@@ -187,10 +192,12 @@ class ContextBuilder:
         task_data = TaskContextData(
             user_request=task.user_request,
             task_id=task.task_id,
-            current_state=task.current_state.value if hasattr(task.current_state, 'value') else str(task.current_state),
-            plan=task.plan[:ContextBuilder.MAX_PLAN_STEPS],
-            hypotheses=task.hypotheses[:ContextBuilder.MAX_HYPOTHESES],
-            tool_results=tool_results[:ContextBuilder.MAX_TOOL_RESULTS],
+            current_state=task.current_state.value
+            if hasattr(task.current_state, "value")
+            else str(task.current_state),
+            plan=task.plan[: ContextBuilder.MAX_PLAN_STEPS],
+            hypotheses=task.hypotheses[: ContextBuilder.MAX_HYPOTHESES],
+            tool_results=tool_results[: ContextBuilder.MAX_TOOL_RESULTS],
             memory_context=memory_context.to_dict(),
         )
 
@@ -216,11 +223,11 @@ class Agent:
         self,
         runtime: RuntimeAdapter,
         memory: MemoryManager,
-        config: Optional[AgentConfig] = None,
-        project_path: Optional[str | Path] = None,
-        agentcore_config: Optional[AgentCoreConfig] = None,
-        event_bus: Optional[EventBus] = None,
-        persistence: Optional[TaskPersistenceManager] = None,
+        config: AgentConfig | None = None,
+        project_path: str | Path | None = None,
+        agentcore_config: AgentCoreConfig | None = None,
+        event_bus: EventBus | None = None,
+        persistence: TaskPersistenceManager | None = None,
     ):
         self.runtime = runtime
         self.memory = memory
@@ -234,22 +241,27 @@ class Agent:
         self._verifier = Verifier(self.project_path)
         self._planner = Planner()
 
-        if hasattr(self.memory, 'set_event_bus'):
+        if hasattr(self.memory, "set_event_bus"):
             self.memory.set_event_bus(self._event_bus)
 
-        if self._persistence is not None and hasattr(self._persistence, 'set_event_bus'):
+        if self._persistence is not None and hasattr(self._persistence, "set_event_bus"):
             self._persistence.set_event_bus(self._event_bus)
 
-        self._current_task: Optional[Task] = None
+        self._current_task: Task | None = None
         self._iterations = 0
         self._tools_used = 0
-        self._tool_results: List[Dict[str, Any]] = []
+        self._tool_results: list[dict[str, Any]] = []
         self._start_time = 0
         self._cancelled = False
         self._replan_count = 0
-        self._baseline_changed_files: Optional[List[str]] = None
+        self._baseline_changed_files: list[str] | None = None
 
-    def _emit(self, event_type: EventType, data: Optional[Dict[str, Any]] = None, metadata: Optional[Dict[str, Any]] = None) -> None:
+    def _emit(
+        self,
+        event_type: EventType,
+        data: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         if self._event_bus.subscriber_count > 0:
             event = create_event(
                 event_type=event_type,
@@ -260,14 +272,23 @@ class Agent:
             )
             self._event_bus.emit(event)
 
-    def _emit_state_changed(self, previous_state: TaskState, new_state: TaskState, reason: str = "", step_id: Optional[str] = None) -> None:
-        self._emit(EventType.TASK_STATE_CHANGED, data={
-            "previous_state": previous_state.value,
-            "new_state": new_state.value,
-            "reason": reason,
-            "step_id": step_id,
-            "iteration": self._iterations,
-        })
+    def _emit_state_changed(
+        self,
+        previous_state: TaskState,
+        new_state: TaskState,
+        reason: str = "",
+        step_id: str | None = None,
+    ) -> None:
+        self._emit(
+            EventType.TASK_STATE_CHANGED,
+            data={
+                "previous_state": previous_state.value,
+                "new_state": new_state.value,
+                "reason": reason,
+                "step_id": step_id,
+                "iteration": self._iterations,
+            },
+        )
 
     def _checkpoint(self) -> None:
         if self._persistence is not None and self._current_task is not None:
@@ -291,8 +312,12 @@ class Agent:
             self.runtime.cancel()
         except Exception:
             pass
+        try:
+            self._tool_manager.cancel_in_flight()
+        except Exception:
+            pass
 
-    def execute(self, user_request: str, project: Optional[str] = None) -> dict[str, Any]:
+    def execute(self, user_request: str, project: str | None = None) -> dict[str, Any]:
         self._start_time = time.time()
         self._cancelled = False
         self._replan_count = 0
@@ -305,19 +330,27 @@ class Agent:
         self._emit_state_changed(TaskState.CREATED, TaskState.ANALYZING, reason="task_started")
         self._checkpoint()
         logger.info(f"Task created: {self._current_task.task_id}")
-        self._emit(EventType.TASK_STARTED, data={"user_request": user_request, "project": project or str(self.project_path)})
+        self._emit(
+            EventType.TASK_STARTED,
+            data={"user_request": user_request, "project": project or str(self.project_path)},
+        )
 
         project_context = self._load_project_context()
         self._current_task.project_context = project_context
 
         memory_results = self._load_memory_context()
-        self._current_task.memory_context = {"results": memory_results, "count": len(memory_results)}
+        self._current_task.memory_context = {
+            "results": memory_results,
+            "count": len(memory_results),
+        }
 
         self._baseline_changed_files = self._capture_changed_files()
 
         try:
             self._current_task.transition(TaskState.ROUTING)
-            self._emit_state_changed(TaskState.ANALYZING, TaskState.ROUTING, reason="routing_skills")
+            self._emit_state_changed(
+                TaskState.ANALYZING, TaskState.ROUTING, reason="routing_skills"
+            )
         except InvalidStateTransitionError:
             pass
         routing = self._route_skills(user_request, project_context)
@@ -326,7 +359,9 @@ class Agent:
 
         try:
             self._current_task.transition(TaskState.INVESTIGATING)
-            self._emit_state_changed(TaskState.ROUTING, TaskState.INVESTIGATING, reason="investigating")
+            self._emit_state_changed(
+                TaskState.ROUTING, TaskState.INVESTIGATING, reason="investigating"
+            )
         except InvalidStateTransitionError:
             pass
         investigation = self._investigate(user_request)
@@ -334,7 +369,9 @@ class Agent:
 
         try:
             self._current_task.transition(TaskState.PLANNING)
-            self._emit_state_changed(TaskState.INVESTIGATING, TaskState.PLANNING, reason="creating_plan")
+            self._emit_state_changed(
+                TaskState.INVESTIGATING, TaskState.PLANNING, reason="creating_plan"
+            )
         except InvalidStateTransitionError:
             pass
         plan = self._generate_plan(user_request, project_context)
@@ -343,7 +380,9 @@ class Agent:
 
         try:
             self._current_task.transition(TaskState.RUNNING)
-            self._emit_state_changed(TaskState.PLANNING, TaskState.RUNNING, reason="starting_execution")
+            self._emit_state_changed(
+                TaskState.PLANNING, TaskState.RUNNING, reason="starting_execution"
+            )
         except InvalidStateTransitionError:
             pass
         results = self._run_iterative_loop(plan)
@@ -354,7 +393,9 @@ class Agent:
         else:
             try:
                 self._current_task.transition(TaskState.VERIFYING)
-                self._emit_state_changed(TaskState.RUNNING, TaskState.VERIFYING, reason="verification_phase")
+                self._emit_state_changed(
+                    TaskState.RUNNING, TaskState.VERIFYING, reason="verification_phase"
+                )
             except InvalidStateTransitionError:
                 pass
             verification = self._run_verification(results)
@@ -363,21 +404,35 @@ class Agent:
                 final_state = TaskState.COMPLETED
                 try:
                     self._current_task.transition(TaskState.COMPLETED)
-                    self._emit_state_changed(TaskState.VERIFYING, TaskState.COMPLETED, reason="verification_passed")
+                    self._emit_state_changed(
+                        TaskState.VERIFYING, TaskState.COMPLETED, reason="verification_passed"
+                    )
                 except InvalidStateTransitionError:
                     pass
                 self._checkpoint()
-                self._emit(EventType.TASK_COMPLETED, data={"success": True, "iterations": self._iterations, "tools_used": self._tools_used})
+                self._emit(
+                    EventType.TASK_COMPLETED,
+                    data={
+                        "success": True,
+                        "iterations": self._iterations,
+                        "tools_used": self._tools_used,
+                    },
+                )
             else:
                 final_state = self._handle_verification_failure(verification)
 
         if final_state in (TaskState.FAILED, TaskState.CANCELLED):
-            self._emit(EventType.TASK_FAILED if final_state == TaskState.FAILED else EventType.TASK_CANCELLED, data={
-                "success": False,
-                "iterations": self._iterations,
-                "tools_used": self._tools_used,
-                "final_state": final_state.value,
-            })
+            self._emit(
+                EventType.TASK_FAILED
+                if final_state == TaskState.FAILED
+                else EventType.TASK_CANCELLED,
+                data={
+                    "success": False,
+                    "iterations": self._iterations,
+                    "tools_used": self._tools_used,
+                    "final_state": final_state.value,
+                },
+            )
 
         self._store_task_memory(final_state == TaskState.COMPLETED)
         self._checkpoint()
@@ -385,27 +440,33 @@ class Agent:
 
         return {
             "task": self._current_task.to_dict(),
-            "verification": verification if verification is not None else {"overall_passed": final_state == TaskState.COMPLETED},
+            "verification": verification
+            if verification is not None
+            else {"overall_passed": final_state == TaskState.COMPLETED},
             "success": final_state == TaskState.COMPLETED,
             "tools_used": self._tools_used,
             "iterations": self._iterations,
             "stopped_reason": results.get("stopped_reason"),
         }
 
-    def _handle_verification_failure(self, verification: Dict[str, Any]) -> TaskState:
+    def _handle_verification_failure(self, verification: dict[str, Any]) -> TaskState:
         if self._cancelled:
             return TaskState.CANCELLED
         if self._replan_count >= self.config.max_replans:
             try:
                 self._current_task.transition(TaskState.FAILED, reason="max_replans_reached")
-                self._emit_state_changed(TaskState.VERIFYING, TaskState.FAILED, reason="max_replans_reached")
+                self._emit_state_changed(
+                    TaskState.VERIFYING, TaskState.FAILED, reason="max_replans_reached"
+                )
             except InvalidStateTransitionError:
                 pass
             return TaskState.FAILED
 
         try:
             self._current_task.transition(TaskState.REPLANNING)
-            self._emit_state_changed(TaskState.VERIFYING, TaskState.REPLANNING, reason="verification_failed")
+            self._emit_state_changed(
+                TaskState.VERIFYING, TaskState.REPLANNING, reason="verification_failed"
+            )
         except InvalidStateTransitionError:
             pass
 
@@ -413,7 +474,9 @@ class Agent:
         if new_plan is None:
             try:
                 self._current_task.transition(TaskState.FAILED, reason="replan_failed")
-                self._emit_state_changed(TaskState.REPLANNING, TaskState.FAILED, reason="replan_failed")
+                self._emit_state_changed(
+                    TaskState.REPLANNING, TaskState.FAILED, reason="replan_failed"
+                )
             except InvalidStateTransitionError:
                 pass
             return TaskState.FAILED
@@ -422,7 +485,9 @@ class Agent:
         self._current_task.plan = [s.to_dict() for s in new_plan]
         try:
             self._current_task.transition(TaskState.RUNNING)
-            self._emit_state_changed(TaskState.REPLANNING, TaskState.RUNNING, reason="replan_executing")
+            self._emit_state_changed(
+                TaskState.REPLANNING, TaskState.RUNNING, reason="replan_executing"
+            )
         except InvalidStateTransitionError:
             pass
         self._run_iterative_loop(new_plan)
@@ -430,18 +495,30 @@ class Agent:
         if verification["overall_passed"]:
             try:
                 self._current_task.transition(TaskState.COMPLETED)
-                self._emit_state_changed(TaskState.RUNNING, TaskState.COMPLETED, reason="verification_passed_after_replan")
+                self._emit_state_changed(
+                    TaskState.RUNNING,
+                    TaskState.COMPLETED,
+                    reason="verification_passed_after_replan",
+                )
             except InvalidStateTransitionError:
                 pass
-            self._emit(EventType.TASK_COMPLETED, data={"success": True, "replanned": True, "iterations": self._iterations, "tools_used": self._tools_used})
+            self._emit(
+                EventType.TASK_COMPLETED,
+                data={
+                    "success": True,
+                    "replanned": True,
+                    "iterations": self._iterations,
+                    "tools_used": self._tools_used,
+                },
+            )
             return TaskState.COMPLETED
         return self._handle_verification_failure(verification)
 
-    def _load_project_context(self) -> Dict[str, Any]:
+    def _load_project_context(self) -> dict[str, Any]:
         ctx = ProjectContext(self.project_path)
         return ctx.discover()
 
-    def _load_memory_context(self) -> List[Dict]:
+    def _load_memory_context(self) -> list[dict]:
         if not self._current_task:
             return []
         query_parts = []
@@ -453,13 +530,15 @@ class Agent:
         query = " ".join(query_parts)
         task_id = self._current_task.task_id if self._current_task else ""
         try:
-            results = self.memory.search(query, self._current_task.project, limit=10, task_id=task_id)
+            results = self.memory.search(
+                query, self._current_task.project, limit=10, task_id=task_id
+            )
             return results
         except Exception as e:
             logger.warning(f"Memory search failed: {e}")
             return []
 
-    def _capture_changed_files(self) -> Optional[List[str]]:
+    def _capture_changed_files(self) -> list[str] | None:
         if not (self.project_path / ".git").exists():
             return []
         try:
@@ -475,7 +554,7 @@ class Agent:
             logger.debug(f"Failed to capture changed files: {e}")
             return None
 
-    def _route_skills(self, prompt: str, context: Dict[str, Any]) -> RoutingResult:
+    def _route_skills(self, prompt: str, context: dict[str, Any]) -> RoutingResult:
         skill_paths = resolve_skill_paths(self._agentcore_config)
         registry = SkillRegistry(skill_paths)
         skills = registry.discover(skill_paths)
@@ -494,13 +573,16 @@ class Agent:
                 loaded_skills.append(skill)
                 self._emit(EventType.SKILL_LOADED, data={"name": skill_name, "path": skill.path})
         result.loaded_skills = loaded_skills
-        self._emit(EventType.ROUTE_SELECTED, data={
-            "selected_skills": result.selected_skills,
-            "attributes": result.attributes,
-        })
+        self._emit(
+            EventType.ROUTE_SELECTED,
+            data={
+                "selected_skills": result.selected_skills,
+                "attributes": result.attributes,
+            },
+        )
         return result
 
-    def _investigate(self, prompt: str) -> Dict[str, Any]:
+    def _investigate(self, prompt: str) -> dict[str, Any]:
         return {
             "statement": f"Investigate: {prompt}",
             "supporting_evidence": [],
@@ -508,7 +590,7 @@ class Agent:
             "status": "PROPOSED",
         }
 
-    def _generate_plan(self, request: str, context: Dict) -> List[PlanStep]:
+    def _generate_plan(self, request: str, context: dict) -> list[PlanStep]:
         request_lower = request.lower()
         if any(word in request_lower for word in ["fix", "crash", "bug", "error", "fail"]):
             plan = self._planner.plan("bug_fix", request, context)
@@ -518,22 +600,31 @@ class Agent:
             plan = self._planner.plan("refactor", request, context)
         elif any(word in request_lower for word in ["investigate", "explain", "why", "what"]):
             plan = [
-                PlanStep(action="investigate", description="Explore the codebase to understand the request"),
+                PlanStep(
+                    action="investigate",
+                    description="Explore the codebase to understand the request",
+                ),
                 PlanStep(action="summarize", description="Summarize findings for the user"),
             ]
         else:
             plan = self._planner.plan("investigate", request, context)
 
-        self._emit(EventType.PLAN_CREATED, data={
-            "plan_steps": [s.to_dict() for s in plan],
-            "request_type": "bug_fix" if any(w in request_lower for w in ["fix", "crash", "bug", "error", "fail"])
-                           else "feature" if any(w in request_lower for w in ["implement", "add", "create", "new"])
-                           else "refactor" if any(w in request_lower for w in ["refactor", "simplify", "clean"])
-                           else "investigate",
-        })
+        self._emit(
+            EventType.PLAN_CREATED,
+            data={
+                "plan_steps": [s.to_dict() for s in plan],
+                "request_type": "bug_fix"
+                if any(w in request_lower for w in ["fix", "crash", "bug", "error", "fail"])
+                else "feature"
+                if any(w in request_lower for w in ["implement", "add", "create", "new"])
+                else "refactor"
+                if any(w in request_lower for w in ["refactor", "simplify", "clean"])
+                else "investigate",
+            },
+        )
         return plan
 
-    def _run_iterative_loop(self, initial_plan: List[PlanStep]) -> Dict[str, Any]:
+    def _run_iterative_loop(self, initial_plan: list[PlanStep]) -> dict[str, Any]:
         results = {
             "actions_taken": [],
             "tool_results": [],
@@ -542,7 +633,7 @@ class Agent:
         }
 
         plan = [PlanStep.from_dict(s) if isinstance(s, dict) else s for s in initial_plan]
-        tool_results: List[ToolResult] = []
+        tool_results: list[ToolResult] = []
 
         capabilities = self.runtime.capabilities()
         supports_tool_calls = capabilities.get("tool_calls", False)
@@ -553,8 +644,14 @@ class Agent:
                 results["stopped_reason"] = "cancelled"
                 if self._current_task and not self._current_task.is_terminal():
                     try:
-                        self._current_task.transition(TaskState.CANCELLED, reason="cancelled_during_loop")
-                        self._emit_state_changed(self._current_task.current_state, TaskState.CANCELLED, reason="cancelled_during_loop")
+                        self._current_task.transition(
+                            TaskState.CANCELLED, reason="cancelled_during_loop"
+                        )
+                        self._emit_state_changed(
+                            self._current_task.current_state,
+                            TaskState.CANCELLED,
+                            reason="cancelled_during_loop",
+                        )
                     except InvalidStateTransitionError:
                         pass
                 break
@@ -565,10 +662,14 @@ class Agent:
                 if self._current_task:
                     try:
                         self._current_task.transition(TaskState.BLOCKED, reason="timeout")
-                        self._emit_state_changed(self._current_task.current_state, TaskState.BLOCKED, reason="timeout")
+                        self._emit_state_changed(
+                            self._current_task.current_state, TaskState.BLOCKED, reason="timeout"
+                        )
                     except InvalidStateTransitionError:
                         pass
-                    self._emit(EventType.RUNTIME_ERROR, data={"error": "timeout", "elapsed": elapsed})
+                    self._emit(
+                        EventType.RUNTIME_ERROR, data={"error": "timeout", "elapsed": elapsed}
+                    )
                 break
 
             if self._tools_used >= self.config.max_tool_calls:
@@ -576,7 +677,9 @@ class Agent:
                 if self._current_task:
                     try:
                         self._current_task.transition(TaskState.BLOCKED, reason="tool_limit")
-                        self._emit_state_changed(self._current_task.current_state, TaskState.BLOCKED, reason="tool_limit")
+                        self._emit_state_changed(
+                            self._current_task.current_state, TaskState.BLOCKED, reason="tool_limit"
+                        )
                     except InvalidStateTransitionError:
                         pass
                 break
@@ -586,7 +689,7 @@ class Agent:
 
             context = ContextBuilder.build(
                 self._current_task,
-                getattr(self, '_available_skills', []),
+                getattr(self, "_available_skills", []),
                 self._current_task.memory_context.get("results", []),
                 [tr.to_dict() for tr in tool_results],
             )
@@ -598,16 +701,24 @@ class Agent:
             context["instructions"] = instructions
 
             try:
-                self._emit(EventType.MODEL_REQUEST_STARTED, metadata={
-                    "runtime": type(self.runtime).__name__,
-                    "model": getattr(self.runtime, 'model', None) or self.config.model,
-                })
+                self._emit(
+                    EventType.MODEL_REQUEST_STARTED,
+                    metadata={
+                        "runtime": type(self.runtime).__name__,
+                        "model": getattr(self.runtime, "model", None) or self.config.model,
+                    },
+                )
                 response = self.runtime.respond(context)
-                self._emit(EventType.MODEL_RESPONSE_RECEIVED, data={
-                    "finish_reason": response.finish_reason.value if response.finish_reason else "stop",
-                    "has_tool_calls": bool(response.tool_calls),
-                    "content_length": len(response.content) if response.content else 0,
-                })
+                self._emit(
+                    EventType.MODEL_RESPONSE_RECEIVED,
+                    data={
+                        "finish_reason": response.finish_reason.value
+                        if response.finish_reason
+                        else "stop",
+                        "has_tool_calls": bool(response.tool_calls),
+                        "content_length": len(response.content) if response.content else 0,
+                    },
+                )
             except Exception as e:
                 logger.error(f"Runtime error: {e}")
                 self._emit(EventType.MODEL_ERROR, data={"error": str(e)})
@@ -616,7 +727,11 @@ class Agent:
                 if self._current_task:
                     try:
                         self._current_task.transition(TaskState.FAILED, reason="runtime_error")
-                        self._emit_state_changed(self._current_task.current_state, TaskState.FAILED, reason="runtime_error")
+                        self._emit_state_changed(
+                            self._current_task.current_state,
+                            TaskState.FAILED,
+                            reason="runtime_error",
+                        )
                     except InvalidStateTransitionError:
                         pass
                 break
@@ -630,8 +745,14 @@ class Agent:
             if response.tool_calls and supports_tool_calls and supports_external_execution:
                 try:
                     if self._current_task:
-                        self._current_task.transition(TaskState.WAITING_FOR_TOOL, reason="tool_calls_requested")
-                        self._emit_state_changed(TaskState.RUNNING, TaskState.WAITING_FOR_TOOL, reason="tool_calls_requested")
+                        self._current_task.transition(
+                            TaskState.WAITING_FOR_TOOL, reason="tool_calls_requested"
+                        )
+                        self._emit_state_changed(
+                            TaskState.RUNNING,
+                            TaskState.WAITING_FOR_TOOL,
+                            reason="tool_calls_requested",
+                        )
                 except InvalidStateTransitionError:
                     pass
 
@@ -640,18 +761,27 @@ class Agent:
                         results["stopped_reason"] = "tool_limit"
                         if self._current_task:
                             try:
-                                self._current_task.transition(TaskState.BLOCKED, reason="tool_limit")
-                                self._emit_state_changed(self._current_task.current_state, TaskState.BLOCKED, reason="tool_limit")
+                                self._current_task.transition(
+                                    TaskState.BLOCKED, reason="tool_limit"
+                                )
+                                self._emit_state_changed(
+                                    self._current_task.current_state,
+                                    TaskState.BLOCKED,
+                                    reason="tool_limit",
+                                )
                             except InvalidStateTransitionError:
                                 pass
                         break
 
                     logger.info(f"Executing tool: {tool_call.tool}")
-                    self._emit(EventType.TOOL_CALL_STARTED, data={
-                        "tool": tool_call.tool,
-                        "call_id": tool_call.id,
-                        "arguments": tool_call.arguments,
-                    })
+                    self._emit(
+                        EventType.TOOL_CALL_STARTED,
+                        data={
+                            "tool": tool_call.tool,
+                            "call_id": tool_call.id,
+                            "arguments": tool_call.arguments,
+                        },
+                    )
                     start_time = time.time()
                     tool_result = self._tool_manager.execute(tool_call, cwd=self.project_path)
                     duration = time.time() - start_time
@@ -660,25 +790,43 @@ class Agent:
                     self._tools_used += 1
                     logger.debug(f"Tool result: success={tool_result.success}")
 
-                    event_type = EventType.TOOL_CALL_COMPLETED if tool_result.success else EventType.TOOL_CALL_FAILED
-                    self._emit(event_type, data={
-                        "tool": tool_call.tool,
-                        "call_id": tool_call.id,
-                        "success": tool_result.success,
-                        "duration": round(duration, 3),
-                        "exit_code": getattr(tool_result, 'exit_code', None),
-                    })
+                    event_type = (
+                        EventType.TOOL_CALL_COMPLETED
+                        if tool_result.success
+                        else EventType.TOOL_CALL_FAILED
+                    )
+                    self._emit(
+                        event_type,
+                        data={
+                            "tool": tool_call.tool,
+                            "call_id": tool_call.id,
+                            "success": tool_result.success,
+                            "duration": round(duration, 3),
+                            "exit_code": getattr(tool_result, "exit_code", None),
+                        },
+                    )
 
-                    self._emit(EventType.OBSERVATION_CREATED, data={
-                        "tool": tool_call.tool,
-                        "success": tool_result.success,
-                        "output_summary": (tool_result.output or "")[:200] if tool_result.output else "",
-                    })
+                    self._emit(
+                        EventType.OBSERVATION_CREATED,
+                        data={
+                            "tool": tool_call.tool,
+                            "success": tool_result.success,
+                            "output_summary": (tool_result.output or "")[:200]
+                            if tool_result.output
+                            else "",
+                        },
+                    )
 
                 if self._current_task:
                     try:
-                        self._current_task.transition(TaskState.OBSERVING, reason="tool_execution_complete")
-                        self._emit_state_changed(TaskState.WAITING_FOR_TOOL, TaskState.OBSERVING, reason="tool_execution_complete")
+                        self._current_task.transition(
+                            TaskState.OBSERVING, reason="tool_execution_complete"
+                        )
+                        self._emit_state_changed(
+                            TaskState.WAITING_FOR_TOOL,
+                            TaskState.OBSERVING,
+                            reason="tool_execution_complete",
+                        )
                     except InvalidStateTransitionError:
                         pass
 
@@ -686,39 +834,66 @@ class Agent:
                     if self._replan_count >= self.config.max_replans:
                         if self._current_task:
                             try:
-                                self._current_task.transition(TaskState.FAILED, reason="max_replans_reached")
-                                self._emit_state_changed(TaskState.OBSERVING, TaskState.FAILED, reason="max_replans_reached")
+                                self._current_task.transition(
+                                    TaskState.FAILED, reason="max_replans_reached"
+                                )
+                                self._emit_state_changed(
+                                    TaskState.OBSERVING,
+                                    TaskState.FAILED,
+                                    reason="max_replans_reached",
+                                )
                             except InvalidStateTransitionError:
                                 pass
                         break
                     try:
-                        self._current_task.transition(TaskState.REPLANNING, reason="tool_failure_replan")
-                        self._emit_state_changed(TaskState.OBSERVING, TaskState.REPLANNING, reason="tool_failure_replan")
+                        self._current_task.transition(
+                            TaskState.REPLANNING, reason="tool_failure_replan"
+                        )
+                        self._emit_state_changed(
+                            TaskState.OBSERVING, TaskState.REPLANNING, reason="tool_failure_replan"
+                        )
                     except InvalidStateTransitionError:
                         pass
-                    new_plan = self._replan(tool_failures=[tr for tr in tool_results if not tr.success])
+                    new_plan = self._replan(
+                        tool_failures=[tr for tr in tool_results if not tr.success]
+                    )
                     if new_plan is None:
                         if self._current_task:
                             try:
-                                self._current_task.transition(TaskState.FAILED, reason="replan_failed")
-                                self._emit_state_changed(TaskState.REPLANNING, TaskState.FAILED, reason="replan_failed")
+                                self._current_task.transition(
+                                    TaskState.FAILED, reason="replan_failed"
+                                )
+                                self._emit_state_changed(
+                                    TaskState.REPLANNING, TaskState.FAILED, reason="replan_failed"
+                                )
                             except InvalidStateTransitionError:
                                 pass
                         break
                     self._replan_count += 1
-                    plan = [PlanStep.from_dict(s.to_dict()) if isinstance(s, PlanStep) else PlanStep.from_dict(s) for s in new_plan]
+                    plan = [
+                        PlanStep.from_dict(s.to_dict())
+                        if isinstance(s, PlanStep)
+                        else PlanStep.from_dict(s)
+                        for s in new_plan
+                    ]
                     self._current_task.plan = [s.to_dict() for s in plan]
                     try:
                         self._current_task.transition(TaskState.RUNNING, reason="replan_executing")
-                        self._emit_state_changed(TaskState.REPLANNING, TaskState.RUNNING, reason="replan_executing")
+                        self._emit_state_changed(
+                            TaskState.REPLANNING, TaskState.RUNNING, reason="replan_executing"
+                        )
                     except InvalidStateTransitionError:
                         pass
                     continue
 
                 try:
                     if self._current_task:
-                        self._current_task.transition(TaskState.RUNNING, reason="observation_complete")
-                        self._emit_state_changed(TaskState.OBSERVING, TaskState.RUNNING, reason="observation_complete")
+                        self._current_task.transition(
+                            TaskState.RUNNING, reason="observation_complete"
+                        )
+                        self._emit_state_changed(
+                            TaskState.OBSERVING, TaskState.RUNNING, reason="observation_complete"
+                        )
                 except InvalidStateTransitionError:
                     pass
                 continue
@@ -730,54 +905,78 @@ class Agent:
                     f"external_tool_execution={supports_external_execution}. "
                     f"Failing task as contract violation."
                 )
-                self._emit(EventType.RUNTIME_ERROR, data={
-                    "error": "runtime_contract_violation",
-                    "runtime": type(self.runtime).__name__,
-                    "tool_calls_capability": supports_tool_calls,
-                    "external_tool_execution_capability": supports_external_execution,
-                    "tool_calls_count": len(response.tool_calls),
-                })
+                self._emit(
+                    EventType.RUNTIME_ERROR,
+                    data={
+                        "error": "runtime_contract_violation",
+                        "runtime": type(self.runtime).__name__,
+                        "tool_calls_capability": supports_tool_calls,
+                        "external_tool_execution_capability": supports_external_execution,
+                        "tool_calls_count": len(response.tool_calls),
+                    },
+                )
                 results["stopped_reason"] = "runtime_contract_violation"
                 if self._current_task:
                     try:
-                        self._current_task.transition(TaskState.FAILED, reason="runtime_contract_violation")
-                        self._emit_state_changed(self._current_task.current_state, TaskState.FAILED, reason="runtime_contract_violation")
+                        self._current_task.transition(
+                            TaskState.FAILED, reason="runtime_contract_violation"
+                        )
+                        self._emit_state_changed(
+                            self._current_task.current_state,
+                            TaskState.FAILED,
+                            reason="runtime_contract_violation",
+                        )
                     except InvalidStateTransitionError:
                         pass
                 break
 
             if response.is_complete:
-                self._emit(EventType.ITERATION_COMPLETED, data={
-                    "iteration": self._iterations,
-                    "complete": True,
-                    "tools_used_this_iteration": 0,
-                })
+                self._emit(
+                    EventType.ITERATION_COMPLETED,
+                    data={
+                        "iteration": self._iterations,
+                        "complete": True,
+                        "tools_used_this_iteration": 0,
+                    },
+                )
                 break
 
-            self._emit(EventType.ITERATION_COMPLETED, data={
-                "iteration": self._iterations,
-                "complete": False,
-            })
+            self._emit(
+                EventType.ITERATION_COMPLETED,
+                data={
+                    "iteration": self._iterations,
+                    "complete": False,
+                },
+            )
 
         results["iterations"] = self._iterations
         results["tool_results"] = [tr.to_dict() for tr in tool_results]
         return results
 
-    def _should_replan_after_observation(self, tool_results: List[ToolResult]) -> bool:
+    def _should_replan_after_observation(self, tool_results: list[ToolResult]) -> bool:
         return any(not tr.success for tr in tool_results)
 
-    def _replan(self, tool_failures: Optional[List[ToolResult]] = None, verification_failures: Optional[List[str]] = None) -> Optional[List[PlanStep]]:
+    def _replan(
+        self,
+        tool_failures: list[ToolResult] | None = None,
+        verification_failures: list[str] | None = None,
+    ) -> list[PlanStep] | None:
         failed_tools = [tr.tool for tr in (tool_failures or []) if not tr.success]
         failed_verifications = verification_failures or []
-        self._current_task.hypotheses.append({
-            "statement": f"Replanning due to failures: tools={failed_tools}, verifications={failed_verifications}",
-            "supporting_evidence": [tr.error for tr in (tool_failures or []) if tr.error],
-            "contradicting_evidence": [],
-            "status": "PROPOSED",
-        })
+        self._current_task.hypotheses.append(
+            {
+                "statement": (
+                    f"Replanning due to failures: tools={failed_tools}, "
+                    f"verifications={failed_verifications}"
+                ),
+                "supporting_evidence": [tr.error for tr in (tool_failures or []) if tr.error],
+                "contradicting_evidence": [],
+                "status": "PROPOSED",
+            }
+        )
         context = ContextBuilder.build(
             self._current_task,
-            getattr(self, '_available_skills', []),
+            getattr(self, "_available_skills", []),
             self._current_task.memory_context.get("results", []),
             self._tool_results,
         )
@@ -793,46 +992,51 @@ class Agent:
         ]
         try:
             response = self.runtime.respond(context)
-            if hasattr(response, 'content') and response.content:
+            if hasattr(response, "content") and response.content:
                 return [PlanStep(action="replan_continue", description=response.content[:200])]
         except Exception as e:
             logger.error(f"Replan runtime error: {e}")
         return None
 
-    def _select_next_step(self, plan: List[PlanStep]) -> Optional[PlanStep]:
+    def _select_next_step(self, plan: list[PlanStep]) -> PlanStep | None:
         for step in plan:
             if step.status == StepStatus.PENDING:
                 return step
         return None
 
-    def _adapt_plan(self, plan: List[PlanStep], tool_results: List[ToolResult]) -> List[PlanStep]:
+    def _adapt_plan(self, plan: list[PlanStep], tool_results: list[ToolResult]) -> list[PlanStep]:
         failed_tools = [tr for tr in tool_results if not tr.success]
         if failed_tools:
-            self._current_task.hypotheses.append({
-                "statement": f"Tools failed: {[t.tool for t in failed_tools]}",
-                "supporting_evidence": [t.error for t in failed_tools if t.error],
-                "contradicting_evidence": [],
-                "status": "PROPOSED",
-            })
+            self._current_task.hypotheses.append(
+                {
+                    "statement": f"Tools failed: {[t.tool for t in failed_tools]}",
+                    "supporting_evidence": [t.error for t in failed_tools if t.error],
+                    "contradicting_evidence": [],
+                    "status": "PROPOSED",
+                }
+            )
         return plan
 
-    def _execute_step(self, step: PlanStep) -> Dict[str, Any]:
-        result = {"step": step.action, "description": step.description, "outcome": None, "error": None}
+    def _execute_step(self, step: PlanStep) -> dict[str, Any]:
+        result = {
+            "step": step.action,
+            "description": step.description,
+            "outcome": None,
+            "error": None,
+        }
         try:
             if self._tools_used >= self.config.max_tool_calls:
                 result["error"] = "Tool limit reached"
                 return result
             context = ContextBuilder.build(
                 self._current_task,
-                getattr(self, '_available_skills', []),
+                getattr(self, "_available_skills", []),
                 self._current_task.memory_context.get("results", []),
                 self._tool_results,
             )
             action_result = self.runtime.respond(context)
             result["outcome"] = (
-                action_result.to_dict()
-                if hasattr(action_result, "to_dict")
-                else str(action_result)
+                action_result.to_dict() if hasattr(action_result, "to_dict") else str(action_result)
             )
             self._tools_used += 1
             logger.info(f"Completed step: {step.action}")
@@ -844,7 +1048,10 @@ class Agent:
     def _store_task_memory(self, success: bool) -> None:
         if not self.memory or not self._current_task:
             return
-        summary = f"Completed {self._iterations} iterations, {self._tools_used} tools used, verification: {'passed' if success else 'failed'}"
+        summary = (
+            f"Completed {self._iterations} iterations, {self._tools_used} tools "
+            f"used, verification: {'passed' if success else 'failed'}"
+        )
         try:
             self.memory.store_task_result(
                 task_id=self._current_task.task_id,
@@ -857,14 +1064,17 @@ class Agent:
         except Exception as e:
             logger.debug(f"Memory storage after task: {e}")
 
-    def _run_verification(self, results: Dict[str, Any]) -> Dict[str, Any]:
-        self._emit(EventType.VERIFICATION_STARTED, data={
-            "flags": {
-                "format_check": self.config.run_format_check,
-                "build_check": self.config.run_build_check,
-                "tests": self.config.run_tests,
-            }
-        })
+    def _run_verification(self, results: dict[str, Any]) -> dict[str, Any]:
+        self._emit(
+            EventType.VERIFICATION_STARTED,
+            data={
+                "flags": {
+                    "format_check": self.config.run_format_check,
+                    "build_check": self.config.run_build_check,
+                    "tests": self.config.run_tests,
+                }
+            },
+        )
         if not self.config.enable_verification:
             self._emit(EventType.VERIFICATION_COMPLETED, data={"passed": True, "skipped": True})
             return {
@@ -878,19 +1088,24 @@ class Agent:
             }
 
         scope = getattr(self.config, "verification_scope", "project")
-        changed_files: Optional[List[str]] = None
+        changed_files: list[str] | None = None
 
         if scope == "changed-files":
             current_changed = self._capture_changed_files()
             if current_changed is None or self._baseline_changed_files is None:
-                logger.warning("Failed to capture changed files; falling back to project-wide verification")
+                logger.warning(
+                    "Failed to capture changed files; falling back to project-wide verification"
+                )
                 scope = "project"
             else:
                 delta = [f for f in current_changed if f not in self._baseline_changed_files]
                 changed_files = delta if delta else []
 
         if scope == "changed-files" and not changed_files:
-            self._emit(EventType.VERIFICATION_COMPLETED, data={"passed": True, "skipped": True, "reason": "no_changes"})
+            self._emit(
+                EventType.VERIFICATION_COMPLETED,
+                data={"passed": True, "skipped": True, "reason": "no_changes"},
+            )
             return {
                 "overall_passed": True,
                 "format_check": None,
@@ -913,15 +1128,18 @@ class Agent:
         for f in failures:
             logger.warning(f"Verification failure: {f}")
 
-        self._emit(EventType.VERIFICATION_COMPLETED, data={
-            "passed": report.to_dict().get("overall_passed", False),
-            "skipped": False,
-            "failure_count": len(failures),
-        })
+        self._emit(
+            EventType.VERIFICATION_COMPLETED,
+            data={
+                "passed": report.to_dict().get("overall_passed", False),
+                "skipped": False,
+                "failure_count": len(failures),
+            },
+        )
         return report.to_dict()
 
     @property
-    def current_task(self) -> Optional[Task]:
+    def current_task(self) -> Task | None:
         return self._current_task
 
     @property
@@ -936,11 +1154,11 @@ class Agent:
 def create_agent(
     runtime: RuntimeAdapter,
     memory: MemoryManager,
-    project_path: Optional[str | Path] = None,
-    config: Optional[AgentConfig] = None,
-    agentcore_config: Optional[AgentCoreConfig] = None,
-    event_bus: Optional[EventBus] = None,
-    persistence: Optional[TaskPersistenceManager] = None,
+    project_path: str | Path | None = None,
+    config: AgentConfig | None = None,
+    agentcore_config: AgentCoreConfig | None = None,
+    event_bus: EventBus | None = None,
+    persistence: TaskPersistenceManager | None = None,
 ) -> Agent:
     project = Path(project_path) if project_path else Path.cwd()
     core_config = agentcore_config or ConfigLoader.discover(project)

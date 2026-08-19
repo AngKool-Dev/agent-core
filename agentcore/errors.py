@@ -7,17 +7,17 @@ No secrets are leaked in error messages.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class AgentCoreError(Exception):
     """Base exception for all AgentCore errors."""
 
-    def __init__(self, message: str = "", details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str = "", details: dict[str, Any] | None = None):
         super().__init__(message)
         self.details = details or {}
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "error": self.__class__.__name__,
             "message": str(self),

@@ -2,16 +2,13 @@
 Tests for AgentCore lifecycle, shutdown, recovery, and limits (Phase 8).
 """
 
-import json
-import time
-
 import pytest
 
 from agentcore.agentcore import AgentCore, AgentCoreLimits, create_agent_core
-from agentcore.task_registry import TaskRecord, TaskRecordStatus
-from agentcore.events import EventBus, EventType
 from agentcore.errors import ConfigurationError
+from agentcore.events import EventBus, EventType
 from agentcore.task import Task, TaskState
+from agentcore.task_registry import TaskRecord, TaskRecordStatus
 
 
 class TestAgentCoreLimits:
@@ -135,7 +132,9 @@ class TestAgentCoreRegistryIntegration:
     def test_list_active_tasks(self):
         core = AgentCore()
         t1 = Task(task_id="t1", user_request="test", project="proj")
-        t2 = Task(task_id="t2", user_request="test", project="proj", current_state=TaskState.COMPLETED)
+        t2 = Task(
+            task_id="t2", user_request="test", project="proj", current_state=TaskState.COMPLETED
+        )
         core.registry.register(t1)
         core.registry.register(t2)
         active = core.registry.list_active()
@@ -145,7 +144,9 @@ class TestAgentCoreRegistryIntegration:
     def test_list_terminal_tasks(self):
         core = AgentCore()
         t1 = Task(task_id="t1", user_request="test", project="proj")
-        t2 = Task(task_id="t2", user_request="test", project="proj", current_state=TaskState.COMPLETED)
+        t2 = Task(
+            task_id="t2", user_request="test", project="proj", current_state=TaskState.COMPLETED
+        )
         core.registry.register(t1)
         core.registry.register(t2)
         terminal = core.registry.list_terminal()
@@ -155,7 +156,9 @@ class TestAgentCoreRegistryIntegration:
     def test_list_resumable_tasks(self):
         core = AgentCore()
         t1 = Task(task_id="t1", user_request="test", project="proj")
-        t2 = Task(task_id="t2", user_request="test", project="proj", current_state=TaskState.RUNNING)
+        t2 = Task(
+            task_id="t2", user_request="test", project="proj", current_state=TaskState.RUNNING
+        )
         core.registry.register(t1)
         core.registry.register(t2)
         core.registry.acquire_lock("t2", "holder-1")
@@ -225,6 +228,7 @@ class TestAgentCoreCreateFactory:
 
     def test_create_agent_core_with_config(self, tmp_path):
         from agentcore.config import AgentCoreConfig
+
         config = AgentCoreConfig(default_runtime="hermes")
         core = create_agent_core(config=config, project_path=tmp_path)
         assert core.config.default_runtime == "hermes"

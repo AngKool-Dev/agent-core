@@ -18,20 +18,22 @@ Architecture:
 Memory is optional. If the backend fails, AgentCore logs and continues.
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, List, Optional
+import builtins
 import logging
 import time
 import uuid
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-class MemoryType(str, Enum):
+class MemoryType(StrEnum):
     """Types of memories that can be stored."""
+
     TASK = "task"
     PROJECT = "project"
     CONVERSATION = "conversation"
@@ -39,6 +41,17 @@ class MemoryType(str, Enum):
     FACT = "fact"
     ERROR = "error"
     LEARNING = "learning"
+    PREFERENCE = "preference"
+    OUTCOME = "outcome"
+
+
+class MemoryConfidence(StrEnum):
+    """Confidence levels for harvested memories."""
+
+    CLAIMED = "claimed"
+    VERIFIED = "verified"
+    INFERRED = "inferred"
+    UNKNOWN = "unknown"
 
 
 @dataclass
@@ -48,14 +61,15 @@ class MemoryRecord:
 
     All fields are JSON-serializable via to_dict().
     """
+
     id: str = field(default_factory=lambda: f"mem-{uuid.uuid4().hex[:12]}")
     content: str = ""
     memory_type: str = MemoryType.FACT.value
     source: str = "agent"
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     metadata: dict[str, Any] = field(default_factory=dict)
     relevance: float = 0.0
-    project: Optional[str] = None
+    project: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -104,12 +118,34 @@ class MemoryBackend(ABC):
     """
 
     @abstractmethod
-    def search(self, query: str, project: Optional[str] = None, limit: int = 20) -> List[dict[str, Any]]:
-        """Search for memories matching the query."""
+    def search(
+        self,
+        query: str,
+        project: str | None = None,
+        limit: int = 20,
+        min_confidence: float | None = None,
+        memory_type: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Search for memories matching the query.
+
+        Args:
+            query: Search text.
+            project: Optional project/task scope.
+            limit: Maximum results.
+            min_confidence: Optional minimum confidence filter (0.0-1.0).
+            memory_type: Optional type filter (e.g. 'fact', 'task', 'outcome').
+        """
         pass
 
     @abstractmethod
-    def store(self, type: str, content: str, project: Optional[str] = None, importance: float = 0.5) -> dict[str, Any]:
+    def store(
+        self,
+        type: str,
+        content: str,
+        project: str | None = None,
+        importance: float = 0.5,
+        confidence: float = 0.5,
+    ) -> dict[str, Any]:
         """Store a memory record."""
         pass
 
@@ -119,17 +155,35 @@ class MemoryBackend(ABC):
         pass
 
     @abstractmethod
-    def list(self, project: Optional[str] = None, type: Optional[str] = None, limit: int = 50) -> List[dict[str, Any]]:
+    def list(
+        self, project: str | None = None, type: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
         """List memory records with optional filtering."""
         pass
+
+    def get(self, memory_id: str) -> dict[str, Any] | None:
+        """Retrieve a single memory by ID. Optional — default: not supported.
+
+        Returns the memory dict or None if not found / unsupported.
+        """
+        return None
 
     def delete(self, memory_id: str) -> bool:
         """Delete a memory record. Optional — default: not supported."""
         return False
 
-    def clear(self, project: Optional[str] = None) -> int:
+    def clear(self, project: str | None = None) -> int:
         """Clear memories, optionally scoped to a project. Optional — default: not supported."""
         return 0
+
+    def update_confidence(
+        self, memory_id: str, confidence: float, reason: str = ""
+    ) -> dict[str, Any] | None:
+        """Update a memory's confidence level. Optional — default: not supported.
+
+        Returns the updated memory dict or None if not found / unsupported.
+        """
+        return None
 
     def close(self) -> None:
         """Close any underlying resources. Optional — default: no-op."""
@@ -150,8 +204,13 @@ class MemoryManager:
     The Manager does NOT know SQL, Obsidian vault layout, or SQLite schemas.
     """
 
-    def __init__(self, backend: Optional[MemoryBackend] = None, event_bus=None,
-                 max_context_records: int = 10, max_content_chars: int = 2000):
+    def __init__(
+        self,
+        backend: MemoryBackend | None = None,
+        event_bus=None,
+        max_context_records: int = 10,
+        max_content_chars: int = 2000,
+    ):
         self._backend = backend
         self._event_bus = event_bus
         self._max_context_records = max_context_records
@@ -176,7 +235,8 @@ class MemoryManager:
         if self._event_bus is None or self._event_bus.subscriber_count == 0:
             return
         try:
-            from agentcore.events import create_event, EventType
+            from agentcore.events import EventType, create_event
+
             # Map string event_type to EventType
             if isinstance(event_type, str):
                 event_type = EventType(event_type)
@@ -191,8 +251,14 @@ class MemoryManager:
         except Exception:
             logger.debug("Failed to emit memory event", exc_info=True)
 
-    def search(self, query: str, project: Optional[str] = None, limit: int = 20,
-               task_id: str = "", iteration: Optional[int] = None) -> List[dict[str, Any]]:
+    def search(
+        self,
+        query: str,
+        project: str | None = None,
+        limit: int = 20,
+        task_id: str = "",
+        iteration: int | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Search for relevant memories.
 
@@ -203,10 +269,15 @@ class MemoryManager:
 
         effective_limit = min(limit, self._max_context_records)
 
-        self._emit("memory.recall.started", metadata={
-            "query": query[:200],
-            "project": project or "",
-        }, task_id=task_id, iteration=iteration)
+        self._emit(
+            "memory.recall.started",
+            metadata={
+                "query": query[:200],
+                "project": project or "",
+            },
+            task_id=task_id,
+            iteration=iteration,
+        )
 
         start = time.time()
         try:
@@ -217,38 +288,57 @@ class MemoryManager:
             normalized = []
             for r in results:
                 if isinstance(r, dict):
-                    normalized.append({
-                        "id": r.get("id", ""),
-                        "content": r.get("content", "")[:self._max_content_chars],
-                        "type": r.get("type", r.get("memory_type", "")),
-                        "project": r.get("project", project or ""),
-                        "relevance": r.get("relevance", r.get("score", 0.0)),
-                        "timestamp": r.get("timestamp", r.get("created_at", "")),
-                    })
+                    normalized.append(
+                        {
+                            "id": r.get("id", ""),
+                            "content": r.get("content", "")[: self._max_content_chars],
+                            "type": r.get("type", r.get("memory_type", "")),
+                            "project": r.get("project", project or ""),
+                            "relevance": r.get("relevance", r.get("score", 0.0)),
+                            "timestamp": r.get("timestamp", r.get("created_at", "")),
+                        }
+                    )
                 else:
-                    normalized.append({"content": str(r)[:self._max_content_chars]})
+                    normalized.append({"content": str(r)[: self._max_content_chars]})
 
-            self._emit("memory.recall.completed", data={
-                "result_count": len(normalized),
-                "duration": round(duration, 3),
-                "success": True,
-            }, task_id=task_id, iteration=iteration)
+            self._emit(
+                "memory.recall.completed",
+                data={
+                    "result_count": len(normalized),
+                    "duration": round(duration, 3),
+                    "success": True,
+                },
+                task_id=task_id,
+                iteration=iteration,
+            )
 
             return normalized
 
         except Exception as e:
             duration = time.time() - start
             logger.warning(f"Memory search failed: {e}")
-            self._emit("memory.error", data={
-                "operation": "search",
-                "error": str(e),
-                "duration": round(duration, 3),
-            }, task_id=task_id, iteration=iteration)
+            self._emit(
+                "memory.error",
+                data={
+                    "operation": "search",
+                    "error": str(e),
+                    "duration": round(duration, 3),
+                },
+                task_id=task_id,
+                iteration=iteration,
+            )
             return []
 
-    def store(self, type: str, content: str, project: Optional[str] = None,
-              importance: float = 0.5,
-              task_id: str = "", iteration: Optional[int] = None) -> Optional[dict[str, Any]]:
+    def store(
+        self,
+        type: str,
+        content: str,
+        project: str | None = None,
+        importance: float = 0.5,
+        confidence: float = 0.5,
+        task_id: str = "",
+        iteration: int | None = None,
+    ) -> dict[str, Any] | None:
         """
         Store a memory record.
 
@@ -264,37 +354,57 @@ class MemoryManager:
             return None
 
         # Limit content size
-        content = content[:self._max_content_chars]
+        content = content[: self._max_content_chars]
 
-        self._emit("memory.store.started", metadata={
-            "type": type,
-            "project": project or "",
-        }, task_id=task_id, iteration=iteration)
+        self._emit(
+            "memory.store.started",
+            metadata={
+                "type": type,
+                "project": project or "",
+            },
+            task_id=task_id,
+            iteration=iteration,
+        )
 
         start = time.time()
         try:
-            result = self._backend.store(type, content, project, importance)
+            try:
+                result = self._backend.store(
+                    type, content, project, importance, confidence=confidence
+                )
+            except TypeError:
+                result = self._backend.store(type, content, project, importance)
             duration = time.time() - start
 
-            self._emit("memory.store.completed", data={
-                "memory_id": result.get("id", "") if isinstance(result, dict) else "",
-                "duration": round(duration, 3),
-                "success": True,
-            }, task_id=task_id, iteration=iteration)
+            self._emit(
+                "memory.store.completed",
+                data={
+                    "memory_id": result.get("id", "") if isinstance(result, dict) else "",
+                    "duration": round(duration, 3),
+                    "success": True,
+                },
+                task_id=task_id,
+                iteration=iteration,
+            )
 
             return result
 
         except Exception as e:
             duration = time.time() - start
             logger.warning(f"Memory store failed: {e}")
-            self._emit("memory.error", data={
-                "operation": "store",
-                "error": str(e),
-                "duration": round(duration, 3),
-            }, task_id=task_id, iteration=iteration)
+            self._emit(
+                "memory.error",
+                data={
+                    "operation": "store",
+                    "error": str(e),
+                    "duration": round(duration, 3),
+                },
+                task_id=task_id,
+                iteration=iteration,
+            )
             return None
 
-    def update(self, memory_id: str, content: str) -> Optional[dict[str, Any]]:
+    def update(self, memory_id: str, content: str) -> dict[str, Any] | None:
         """Update a memory record. Returns None on failure."""
         if not self.enabled:
             return None
@@ -304,8 +414,22 @@ class MemoryManager:
             logger.warning(f"Memory update failed: {e}")
             return None
 
-    def list(self, project: Optional[str] = None, type: Optional[str] = None,
-             limit: int = 50) -> List[dict[str, Any]]:
+    def get(self, memory_id: str) -> dict[str, Any] | None:
+        """Retrieve a memory by ID. Returns None if not found or on failure."""
+        if not self.enabled:
+            return None
+        try:
+            getter = getattr(self._backend, "get", None)
+            if getter is None:
+                return None
+            return getter(memory_id)
+        except Exception as e:
+            logger.warning(f"Memory get failed: {e}")
+            return None
+
+    def list(
+        self, project: str | None = None, type: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
         """List memory records. Returns empty list on failure."""
         if not self.enabled:
             return []
@@ -320,18 +444,18 @@ class MemoryManager:
         if not self.enabled:
             return False
         try:
-            if hasattr(self._backend, 'delete'):
+            if hasattr(self._backend, "delete"):
                 return self._backend.delete(memory_id)
         except Exception as e:
             logger.warning(f"Memory delete failed: {e}")
         return False
 
-    def clear(self, project: Optional[str] = None) -> int:
+    def clear(self, project: str | None = None) -> int:
         """Clear memories. Returns count of cleared records."""
         if not self.enabled:
             return 0
         try:
-            if hasattr(self._backend, 'clear'):
+            if hasattr(self._backend, "clear"):
                 return self._backend.clear(project)
         except Exception as e:
             logger.warning(f"Memory clear failed: {e}")
@@ -339,42 +463,79 @@ class MemoryManager:
 
     def close(self) -> None:
         """Close the backend if it supports closing."""
-        if self._backend and hasattr(self._backend, 'close'):
+        if self._backend and hasattr(self._backend, "close"):
             try:
                 self._backend.close()
             except Exception:
                 pass
 
-    def store_decision(self, decision: str, project: str, context: Optional[str] = None,
-                       task_id: str = "", iteration: Optional[int] = None) -> Optional[dict[str, Any]]:
+    def store_decision(
+        self,
+        decision: str,
+        project: str,
+        context: str | None = None,
+        task_id: str = "",
+        iteration: int | None = None,
+    ) -> dict[str, Any] | None:
         """Store a decision memory."""
         content = f"{context}\n\nDecision: {decision}" if context else decision
-        return self.store(MemoryType.DECISION.value, content, project=project,
-                          importance=0.8, task_id=task_id, iteration=iteration)
+        return self.store(
+            MemoryType.DECISION.value,
+            content,
+            project=project,
+            importance=0.8,
+            task_id=task_id,
+            iteration=iteration,
+        )
 
-    def store_lesson(self, lesson: str, project: str,
-                     task_id: str = "", iteration: Optional[int] = None) -> Optional[dict[str, Any]]:
+    def store_lesson(
+        self, lesson: str, project: str, task_id: str = "", iteration: int | None = None
+    ) -> dict[str, Any] | None:
         """Store a lesson learned."""
-        return self.store(MemoryType.LEARNING.value, lesson, project=project,
-                          importance=0.7, task_id=task_id, iteration=iteration)
+        return self.store(
+            MemoryType.LEARNING.value,
+            lesson,
+            project=project,
+            importance=0.7,
+            task_id=task_id,
+            iteration=iteration,
+        )
 
-    def store_project_architecture(self, architecture: str, project: str,
-                                   task_id: str = "", iteration: Optional[int] = None) -> Optional[dict[str, Any]]:
+    def store_project_architecture(
+        self, architecture: str, project: str, task_id: str = "", iteration: int | None = None
+    ) -> dict[str, Any] | None:
         """Store architecture information."""
-        return self.store(MemoryType.PROJECT.value, architecture, project=project,
-                          importance=0.9, task_id=task_id, iteration=iteration)
+        return self.store(
+            MemoryType.PROJECT.value,
+            architecture,
+            project=project,
+            importance=0.9,
+            task_id=task_id,
+            iteration=iteration,
+        )
 
-    def retrieve_relevant_memory(self, query: str, project: str,
-                                 types: Optional[List[str]] = None,
-                                 task_id: str = "", iteration: Optional[int] = None) -> str:
+    def retrieve_relevant_memory(
+        self,
+        query: str,
+        project: str,
+        types: builtins.list[str] | None = None,
+        task_id: str = "",
+        iteration: int | None = None,
+    ) -> str:
         """Retrieve relevant memories as a formatted string for context."""
         results = self.search(query, project, limit=10, task_id=task_id, iteration=iteration)
         relevant = [r for r in results if types is None or r.get("type") in types]
         return "\n\n---\n\n".join(r.get("content", "") for r in relevant if r.get("content"))
 
-    def store_task_result(self, task_id: str, user_request: str, success: bool,
-                          summary: str, project: str,
-                          iteration: Optional[int] = None) -> Optional[dict[str, Any]]:
+    def store_task_result(
+        self,
+        task_id: str,
+        user_request: str,
+        success: bool,
+        summary: str,
+        project: str,
+        iteration: int | None = None,
+    ) -> dict[str, Any] | None:
         """Store the outcome of a completed task."""
         content = (
             f"Task: {user_request}\n"
@@ -382,9 +543,12 @@ class MemoryManager:
             f"Summary: {summary}"
         )
         return self.store(
-            MemoryType.TASK.value, content, project=project,
+            MemoryType.TASK.value,
+            content,
+            project=project,
             importance=0.7 if success else 0.3,
-            task_id=task_id, iteration=iteration,
+            task_id=task_id,
+            iteration=iteration,
         )
 
 
@@ -398,26 +562,44 @@ class InMemoryBackend(MemoryBackend):
     def __init__(self):
         self._records: dict[str, dict[str, Any]] = {}
 
-    def search(self, query: str, project: Optional[str] = None, limit: int = 20) -> List[dict[str, Any]]:
+    def search(
+        self,
+        query: str,
+        project: str | None = None,
+        limit: int = 20,
+        min_confidence: float | None = None,
+        memory_type: str | None = None,
+    ) -> list[dict[str, Any]]:
         query_lower = query.lower()
         results = []
         for r in self._records.values():
             if project and r.get("project") != project:
+                continue
+            if memory_type and r.get("type") != memory_type:
+                continue
+            if min_confidence is not None and r.get("confidence", 0.5) < min_confidence:
                 continue
             content = r.get("content", "")
             if query_lower in content.lower():
                 results.append(dict(r))
         return sorted(results, key=lambda x: x.get("importance", 0), reverse=True)[:limit]
 
-    def store(self, type: str, content: str, project: Optional[str] = None,
-              importance: float = 0.5) -> dict[str, Any]:
+    def store(
+        self,
+        type: str,
+        content: str,
+        project: str | None = None,
+        importance: float = 0.5,
+        confidence: float = 0.5,
+    ) -> dict[str, Any]:
         record = {
             "id": f"mem-{uuid.uuid4().hex[:12]}",
             "type": type,
             "content": content,
             "project": project,
             "importance": importance,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "confidence": confidence,
+            "created_at": datetime.now(UTC).isoformat(),
         }
         self._records[record["id"]] = record
         return record
@@ -428,8 +610,14 @@ class InMemoryBackend(MemoryBackend):
         self._records[memory_id]["content"] = content
         return dict(self._records[memory_id])
 
-    def list(self, project: Optional[str] = None, type: Optional[str] = None,
-             limit: int = 50) -> List[dict[str, Any]]:
+    def get(self, memory_id: str) -> dict[str, Any] | None:
+        if memory_id in self._records:
+            return dict(self._records[memory_id])
+        return None
+
+    def list(
+        self, project: str | None = None, type: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
         results = []
         for r in self._records.values():
             if project and r.get("project") != project:
@@ -445,7 +633,7 @@ class InMemoryBackend(MemoryBackend):
             return True
         return False
 
-    def clear(self, project: Optional[str] = None) -> int:
+    def clear(self, project: str | None = None) -> int:
         if project:
             to_remove = [k for k, v in self._records.items() if v.get("project") == project]
             for k in to_remove:
@@ -455,6 +643,17 @@ class InMemoryBackend(MemoryBackend):
             count = len(self._records)
             self._records.clear()
             return count
+
+    def update_confidence(
+        self, memory_id: str, confidence: float, reason: str = ""
+    ) -> dict[str, Any] | None:
+        if memory_id not in self._records:
+            return None
+        existing = self._records[memory_id]
+        existing["confidence"] = confidence
+        if reason:
+            existing["confidence_reason"] = reason
+        return dict(existing)
 
     def close(self) -> None:
         pass

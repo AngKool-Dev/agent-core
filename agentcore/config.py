@@ -15,12 +15,15 @@ import os
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from agentcore.agent import AgentConfig
 
 # ---------------------------------------------------------------------------
 # Cross-platform user config directory
 # ---------------------------------------------------------------------------
+
 
 def user_config_dir() -> Path:
     """Return the platform-appropriate user-level config directory."""
@@ -42,6 +45,7 @@ def user_config_dir() -> Path:
 
 def sys_platform_darwin() -> bool:
     import platform
+
     return platform.system() == "Darwin"
 
 
@@ -63,22 +67,26 @@ def user_data_dir() -> Path:
 # Typed config sections
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class SkillConfig:
     """Skill discovery configuration."""
-    paths: List[str] = field(default_factory=list)
+
+    paths: list[str] = field(default_factory=list)
 
 
 @dataclass
 class MemoryConfig:
     """Memory backend configuration."""
-    backend: str = "db_obsidian"
+
+    backend: str = "in_memory"
     db_path: str = ""  # empty = use default per-platform path
 
 
 @dataclass
 class ToolLimits:
     """Tool and iteration limits."""
+
     max_iterations: int = 10
     max_tool_calls: int = 50
     max_runtime_seconds: int = 300
@@ -88,6 +96,7 @@ class ToolLimits:
 @dataclass
 class VerificationConfig:
     """Verification gate settings."""
+
     run_format_check: bool = True
     run_build_check: bool = True
     run_tests: bool = True
@@ -101,17 +110,19 @@ class AgentCoreConfig:
     Built from TOML via ConfigLoader. All sections are optional;
     missing values fall back to built-in defaults.
     """
+
     # Agent runtime settings
     default_runtime: str = "hermes"
-    model: Optional[str] = None
-    provider: Optional[str] = None
+    model: str | None = None
+    provider: str | None = None
 
     # Skill discovery
-    skill_paths: List[str] = field(default_factory=list)
+    skill_paths: list[str] = field(default_factory=list)
 
     # Memory
-    memory_backend: str = "db_obsidian"
+    memory_backend: str = "in_memory"
     memory_db_path: str = ""
+    harvesting_enabled: bool = True
 
     # Tool limits
     max_iterations: int = 10
@@ -127,14 +138,23 @@ class AgentCoreConfig:
 
     # Project discovery
     max_context_files: int = 50
-    exclude_patterns: List[str] = field(default_factory=lambda: [
-        "*.pyc", "*.pyo", "__pycache__", ".git", "*.egg-info",
-        "node_modules", ".venv", "venv",
-    ])
+    exclude_patterns: list[str] = field(
+        default_factory=lambda: [
+            "*.pyc",
+            "*.pyo",
+            "__pycache__",
+            ".git",
+            "*.egg-info",
+            "node_modules",
+            ".venv",
+            "venv",
+        ]
+    )
 
-    def to_agent_config(self) -> "AgentConfig":
+    def to_agent_config(self) -> AgentConfig:
         """Extract the subset relevant to AgentConfig."""
         from agentcore.agent import AgentConfig
+
         return AgentConfig(
             model=self.model,
             provider=self.provider,
@@ -150,7 +170,7 @@ class AgentCoreConfig:
         )
 
     @classmethod
-    def defaults(cls) -> "AgentCoreConfig":
+    def defaults(cls) -> AgentCoreConfig:
         """Return a config populated with built-in defaults and default paths."""
         return cls(
             default_runtime="hermes",
@@ -166,6 +186,7 @@ class AgentCoreConfig:
             "skill_paths": list(self.skill_paths),
             "memory_backend": self.memory_backend,
             "memory_db_path": self.memory_db_path,
+            "harvesting_enabled": self.harvesting_enabled,
             "max_iterations": self.max_iterations,
             "max_tool_calls": self.max_tool_calls,
             "max_runtime_seconds": self.max_runtime_seconds,
@@ -178,7 +199,7 @@ class AgentCoreConfig:
         }
 
 
-def _default_skill_paths() -> List[str]:
+def _default_skill_paths() -> list[str]:
     """Return default skill search directories, platform-appropriate."""
     paths = []
 
@@ -217,7 +238,7 @@ class ConfigLoader:
     """
 
     @staticmethod
-    def discover(project_path: Optional[Path] = None) -> AgentCoreConfig:
+    def discover(project_path: Path | None = None) -> AgentCoreConfig:
         """
         Discover configuration in priority order.
 
@@ -269,7 +290,7 @@ class ConfigLoader:
         return ConfigLoader._parse_toml(data)
 
     @staticmethod
-    def _parse_toml(data: Dict[str, Any]) -> AgentCoreConfig:
+    def _parse_toml(data: dict[str, Any]) -> AgentCoreConfig:
         """Parse a TOML dict into an AgentCoreConfig."""
         config = AgentCoreConfig()
 
@@ -312,7 +333,8 @@ class ConfigLoader:
                 limits_data.get("max_tools_per_task", config.max_tool_calls),
             )
             config.max_runtime_seconds = limits_data.get(
-                "max_runtime_seconds", limits_data.get("timeout_seconds", config.max_runtime_seconds)
+                "max_runtime_seconds",
+                limits_data.get("timeout_seconds", config.max_runtime_seconds),
             )
             config.timeout = limits_data.get("timeout", config.timeout)
 
@@ -322,18 +344,22 @@ class ConfigLoader:
             config.run_format_check = verify_data.get("run_format_check", config.run_format_check)
             config.run_build_check = verify_data.get("run_build_check", config.run_build_check)
             config.run_tests = verify_data.get("run_tests", config.run_tests)
-            config.verification_scope = verify_data.get("verification_scope", config.verification_scope)
+            config.verification_scope = verify_data.get(
+                "verification_scope", config.verification_scope
+            )
 
         # Project discovery
         discovery_data = data.get("project_discovery", {})
         if discovery_data:
-            config.max_context_files = discovery_data.get("max_context_files", config.max_context_files)
+            config.max_context_files = discovery_data.get(
+                "max_context_files", config.max_context_files
+            )
             patterns = discovery_data.get("exclude_patterns", [])
             if isinstance(patterns, list):
                 config.exclude_patterns = patterns
 
         # Also check root-level [tool_limits] for backwards compat with old config format
-        old_limits = data.get("tool_limits", {})
+        data.get("tool_limits", {})
         # Already handled above — but also check if there's a flat top-level section
 
         return config
@@ -348,7 +374,7 @@ class ConfigLoader:
             config.skill_paths = _default_skill_paths()
 
 
-def resolve_skill_paths(config: Optional[AgentCoreConfig] = None) -> List[str]:
+def resolve_skill_paths(config: AgentCoreConfig | None = None) -> list[str]:
     """
     Resolve skill search paths with environment-variable override.
 

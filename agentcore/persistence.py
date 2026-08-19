@@ -21,18 +21,16 @@ Persistence is optional. If the backend fails, AgentCore logs and continues.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import tempfile
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-import logging
-import uuid
+from typing import Any
 
 from .config import user_data_dir
-from .events import AgentEvent, EventType, EventBus, create_event
+from .events import AgentEvent, EventBus, EventType, create_event
 from .task import Task, TaskState
 
 logger = logging.getLogger(__name__)
@@ -122,16 +120,19 @@ def _sanitize_for_persistence(data: Any, max_output_length: int = 2000) -> Any:
 # PersistenceBackend interface
 # ---------------------------------------------------------------------------
 
+
 class PersistenceBackend(ABC):
     """Provider-neutral interface for task record persistence."""
 
     @abstractmethod
-    def save_task(self, task_id: str, task_dict: Dict[str, Any], schema_version: int = CURRENT_SCHEMA_VERSION) -> bool:
+    def save_task(
+        self, task_id: str, task_dict: dict[str, Any], schema_version: int = CURRENT_SCHEMA_VERSION
+    ) -> bool:
         """Save a task record. Returns True on success."""
         pass
 
     @abstractmethod
-    def load_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def load_task(self, task_id: str) -> dict[str, Any] | None:
         """Load a task record by ID. Returns None if not found."""
         pass
 
@@ -141,22 +142,22 @@ class PersistenceBackend(ABC):
         pass
 
     @abstractmethod
-    def list_tasks(self) -> List[str]:
+    def list_tasks(self) -> list[str]:
         """List all task IDs."""
         pass
 
     @abstractmethod
-    def save_event(self, event_dict: Dict[str, Any]) -> bool:
+    def save_event(self, event_dict: dict[str, Any]) -> bool:
         """Append an event to the persistent log. Returns True on success."""
         pass
 
     @abstractmethod
-    def get_events(self, task_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_events(self, task_id: str, limit: int = 100) -> list[dict[str, Any]]:
         """Get events for a task, newest first."""
         pass
 
     @abstractmethod
-    def clear(self, task_id: Optional[str] = None) -> int:
+    def clear(self, task_id: str | None = None) -> int:
         """Clear all data, or data for a specific task. Returns count cleared."""
         pass
 
@@ -165,6 +166,7 @@ class PersistenceBackend(ABC):
 # InMemoryPersistenceBackend
 # ---------------------------------------------------------------------------
 
+
 class InMemoryPersistenceBackend(PersistenceBackend):
     """In-memory persistence backend for testing and development.
 
@@ -172,18 +174,21 @@ class InMemoryPersistenceBackend(PersistenceBackend):
     """
 
     def __init__(self):
-        self._tasks: Dict[str, Dict[str, Any]] = {}
-        self._events: Dict[str, List[Dict[str, Any]]] = {}
+        self._tasks: dict[str, dict[str, Any]] = {}
+        self._events: dict[str, list[dict[str, Any]]] = {}
 
-    def save_task(self, task_id: str, task_dict: Dict[str, Any], schema_version: int = CURRENT_SCHEMA_VERSION) -> bool:
+    def save_task(
+        self, task_id: str, task_dict: dict[str, Any], schema_version: int = CURRENT_SCHEMA_VERSION
+    ) -> bool:
         record = dict(task_dict)
         record["schema_version"] = schema_version
-        record["_persisted_at"] = datetime.now(timezone.utc).isoformat()
+        record["_persisted_at"] = datetime.now(UTC).isoformat()
         self._tasks[task_id] = record
         return True
 
-    def load_task(self, task_id: str) -> Optional[Dict[str, Any]]:
-        return self._tasks.get(task_id)
+    def load_task(self, task_id: str) -> dict[str, Any] | None:
+        data = self._tasks.get(task_id)
+        return dict(data) if data is not None else None
 
     def delete_task(self, task_id: str) -> bool:
         if task_id in self._tasks:
@@ -191,21 +196,21 @@ class InMemoryPersistenceBackend(PersistenceBackend):
             return True
         return False
 
-    def list_tasks(self) -> List[str]:
+    def list_tasks(self) -> list[str]:
         return list(self._tasks.keys())
 
-    def save_event(self, event_dict: Dict[str, Any]) -> bool:
+    def save_event(self, event_dict: dict[str, Any]) -> bool:
         task_id = event_dict.get("task_id", "")
         if task_id not in self._events:
             self._events[task_id] = []
         self._events[task_id].append(dict(event_dict))
         return True
 
-    def get_events(self, task_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_events(self, task_id: str, limit: int = 100) -> list[dict[str, Any]]:
         events = self._events.get(task_id, [])
         return events[-limit:]
 
-    def clear(self, task_id: Optional[str] = None) -> int:
+    def clear(self, task_id: str | None = None) -> int:
         if task_id is None:
             count = len(self._tasks) + sum(len(v) for v in self._events.values())
             self._tasks.clear()
@@ -228,6 +233,7 @@ class InMemoryPersistenceBackend(PersistenceBackend):
 # FilesystemPersistenceBackend
 # ---------------------------------------------------------------------------
 
+
 class FilesystemPersistenceBackend(PersistenceBackend):
     """Crash-safe atomic filesystem persistence backend.
 
@@ -235,7 +241,7 @@ class FilesystemPersistenceBackend(PersistenceBackend):
     first, then moved into place with os.replace().
     """
 
-    def __init__(self, base_path: Optional[Path] = None):
+    def __init__(self, base_path: Path | None = None):
         if base_path is None:
             base_path = user_data_dir() / "tasks"
         self._base_path = Path(base_path)
@@ -251,7 +257,7 @@ class FilesystemPersistenceBackend(PersistenceBackend):
     def _event_path(self, task_id: str) -> Path:
         return self._events_dir / f"{task_id}.jsonl"
 
-    def _atomic_write(self, path: Path, data: Dict[str, Any]) -> bool:
+    def _atomic_write(self, path: Path, data: dict[str, Any]) -> bool:
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             fd, tmp_path = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
@@ -270,19 +276,21 @@ class FilesystemPersistenceBackend(PersistenceBackend):
             logger.warning(f"Atomic write failed for {path}: {e}")
             return False
 
-    def save_task(self, task_id: str, task_dict: Dict[str, Any], schema_version: int = CURRENT_SCHEMA_VERSION) -> bool:
+    def save_task(
+        self, task_id: str, task_dict: dict[str, Any], schema_version: int = CURRENT_SCHEMA_VERSION
+    ) -> bool:
         path = self._task_path(task_id)
         record = dict(task_dict)
         record["schema_version"] = schema_version
-        record["_persisted_at"] = datetime.now(timezone.utc).isoformat()
+        record["_persisted_at"] = datetime.now(UTC).isoformat()
         return self._atomic_write(path, record)
 
-    def load_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def load_task(self, task_id: str) -> dict[str, Any] | None:
         path = self._task_path(task_id)
         if not path.exists():
             return None
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
             logger.warning(f"Failed to load task {task_id}: {e}")
@@ -298,12 +306,12 @@ class FilesystemPersistenceBackend(PersistenceBackend):
                 logger.warning(f"Failed to delete task {task_id}: {e}")
         return False
 
-    def list_tasks(self) -> List[str]:
+    def list_tasks(self) -> list[str]:
         if not self._tasks_dir.exists():
             return []
         return [p.stem for p in self._tasks_dir.glob("*.json")]
 
-    def save_event(self, event_dict: Dict[str, Any]) -> bool:
+    def save_event(self, event_dict: dict[str, Any]) -> bool:
         task_id = event_dict.get("task_id", "")
         if not task_id:
             return False
@@ -318,13 +326,13 @@ class FilesystemPersistenceBackend(PersistenceBackend):
             logger.warning(f"Failed to append event for {task_id}: {e}")
             return False
 
-    def get_events(self, task_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_events(self, task_id: str, limit: int = 100) -> list[dict[str, Any]]:
         path = self._event_path(task_id)
         if not path.exists():
             return []
         events = []
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if line:
@@ -337,7 +345,7 @@ class FilesystemPersistenceBackend(PersistenceBackend):
             logger.warning(f"Failed to read events for {task_id}: {e}")
             return []
 
-    def clear(self, task_id: Optional[str] = None) -> int:
+    def clear(self, task_id: str | None = None) -> int:
         count = 0
         if task_id is None:
             for p in list(self._tasks_dir.glob("*.json")):
@@ -377,21 +385,24 @@ class FilesystemPersistenceBackend(PersistenceBackend):
 # EventStore interface
 # ---------------------------------------------------------------------------
 
+
 class EventStore(ABC):
     """Provider-neutral interface for event log persistence."""
 
     @abstractmethod
-    def append(self, event_dict: Dict[str, Any]) -> bool:
+    def append(self, event_dict: dict[str, Any]) -> bool:
         """Append an event. Returns True on success."""
         pass
 
     @abstractmethod
-    def get_events(self, task_id: str, limit: int = 100, since: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_events(
+        self, task_id: str, limit: int = 100, since: str | None = None
+    ) -> list[dict[str, Any]]:
         """Get events for a task."""
         pass
 
     @abstractmethod
-    def clear(self, task_id: Optional[str] = None) -> int:
+    def clear(self, task_id: str | None = None) -> int:
         """Clear events. Returns count cleared."""
         pass
 
@@ -400,20 +411,22 @@ class InMemoryEventStore(EventStore):
     """In-memory event store for testing."""
 
     def __init__(self):
-        self._events: Dict[str, List[Dict[str, Any]]] = {}
+        self._events: dict[str, list[dict[str, Any]]] = {}
 
-    def append(self, event_dict: Dict[str, Any]) -> bool:
+    def append(self, event_dict: dict[str, Any]) -> bool:
         task_id = event_dict.get("task_id", "")
         self._events.setdefault(task_id, []).append(dict(event_dict))
         return True
 
-    def get_events(self, task_id: str, limit: int = 100, since: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_events(
+        self, task_id: str, limit: int = 100, since: str | None = None
+    ) -> list[dict[str, Any]]:
         events = self._events.get(task_id, [])
         if since:
             events = [e for e in events if e.get("timestamp", "") > since]
         return events[-limit:]
 
-    def clear(self, task_id: Optional[str] = None) -> int:
+    def clear(self, task_id: str | None = None) -> int:
         if task_id is None:
             count = sum(len(v) for v in self._events.values())
             self._events.clear()
@@ -426,7 +439,7 @@ class InMemoryEventStore(EventStore):
 class FilesystemEventStore(EventStore):
     """Filesystem-backed event store using JSONL."""
 
-    def __init__(self, base_path: Optional[Path] = None):
+    def __init__(self, base_path: Path | None = None):
         if base_path is None:
             base_path = user_data_dir() / "events"
         self._base_path = Path(base_path)
@@ -435,7 +448,7 @@ class FilesystemEventStore(EventStore):
     def _event_path(self, task_id: str) -> Path:
         return self._base_path / f"{task_id}.jsonl"
 
-    def append(self, event_dict: Dict[str, Any]) -> bool:
+    def append(self, event_dict: dict[str, Any]) -> bool:
         task_id = event_dict.get("task_id", "")
         if not task_id:
             return False
@@ -450,13 +463,15 @@ class FilesystemEventStore(EventStore):
             logger.warning(f"Event store append failed: {e}")
             return False
 
-    def get_events(self, task_id: str, limit: int = 100, since: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_events(
+        self, task_id: str, limit: int = 100, since: str | None = None
+    ) -> list[dict[str, Any]]:
         path = self._event_path(task_id)
         if not path.exists():
             return []
         events = []
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if line:
@@ -471,7 +486,7 @@ class FilesystemEventStore(EventStore):
             logger.warning(f"Event store read failed: {e}")
             return []
 
-    def clear(self, task_id: Optional[str] = None) -> int:
+    def clear(self, task_id: str | None = None) -> int:
         if task_id is None:
             count = len(list(self._base_path.glob("*.jsonl")))
             for p in self._base_path.glob("*.jsonl"):
@@ -494,6 +509,7 @@ class FilesystemEventStore(EventStore):
 # TaskPersistenceManager
 # ---------------------------------------------------------------------------
 
+
 class TaskPersistenceManager:
     """
     Orchestration layer around PersistenceBackend and EventStore.
@@ -508,9 +524,9 @@ class TaskPersistenceManager:
 
     def __init__(
         self,
-        backend: Optional[PersistenceBackend] = None,
-        event_store: Optional[EventStore] = None,
-        event_bus: Optional[EventBus] = None,
+        backend: PersistenceBackend | None = None,
+        event_store: EventStore | None = None,
+        event_bus: EventBus | None = None,
     ):
         self._backend = backend or InMemoryPersistenceBackend()
         self._event_store = event_store or InMemoryEventStore()
@@ -525,10 +541,15 @@ class TaskPersistenceManager:
     def event_store(self) -> EventStore:
         return self._event_store
 
-    def set_event_bus(self, event_bus: Optional[EventBus]) -> None:
+    def set_event_bus(self, event_bus: EventBus | None) -> None:
         self._event_bus = event_bus
 
-    def _emit(self, event_type: EventType, data: Optional[Dict[str, Any]] = None, metadata: Optional[Dict[str, Any]] = None) -> None:
+    def _emit(
+        self,
+        event_type: EventType,
+        data: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         if self._event_bus is None or self._event_bus.subscriber_count == 0:
             return
         try:
@@ -542,7 +563,7 @@ class TaskPersistenceManager:
         except Exception:
             logger.debug("Failed to emit persistence event", exc_info=True)
 
-    def _prepare_task_dict(self, task: Task) -> Dict[str, Any]:
+    def _prepare_task_dict(self, task: Task) -> dict[str, Any]:
         task_dict = task.to_dict()
         return _sanitize_for_persistence(task_dict)
 
@@ -550,24 +571,30 @@ class TaskPersistenceManager:
         """Checkpoint a task at a lifecycle boundary."""
         if not self._checkpoint_enabled:
             return
-        if task.is_terminal():
+        if task.current_state == TaskState.RUNNING:
             return
         task_dict = self._prepare_task_dict(task)
         try:
             success = self._backend.save_task(task.task_id, task_dict)
             if success:
-                self._emit(EventType.TASK_STATE_CHANGED, data={
-                    "task_id": task.task_id,
-                    "current_state": task.current_state.value,
-                    "action": "checkpoint",
-                })
+                self._emit(
+                    EventType.TASK_STATE_CHANGED,
+                    data={
+                        "task_id": task.task_id,
+                        "current_state": task.current_state.value,
+                        "action": "checkpoint",
+                    },
+                )
         except Exception as e:
             logger.warning(f"Task checkpoint failed: {e}")
-            self._emit(EventType.RUNTIME_ERROR, data={
-                "task_id": task.task_id,
-                "error": f"checkpoint_failed: {e}",
-                "source": "persistence",
-            })
+            self._emit(
+                EventType.RUNTIME_ERROR,
+                data={
+                    "task_id": task.task_id,
+                    "error": f"checkpoint_failed: {e}",
+                    "source": "persistence",
+                },
+            )
 
     def save_event(self, event: AgentEvent) -> None:
         """Persist an event to the event store."""
@@ -578,7 +605,7 @@ class TaskPersistenceManager:
         except Exception as e:
             logger.warning(f"Event store append failed: {e}")
 
-    def load_task(self, task_id: str) -> Optional[Task]:
+    def load_task(self, task_id: str) -> Task | None:
         """Load a persisted task by ID."""
         try:
             data = self._backend.load_task(task_id)
@@ -589,7 +616,10 @@ class TaskPersistenceManager:
                 logger.warning(f"Task {task_id} missing schema_version; refusing to load")
                 return None
             if schema_version != CURRENT_SCHEMA_VERSION:
-                logger.warning(f"Task {task_id} has unsupported schema_version={schema_version}; refusing to load")
+                logger.warning(
+                    f"Task {task_id} has unsupported schema_version="
+                    f"{schema_version}; refusing to load"
+                )
                 return None
             data.pop("schema_version", None)
             data.pop("_persisted_at", None)
@@ -598,7 +628,7 @@ class TaskPersistenceManager:
             logger.warning(f"Task load failed: {e}")
             return None
 
-    def recover_incomplete_tasks(self) -> List[Task]:
+    def recover_incomplete_tasks(self) -> list[Task]:
         """Recover all non-terminal tasks from persistence."""
         recovered = []
         try:
@@ -608,11 +638,14 @@ class TaskPersistenceManager:
                     continue
                 if not task.is_terminal():
                     recovered.append(task)
-                    self._emit(EventType.TASK_STATE_CHANGED, data={
-                        "task_id": task_id,
-                        "current_state": task.current_state.value,
-                        "action": "recovered",
-                    })
+                    self._emit(
+                        EventType.TASK_STATE_CHANGED,
+                        data={
+                            "task_id": task_id,
+                            "current_state": task.current_state.value,
+                            "action": "recovered",
+                        },
+                    )
         except Exception as e:
             logger.warning(f"Task recovery failed: {e}")
         return recovered
@@ -627,7 +660,7 @@ class TaskPersistenceManager:
             logger.warning(f"Task delete failed: {e}")
             return False
 
-    def get_task_events(self, task_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_task_events(self, task_id: str, limit: int = 100) -> list[dict[str, Any]]:
         """Get persisted events for a task."""
         try:
             return self._event_store.get_events(task_id, limit=limit)
@@ -638,7 +671,7 @@ class TaskPersistenceManager:
     def close(self) -> None:
         """Close underlying resources."""
         try:
-            if hasattr(self._backend, 'close'):
+            if hasattr(self._backend, "close"):
                 self._backend.close()
         except Exception:
             pass
@@ -648,12 +681,13 @@ class TaskPersistenceManager:
 # Factories
 # ---------------------------------------------------------------------------
 
+
 def create_persistence_manager(
-    backend: Optional[PersistenceBackend] = None,
-    event_store: Optional[EventStore] = None,
-    event_bus: Optional[EventBus] = None,
+    backend: PersistenceBackend | None = None,
+    event_store: EventStore | None = None,
+    event_bus: EventBus | None = None,
     use_filesystem: bool = False,
-    base_path: Optional[Path] = None,
+    base_path: Path | None = None,
 ) -> TaskPersistenceManager:
     """Create a TaskPersistenceManager with optional filesystem backends.
 

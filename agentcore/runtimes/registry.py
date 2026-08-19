@@ -5,7 +5,8 @@ Allows registration and creation of runtime adapters by name.
 Third-party runtimes can register themselves without modifying AgentCore core.
 """
 
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from .base import RuntimeAdapter, RuntimeCapabilities
 
@@ -18,14 +19,14 @@ class RuntimeRegistry:
     """
 
     def __init__(self) -> None:
-        self._factories: Dict[str, Callable[..., RuntimeAdapter]] = {}
-        self._info: Dict[str, Dict[str, Any]] = {}
+        self._factories: dict[str, Callable[..., RuntimeAdapter]] = {}
+        self._info: dict[str, dict[str, Any]] = {}
 
     def register(
         self,
         name: str,
         factory: Callable[..., RuntimeAdapter],
-        info: Optional[Dict[str, Any]] = None,
+        info: dict[str, Any] | None = None,
     ) -> None:
         """
         Register a runtime factory.
@@ -54,16 +55,14 @@ class RuntimeRegistry:
         """
         if name not in self._factories:
             available = ", ".join(sorted(self._factories.keys())) or "none"
-            raise ValueError(
-                f"Unknown runtime '{name}'. Available runtimes: {available}"
-            )
+            raise ValueError(f"Unknown runtime '{name}'. Available runtimes: {available}")
         return self._factories[name](**kwargs)
 
-    def list_runtimes(self) -> List[str]:
+    def list_runtimes(self) -> list[str]:
         """Return sorted list of registered runtime names."""
         return sorted(self._factories.keys())
 
-    def get_info(self, name: str) -> Dict[str, Any]:
+    def get_info(self, name: str) -> dict[str, Any]:
         """
         Return metadata for a registered runtime.
 
@@ -89,7 +88,7 @@ class RuntimeRegistry:
         return name in self._factories
 
 
-_default_registry: Optional[RuntimeRegistry] = None
+_default_registry: RuntimeRegistry | None = None
 
 
 def get_default_registry() -> RuntimeRegistry:
@@ -104,7 +103,7 @@ def get_default_registry() -> RuntimeRegistry:
 def _register_builtin_runtimes(registry: RuntimeRegistry) -> None:
     """Register the built-in Hermes runtime."""
     try:
-        from .hermes import HermesRuntime, create_hermes_runtime
+        from .hermes import create_hermes_runtime
 
         registry.register(
             "hermes",
@@ -117,7 +116,7 @@ def _register_builtin_runtimes(registry: RuntimeRegistry) -> None:
                     "tool_calls": False,
                     "external_tool_execution": False,
                     "streaming": False,
-                    "cancellation": False,
+                    "cancellation": True,
                 },
             },
         )

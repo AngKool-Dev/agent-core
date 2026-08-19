@@ -22,12 +22,12 @@ observable behavior changes.
 from __future__ import annotations
 
 import enum
-import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable, List, Optional
+from typing import Any
 
 
 class EventType(enum.Enum):
@@ -80,6 +80,8 @@ class EventType(enum.Enum):
     MEMORY_STORE_STARTED = "memory.store.started"
     MEMORY_STORE_COMPLETED = "memory.store.completed"
     MEMORY_ERROR = "memory.error"
+    MEMORY_HARVEST_COMPLETED = "memory.harvest.completed"
+    MEMORY_HARVEST_FAILED = "memory.harvest.failed"
 
     # Persistence & Recovery (Phase 7)
     TASK_CHECKPOINTED = "task.checkpointed"
@@ -110,15 +112,16 @@ class AgentEvent:
 
     All fields are JSON-serializable via to_dict().
     """
+
     event_type: EventType
     task_id: str = ""
-    iteration: Optional[int] = None
+    iteration: int | None = None
     data: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     # Auto-generated fields
     id: str = field(default_factory=lambda: f"evt-{uuid.uuid4().hex[:12]}")
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -127,15 +130,17 @@ class AgentEvent:
         Handles Path, Enum, datetime, dataclasses, and nested structures
         via a simple recursive converter.
         """
-        return _serialize_value({
-            "id": self.id,
-            "timestamp": self.timestamp,
-            "event_type": self.event_type.value,
-            "task_id": self.task_id,
-            "iteration": self.iteration,
-            "data": self.data,
-            "metadata": self.metadata,
-        })
+        return _serialize_value(
+            {
+                "id": self.id,
+                "timestamp": self.timestamp,
+                "event_type": self.event_type.value,
+                "task_id": self.task_id,
+                "iteration": self.iteration,
+                "data": self.data,
+                "metadata": self.metadata,
+            }
+        )
 
 
 def _serialize_value(value: Any) -> Any:
@@ -185,6 +190,7 @@ def _serialize_value(value: Any) -> Any:
 def _is_dataclass_instance(obj: Any) -> bool:
     """Check if obj is a dataclass instance (not the class itself)."""
     import dataclasses
+
     return dataclasses.is_dataclass(obj) and not isinstance(obj, type)
 
 
@@ -203,7 +209,7 @@ class EventBus:
     """
 
     def __init__(self) -> None:
-        self._subscribers: List[EventHandler] = []
+        self._subscribers: list[EventHandler] = []
 
     def subscribe(self, callback: EventHandler) -> None:
         """Register an event handler."""
@@ -233,6 +239,7 @@ class EventBus:
                 # Subscriber failures must not crash AgentCore
                 # Log but continue
                 import logging
+
                 logging.getLogger(__name__).exception(
                     "EventBus subscriber raised an exception for event %s",
                     event.event_type.value,
@@ -247,9 +254,9 @@ class EventBus:
 def create_event(
     event_type: EventType,
     task_id: str = "",
-    iteration: Optional[int] = None,
-    data: Optional[dict[str, Any]] = None,
-    metadata: Optional[dict[str, Any]] = None,
+    iteration: int | None = None,
+    data: dict[str, Any] | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> AgentEvent:
     """Convenience factory for creating events."""
     return AgentEvent(

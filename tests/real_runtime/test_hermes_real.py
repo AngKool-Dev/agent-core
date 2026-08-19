@@ -13,11 +13,10 @@ import shutil
 
 import pytest
 
-from agentcore import Agent, AgentConfig, create_agent
+from agentcore import Agent, AgentConfig
 from agentcore.memory import MemoryManager
+from agentcore.runtimes.base import FinishReason, RuntimeResponse
 from agentcore.runtimes.hermes import HermesRuntime
-from agentcore.runtimes.base import RuntimeResponse, FinishReason
-
 
 pytestmark = pytest.mark.real_runtime
 
@@ -85,7 +84,12 @@ class InMemoryBackend:
         return [m for m in self._store if query.lower() in m.get("content", "").lower()]
 
     def store(self, type, content, project=None, importance=0.5):
-        mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+        mem = {
+            "id": f"mem-{len(self._store)}",
+            "type": type,
+            "content": content,
+            "project": project,
+        }
         self._store.append(mem)
         return mem
 

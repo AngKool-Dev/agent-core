@@ -1,5 +1,4 @@
-from typing import Any, Optional
-from dataclasses import dataclass, field
+from typing import Any
 
 from .task import PlanStep
 
@@ -8,9 +7,13 @@ class Planner:
     def __init__(self):
         self._templates = {
             "bug_fix": [
-                PlanStep(action="inspect", description="Understand the bug by examining relevant code"),
+                PlanStep(
+                    action="inspect", description="Understand the bug by examining relevant code"
+                ),
                 PlanStep(action="reproduce", description="Create or find a reproduction case"),
-                PlanStep(action="hypothesize", description="Form a hypothesis about the root cause"),
+                PlanStep(
+                    action="hypothesize", description="Form a hypothesis about the root cause"
+                ),
                 PlanStep(action="validate", description="Verify the hypothesis with experiments"),
                 PlanStep(action="implement", description="Implement the fix"),
                 PlanStep(action="test", description="Run tests to verify the fix"),
@@ -36,7 +39,9 @@ class Planner:
             ],
         }
 
-    def plan(self, task_type: str, user_request: str, context: dict[str, Any] | None = None) -> list[PlanStep]:
+    def plan(
+        self, task_type: str, user_request: str, context: dict[str, Any] | None = None
+    ) -> list[PlanStep]:
         if task_type in self._templates:
             return list(self._templates[task_type])
 
@@ -52,7 +57,7 @@ class Planner:
         adapted = list(original_plan)
         return adapted
 
-    def suggest_next_step(self, plan: list[PlanStep], completed: list[str]) -> Optional[PlanStep]:
+    def suggest_next_step(self, plan: list[PlanStep], completed: list[str]) -> PlanStep | None:
         for step in plan:
             if step.action not in completed:
                 return step

@@ -8,24 +8,22 @@ These tests verify:
 - Tool success and failure are handled gracefully
 """
 
-import pytest
 from unittest.mock import patch
-from pathlib import Path
-from agentcore import Agent, AgentConfig, create_agent
+
+from agentcore import Agent, AgentConfig
 from agentcore.memory import MemoryManager
 from agentcore.runtimes.base import (
+    FinishReason,
     RuntimeAdapter,
     RuntimeResponse,
     ToolCall,
-    ToolResult,
-    FinishReason,
 )
-from agentcore.tools import ToolManager
 from tests.test_mock_runtime import MockRuntime
 
 
 class InMemoryBackend:
     """Simple in-memory memory backend for tests."""
+
     def __init__(self):
         self._store = []
 
@@ -33,7 +31,12 @@ class InMemoryBackend:
         return [m for m in self._store if query.lower() in m.get("content", "").lower()]
 
     def store(self, type, content, project=None, importance=0.5):
-        mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+        mem = {
+            "id": f"mem-{len(self._store)}",
+            "type": type,
+            "content": content,
+            "project": project,
+        }
         self._store.append(mem)
         return mem
 
@@ -70,12 +73,14 @@ class TestAgentWithRuntimeResponse:
     def test_agent_no_hasattr_probing(self):
         """Agent must not use hasattr to probe runtime for tool methods."""
         import inspect
+
         source = inspect.getsource(Agent)
-        assert "hasattr(runtime" not in source, \
+        assert "hasattr(runtime" not in source, (
             "Agent must not use hasattr() to probe runtime capabilities"
-        assert "get_pending_tool_call" not in source or \
-               "getattr" not in source, \
+        )
+        assert "get_pending_tool_call" not in source or "getattr" not in source, (
             "Agent must not probe runtime for get_pending_tool_call"
+        )
 
 
 class TestAgentToolExecution:
@@ -157,7 +162,9 @@ class TestAgentToolExecution:
 
     def test_agent_tool_limit_enforced(self, tmp_path):
         """Agent should respect max_tool_calls limit."""
-        tool_calls = [ToolCall(tool="read_file", arguments={"path": f"file{i}.txt"}) for i in range(20)]
+        tool_calls = [
+            ToolCall(tool="read_file", arguments={"path": f"file{i}.txt"}) for i in range(20)
+        ]
         runtime = MockRuntime(responses=tool_calls[:10])
         memory = MemoryManager(InMemoryBackend())
         config = AgentConfig(
@@ -318,9 +325,13 @@ class TestAgentCapabilityAwareness:
     def test_contract_violation_tool_calls_false_returns_tool_calls(self, tmp_path):
         """Runtime declaring tool_calls=False but returning tool_calls should fail."""
         tool_call = ToolCall(tool="read_file", arguments={"path": "x.py"})
-        runtime = ContractViolatingRuntime(responses=[
-            RuntimeResponse(content="", tool_calls=[tool_call], finish_reason=FinishReason.TOOL_CALLS),
-        ])
+        runtime = ContractViolatingRuntime(
+            responses=[
+                RuntimeResponse(
+                    content="", tool_calls=[tool_call], finish_reason=FinishReason.TOOL_CALLS
+                ),
+            ]
+        )
         memory = MemoryManager(InMemoryBackend())
         config = AgentConfig(
             max_iterations=5,
@@ -335,10 +346,12 @@ class TestAgentCapabilityAwareness:
         assert result["stopped_reason"] == "runtime_contract_violation"
 
     def test_contract_violation_tool_calls_true_external_false(self, tmp_path):
-        """Runtime with tool_calls=True but external_tool_execution=False should fail on tool calls."""
+        """Runtime with tool_calls=True but external_tool_execution=False fails on tool calls."""
+
         class HybridRuntime(RuntimeAdapter):
             def __init__(self):
                 self.called = False
+
             def respond(self, context):
                 if not self.called:
                     self.called = True
@@ -348,6 +361,7 @@ class TestAgentCapabilityAwareness:
                         finish_reason=FinishReason.TOOL_CALLS,
                     )
                 return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
+
             def capabilities(self):
                 return {
                     "text_generation": True,
@@ -356,8 +370,10 @@ class TestAgentCapabilityAwareness:
                     "streaming": False,
                     "cancellation": False,
                 }
+
             def cancel(self):
                 pass
+
             @property
             def default_model(self):
                 return "hybrid-model"
@@ -377,10 +393,12 @@ class TestAgentCapabilityAwareness:
         assert result["stopped_reason"] == "runtime_contract_violation"
 
     def test_contract_violation_tool_calls_false_external_true(self, tmp_path):
-        """Runtime with tool_calls=False but external_tool_execution=True should fail on tool calls."""
+        """Runtime with tool_calls=False but external_tool_execution=True fails on tool calls."""
+
         class InconsistentRuntime(RuntimeAdapter):
             def __init__(self):
                 self.called = False
+
             def respond(self, context):
                 if not self.called:
                     self.called = True
@@ -390,6 +408,7 @@ class TestAgentCapabilityAwareness:
                         finish_reason=FinishReason.TOOL_CALLS,
                     )
                 return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
+
             def capabilities(self):
                 return {
                     "text_generation": True,
@@ -398,8 +417,10 @@ class TestAgentCapabilityAwareness:
                     "streaming": False,
                     "cancellation": False,
                 }
+
             def cancel(self):
                 pass
+
             @property
             def default_model(self):
                 return "inconsistent-model"
@@ -420,11 +441,13 @@ class TestAgentCapabilityAwareness:
 
     def test_agent_queries_capabilities_before_tool_execution(self, tmp_path):
         """Agent should query runtime.capabilities() and respect the result."""
+
         class QueryTrackingRuntime(RuntimeAdapter):
             def __init__(self, responses=None):
                 self._responses = responses or ["Done"]
                 self._index = 0
                 self.capabilities_calls = 0
+
             def respond(self, context):
                 if self._index < len(self._responses):
                     resp = self._responses[self._index]
@@ -433,6 +456,7 @@ class TestAgentCapabilityAwareness:
                         return resp
                     return RuntimeResponse(content=str(resp), finish_reason=FinishReason.STOP)
                 return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
+
             def capabilities(self):
                 self.capabilities_calls += 1
                 return {
@@ -442,8 +466,10 @@ class TestAgentCapabilityAwareness:
                     "streaming": False,
                     "cancellation": False,
                 }
+
             def cancel(self):
                 pass
+
             @property
             def default_model(self):
                 return "query-model"
@@ -484,7 +510,9 @@ class TestVerificationScope:
 
         agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
 
-        with patch.object(agent, '_capture_changed_files', side_effect=[["a.py"], ["a.py", "b.py"]]):
+        with patch.object(
+            agent, "_capture_changed_files", side_effect=[["a.py"], ["a.py", "b.py"]]
+        ):
             agent._baseline_changed_files = ["a.py"]
             result = agent.execute("Do something")
 
@@ -504,7 +532,7 @@ class TestVerificationScope:
 
         agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
 
-        with patch.object(agent, '_capture_changed_files', side_effect=[[], []]):
+        with patch.object(agent, "_capture_changed_files", side_effect=[[], []]):
             agent._baseline_changed_files = []
             result = agent.execute("Reply with hello")
 
@@ -524,7 +552,7 @@ class TestVerificationScope:
 
         agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
 
-        with patch.object(agent, '_capture_changed_files', side_effect=[None, ["b.py"]]):
+        with patch.object(agent, "_capture_changed_files", side_effect=[None, ["b.py"]]):
             agent._baseline_changed_files = None
             result = agent.execute("Reply with hello")
 
@@ -543,7 +571,9 @@ class TestVerificationScope:
 
         agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
 
-        with patch.object(agent, '_capture_changed_files', side_effect=[["a.py"], ["a.py", "b.py"]]):
+        with patch.object(
+            agent, "_capture_changed_files", side_effect=[["a.py"], ["a.py", "b.py"]]
+        ):
             agent._baseline_changed_files = ["a.py"]
             result = agent.execute("Do something")
 

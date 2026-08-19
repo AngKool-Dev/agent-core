@@ -11,22 +11,22 @@ Provides:
 from __future__ import annotations
 
 import threading
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
-from .config import AgentCoreConfig, ConfigLoader, ToolLimits
+from .config import AgentCoreConfig, ConfigLoader
 from .errors import ConfigurationError
 from .events import EventBus, EventType, create_event
 from .persistence import TaskPersistenceManager, create_persistence_manager
-from .task import Task, TaskState
-from .task_registry import TaskRegistry, TaskRecord, TaskRecordStatus
+from .task_registry import TaskRecord, TaskRegistry
 
 
 @dataclass
 class AgentCoreLimits:
     """Production resource limits."""
+
     max_active_tasks: int = 10
     max_task_execution_seconds: int = 600
     max_task_lifetime_seconds: int = 3600
@@ -34,7 +34,7 @@ class AgentCoreLimits:
     max_event_history: int = 1000
     max_persisted_task_size_bytes: int = 1024 * 1024  # 1 MB
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "max_active_tasks": self.max_active_tasks,
             "max_task_execution_seconds": self.max_task_execution_seconds,
@@ -76,11 +76,11 @@ class AgentCore:
 
     def __init__(
         self,
-        config: Optional[AgentCoreConfig] = None,
-        persistence: Optional[TaskPersistenceManager] = None,
-        event_bus: Optional[EventBus] = None,
-        limits: Optional[AgentCoreLimits] = None,
-        project_path: Optional[Path] = None,
+        config: AgentCoreConfig | None = None,
+        persistence: TaskPersistenceManager | None = None,
+        event_bus: EventBus | None = None,
+        limits: AgentCoreLimits | None = None,
+        project_path: Path | None = None,
     ):
         self._config = config or ConfigLoader.discover(project_path or Path.cwd())
         self._persistence = persistence or create_persistence_manager()
@@ -98,10 +98,10 @@ class AgentCore:
         )
 
         self._project_path = project_path or Path.cwd()
-        self._active_agents: Dict[str, Any] = {}  # task_id -> Agent
+        self._active_agents: dict[str, Any] = {}  # task_id -> Agent
         self._shutdown_requested = False
         self._shutdown_lock = threading.RLock()
-        self._started_at = datetime.now(timezone.utc).isoformat()
+        self._started_at = datetime.now(UTC).isoformat()
 
     @property
     def config(self) -> AgentCoreConfig:
@@ -127,7 +127,7 @@ class AgentCore:
     def started_at(self) -> str:
         return self._started_at
 
-    def _emit(self, event_type: EventType, data: Optional[Dict[str, Any]] = None) -> None:
+    def _emit(self, event_type: EventType, data: dict[str, Any] | None = None) -> None:
         if self._event_bus is None or self._event_bus.subscriber_count == 0:
             return
         try:
@@ -140,7 +140,7 @@ class AgentCore:
         except Exception:
             pass
 
-    def shutdown(self) -> Dict[str, Any]:
+    def shutdown(self) -> dict[str, Any]:
         """
         Graceful shutdown.
 
@@ -156,11 +156,11 @@ class AgentCore:
 
             checkpointed = 0
             cancelled = 0
-            errors: List[str] = []
+            errors: list[str] = []
 
             for record in self._registry.list_active():
                 try:
-                    if self._persistence is not None and hasattr(self._persistence, 'checkpoint'):
+                    if self._persistence is not None and hasattr(self._persistence, "checkpoint"):
                         task = self._persistence.load_task(record.task_id)
                         if task is not None and not task.is_terminal():
                             self._persistence.checkpoint(task)
@@ -170,7 +170,7 @@ class AgentCore:
                 except Exception as e:
                     errors.append(f"{record.task_id}: {e}")
 
-            if self._persistence is not None and hasattr(self._persistence, 'close'):
+            if self._persistence is not None and hasattr(self._persistence, "close"):
                 try:
                     self._persistence.close()
                 except Exception as e:
@@ -191,7 +191,7 @@ class AgentCore:
         """Check if shutdown has been requested."""
         return self._shutdown_requested
 
-    def recover_tasks(self) -> List[TaskRecord]:
+    def recover_tasks(self) -> list[TaskRecord]:
         """
         Discover and recover incomplete tasks from persistence.
 
@@ -200,9 +200,12 @@ class AgentCore:
         self._emit(EventType.RECOVERY_STARTED, data={})
         try:
             recovered = self._registry.recover_from_persistence(self._persistence)
-            self._emit(EventType.RECOVERY_COMPLETED, data={
-                "recovered_count": len(recovered),
-            })
+            self._emit(
+                EventType.RECOVERY_COMPLETED,
+                data={
+                    "recovered_count": len(recovered),
+                },
+            )
             return recovered
         except Exception as e:
             self._emit(EventType.RECOVERY_FAILED, data={"error": str(e)})
@@ -216,7 +219,7 @@ class AgentCore:
         if len(self._registry.list_active()) >= self._limits.max_active_tasks:
             raise RuntimeError(f"Active task limit ({self._limits.max_active_tasks}) reached")
 
-        task = getattr(agent, 'current_task', None)
+        task = getattr(agent, "current_task", None)
         if task is None:
             raise ValueError("Agent has no current task")
 
@@ -228,11 +231,11 @@ class AgentCore:
         """Unregister an agent after completion."""
         self._active_agents.pop(task_id, None)
 
-    def get_active_agent(self, task_id: str) -> Optional[Any]:
+    def get_active_agent(self, task_id: str) -> Any | None:
         """Get an active agent by task ID."""
         return self._active_agents.get(task_id)
 
-    def list_active_agents(self) -> Dict[str, Any]:
+    def list_active_agents(self) -> dict[str, Any]:
         """List all active agents."""
         return dict(self._active_agents)
 
@@ -242,10 +245,10 @@ class AgentCore:
 
 
 def create_agent_core(
-    config: Optional[AgentCoreConfig] = None,
-    persistence: Optional[TaskPersistenceManager] = None,
-    event_bus: Optional[EventBus] = None,
-    project_path: Optional[Path] = None,
+    config: AgentCoreConfig | None = None,
+    persistence: TaskPersistenceManager | None = None,
+    event_bus: EventBus | None = None,
+    project_path: Path | None = None,
 ) -> AgentCore:
     """Factory for AgentCore."""
     return AgentCore(

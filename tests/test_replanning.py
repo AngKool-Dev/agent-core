@@ -9,21 +9,17 @@ Covers:
 - Runtime cancellation contract
 """
 
-import pytest
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from agentcore import Agent, AgentConfig, TaskState
-from agentcore.task import PlanStep, StepStatus, Task, InvalidStateTransitionError
-from agentcore.memory import MemoryManager, MemoryBackend, InMemoryBackend
+from agentcore.events import EventBus, EventType
+from agentcore.memory import MemoryBackend, MemoryManager
 from agentcore.runtimes.base import (
+    FinishReason,
     RuntimeAdapter,
     RuntimeResponse,
     ToolCall,
-    ToolResult,
-    FinishReason,
 )
-from agentcore.events import EventType, EventBus, AgentEvent
 
 
 class InMemoryBackendForReplan(MemoryBackend):
@@ -34,7 +30,12 @@ class InMemoryBackendForReplan(MemoryBackend):
         return []
 
     def store(self, type, content, project=None, importance=0.5):
-        mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+        mem = {
+            "id": f"mem-{len(self._store)}",
+            "type": type,
+            "content": content,
+            "project": project,
+        }
         self._store.append(mem)
         return mem
 
@@ -125,7 +126,7 @@ class TestToolFailureReplanning:
             max_replans=1,
         )
         agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
-        result = agent.execute("Test max replans", str(tmp_path))
+        agent.execute("Test max replans", str(tmp_path))
         assert agent._replan_count <= 1
 
     def test_successful_tool_does_not_replan(self, tmp_path):
@@ -156,7 +157,9 @@ class TestVerificationFailureReplanning:
     def test_verification_failure_triggers_replanning(self, tmp_path):
         responses = [
             RuntimeResponse(content="Initial work", finish_reason=FinishReason.STOP),
-            RuntimeResponse(content="Fixed after verification failure", finish_reason=FinishReason.STOP),
+            RuntimeResponse(
+                content="Fixed after verification failure", finish_reason=FinishReason.STOP
+            ),
         ]
         runtime = RecorderRuntime(responses)
         memory = MemoryManager(InMemoryBackendForReplan())
@@ -171,11 +174,15 @@ class TestVerificationFailureReplanning:
         )
         agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
         with patch.object(agent._verifier, "verify_all") as mock_verify:
-            mock_verify.return_value = MagicMock(to_dict=MagicMock(return_value={
-                "overall_passed": False,
-                "failures": ["tests failed"],
-            }))
-            result = agent.execute("Test verification replanning", str(tmp_path))
+            mock_verify.return_value = MagicMock(
+                to_dict=MagicMock(
+                    return_value={
+                        "overall_passed": False,
+                        "failures": ["tests failed"],
+                    }
+                )
+            )
+            agent.execute("Test verification replanning", str(tmp_path))
         assert agent._replan_count >= 1
 
     def test_verification_success_completes(self, tmp_path):
@@ -195,10 +202,14 @@ class TestVerificationFailureReplanning:
         )
         agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
         with patch.object(agent._verifier, "verify_all") as mock_verify:
-            mock_verify.return_value = MagicMock(to_dict=MagicMock(return_value={
-                "overall_passed": True,
-                "failures": [],
-            }))
+            mock_verify.return_value = MagicMock(
+                to_dict=MagicMock(
+                    return_value={
+                        "overall_passed": True,
+                        "failures": [],
+                    }
+                )
+            )
             result = agent.execute("Test verification success", str(tmp_path))
         assert agent._replan_count == 0
         assert result["success"] is True
@@ -206,7 +217,9 @@ class TestVerificationFailureReplanning:
 
 class TestCancellation:
     def test_cancel_sets_cancelled_state(self, tmp_path):
-        runtime = RecorderRuntime([RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)])
+        runtime = RecorderRuntime(
+            [RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)]
+        )
         memory = MemoryManager(InMemoryBackendForReplan())
         config = AgentConfig(
             max_iterations=10,
@@ -221,7 +234,9 @@ class TestCancellation:
         assert agent._current_task.current_state == TaskState.CANCELLED
 
     def test_cancel_calls_runtime_cancel(self, tmp_path):
-        runtime = RecorderRuntime([RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)])
+        runtime = RecorderRuntime(
+            [RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)]
+        )
         memory = MemoryManager(InMemoryBackendForReplan())
         config = AgentConfig(
             max_iterations=10,
@@ -234,7 +249,9 @@ class TestCancellation:
         assert runtime.cancelled is True
 
     def test_cancel_before_execute_is_noop(self, tmp_path):
-        runtime = RecorderRuntime([RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)])
+        runtime = RecorderRuntime(
+            [RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)]
+        )
         memory = MemoryManager(InMemoryBackendForReplan())
         config = AgentConfig(
             max_iterations=10,
@@ -255,7 +272,9 @@ class TestCancellation:
                 if call_count[0] == 1:
                     return RuntimeResponse(
                         content="I'll run a tool",
-                        tool_calls=[ToolCall(tool="run_command", arguments={"command": "sleep 10"})],
+                        tool_calls=[
+                            ToolCall(tool="run_command", arguments={"command": "sleep 10"})
+                        ],
                         finish_reason=FinishReason.TOOL_CALLS,
                     )
                 return RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)
@@ -283,12 +302,14 @@ class TestCancellation:
         agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path)
 
         import threading
+
         def run():
             agent.execute("Test cancel during execution", str(tmp_path))
 
         thread = threading.Thread(target=run)
         thread.start()
         import time
+
         time.sleep(0.1)
         agent.cancel()
         thread.join(timeout=5)
@@ -318,7 +339,9 @@ class TestRecoverableVsTerminalFailures:
         assert result["success"] is True
 
     def test_terminal_cancellation_sets_failed_or_cancelled(self, tmp_path):
-        runtime = RecorderRuntime([RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)])
+        runtime = RecorderRuntime(
+            [RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)]
+        )
         memory = MemoryManager(InMemoryBackendForReplan())
         config = AgentConfig(
             max_iterations=10,
@@ -333,7 +356,9 @@ class TestRecoverableVsTerminalFailures:
 
 class TestStateEvents:
     def test_state_change_event_emitted(self, tmp_path):
-        runtime = RecorderRuntime([RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)])
+        runtime = RecorderRuntime(
+            [RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)]
+        )
         memory = MemoryManager(InMemoryBackendForReplan())
         bus = EventBus()
         received = []
@@ -343,7 +368,9 @@ class TestStateEvents:
             max_tool_calls=10,
             enable_verification=False,
         )
-        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path, event_bus=bus)
+        agent = Agent(
+            runtime=runtime, memory=memory, config=config, project_path=tmp_path, event_bus=bus
+        )
         agent.execute("Test state events", str(tmp_path))
         state_events = [e for e in received if e.event_type == EventType.TASK_STATE_CHANGED]
         assert len(state_events) > 0
@@ -352,7 +379,9 @@ class TestStateEvents:
             assert "new_state" in event.data
 
     def test_task_cancelled_event_emitted(self, tmp_path):
-        runtime = RecorderRuntime([RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)])
+        runtime = RecorderRuntime(
+            [RuntimeResponse(content="Done", finish_reason=FinishReason.STOP)]
+        )
         memory = MemoryManager(InMemoryBackendForReplan())
         bus = EventBus()
         received = []
@@ -362,7 +391,9 @@ class TestStateEvents:
             max_tool_calls=10,
             enable_verification=False,
         )
-        agent = Agent(runtime=runtime, memory=memory, config=config, project_path=tmp_path, event_bus=bus)
+        agent = Agent(
+            runtime=runtime, memory=memory, config=config, project_path=tmp_path, event_bus=bus
+        )
         agent.execute("Test cancel event", str(tmp_path))
         agent.cancel()
         cancel_events = [e for e in received if e.event_type == EventType.TASK_CANCELLED]

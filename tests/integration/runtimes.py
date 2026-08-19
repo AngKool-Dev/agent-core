@@ -4,8 +4,9 @@ Deterministic runtime for AgentCore integration testing.
 Simulates a complete coding-agent lifecycle without external dependencies.
 """
 
-from typing import Any, Dict, List, Optional
-from agentcore.runtimes.base import RuntimeAdapter, RuntimeResponse, ToolCall, FinishReason
+from typing import Any
+
+from agentcore.runtimes.base import FinishReason, RuntimeAdapter, RuntimeResponse, ToolCall
 
 
 class DeterministicRuntime(RuntimeAdapter):
@@ -20,10 +21,10 @@ class DeterministicRuntime(RuntimeAdapter):
     - Timeouts
     """
 
-    def __init__(self, responses: Optional[List[Any]] = None, fail_on_call: Optional[int] = None):
-        self._responses: List[RuntimeResponse] = []
+    def __init__(self, responses: list[Any] | None = None, fail_on_call: int | None = None):
+        self._responses: list[RuntimeResponse] = []
         self._response_index = 0
-        self._last_response: Optional[RuntimeResponse] = None
+        self._last_response: RuntimeResponse | None = None
         self._call_count = 0
         self._fail_on_call = fail_on_call
 
@@ -64,7 +65,7 @@ class DeterministicRuntime(RuntimeAdapter):
         text = str(resp) if not isinstance(resp, str) else resp
         return RuntimeResponse(content=text, finish_reason=FinishReason.STOP)
 
-    def respond(self, context: Dict[str, Any]) -> RuntimeResponse:
+    def respond(self, context: dict[str, Any]) -> RuntimeResponse:
         self._call_count += 1
         if self._fail_on_call is not None and self._call_count >= self._fail_on_call:
             raise RuntimeError("Simulated runtime failure")
@@ -85,7 +86,7 @@ class DeterministicRuntime(RuntimeAdapter):
         self._last_response = response
         return response
 
-    def capabilities(self) -> Dict[str, Any]:
+    def capabilities(self) -> dict[str, Any]:
         return {
             "adapter": "deterministic",
             "text_generation": True,
@@ -99,7 +100,7 @@ class DeterministicRuntime(RuntimeAdapter):
         pass
 
     @property
-    def default_model(self) -> Optional[str]:
+    def default_model(self) -> str | None:
         return "deterministic-model"
 
     @property
@@ -112,7 +113,7 @@ class DeterministicRuntime(RuntimeAdapter):
         self._last_response = None
 
 
-def bug_fix_lifecycle() -> List[Any]:
+def bug_fix_lifecycle() -> list[Any]:
     """
     Return a sequence of responses simulating a successful bug fix.
 
@@ -131,7 +132,7 @@ def bug_fix_lifecycle() -> List[Any]:
     ]
 
 
-def multi_tool_lifecycle() -> List[Any]:
+def multi_tool_lifecycle() -> list[Any]:
     """
     Return a sequence with multiple tool calls in one iteration.
     """
@@ -146,7 +147,7 @@ def multi_tool_lifecycle() -> List[Any]:
     ]
 
 
-def tool_failure_lifecycle() -> List[Any]:
+def tool_failure_lifecycle() -> list[Any]:
     """
     Return a sequence with a tool failure followed by recovery.
     """
@@ -158,7 +159,7 @@ def tool_failure_lifecycle() -> List[Any]:
     ]
 
 
-def verification_failure_lifecycle() -> List[Any]:
+def verification_failure_lifecycle() -> list[Any]:
     """
     Return a sequence that triggers verification failure and replanning.
     """
@@ -168,7 +169,7 @@ def verification_failure_lifecycle() -> List[Any]:
     ]
 
 
-def runtime_failure_lifecycle() -> List[Any]:
+def runtime_failure_lifecycle() -> list[Any]:
     """
     Return a sequence for runtime failure testing.
     Use with fail_on_call=1 in tests.
@@ -176,7 +177,7 @@ def runtime_failure_lifecycle() -> List[Any]:
     return ["This should not be reached"]
 
 
-def timeout_lifecycle() -> List[Any]:
+def timeout_lifecycle() -> list[Any]:
     """
     Return a sequence that triggers a timeout.
     """

@@ -33,3 +33,20 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Test artifacts
+MagicMock/
+agentcore.egg-info/
+.eggs/
+
+# Databases and data
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Logs
+*.log
+
+# Kilo workspace
+.kilo/

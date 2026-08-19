@@ -1,5 +1,6 @@
 import pytest
-from agentcore.memory import MemoryManager, MemoryBackend
+
+from agentcore.memory import MemoryBackend, MemoryManager
 
 
 class TestMemoryBackend:
@@ -11,13 +12,13 @@ class TestMemoryBackend:
         class ConcreteMemory(MemoryBackend):
             def search(self, query, project=None, limit=20):
                 return []
-            
+
             def store(self, type, content, project=None, importance=0.5):
                 return {}
-            
+
             def update(self, memory_id, content):
                 return {}
-            
+
             def list(self, project=None, type=None, limit=50):
                 return []
 
@@ -31,22 +32,22 @@ class TestMemoryManager:
         class FakeBackend(MemoryBackend):
             def __init__(self):
                 self.stored = []
-            
+
             def search(self, query, project=None, limit=20):
                 return [m for m in self.stored if query in m.get("content", "")]
-            
+
             def store(self, type, content, project=None, importance=0.5):
                 mem = {"id": "test-1", "type": type, "content": content, "project": project}
                 self.stored.append(mem)
                 return mem
-            
+
             def update(self, memory_id, content):
                 for m in self.stored:
                     if m["id"] == memory_id:
                         m["content"] = content
                         return m
                 return {}
-            
+
             def list(self, project=None, type=None, limit=50):
                 return [m for m in self.stored if (project is None or m["project"] == project)]
 
@@ -65,26 +66,26 @@ class TestMemoryManager:
             def __init__(self):
                 self.last_type = None
                 self.last_content = None
-            
+
             def search(self, query, project=None, limit=20):
                 return []
-            
+
             def store(self, type, content, project=None, importance=0.5):
                 self.last_type = type
                 self.last_content = content
                 return {"id": "new-id", "type": type, "content": content, "project": project}
-            
+
             def update(self, memory_id, content):
                 return {}
-            
+
             def list(self, project=None, type=None, limit=50):
                 return []
 
         backend = FakeBackend()
         manager = MemoryManager(backend)
-        
+
         manager.store_decision("Use memory abstraction", "my-project", "Discussed design")
-        
+
         assert backend.last_type == "decision"
         assert "Use memory abstraction" in backend.last_content
 
@@ -92,25 +93,25 @@ class TestMemoryManager:
         class FakeBackend(MemoryBackend):
             def __init__(self):
                 self.data = []
-            
+
             def search(self, query, project=None, limit=20):
                 if "database" in query:
                     return [
                         {"id": "m1", "type": "architecture", "content": "Use SQLite for database"},
                     ]
                 return []
-            
+
             def store(self, type, content, project=None, importance=0.5):
                 return {"id": "new", "type": type, "content": content}
-            
+
             def update(self, memory_id, content):
                 return {"id": memory_id, "content": content}
-            
+
             def list(self, project=None, type=None, limit=50):
                 return []
 
         backend = FakeBackend()
         manager = MemoryManager(backend)
-        
+
         results = manager.retrieve_relevant_memory("database choice", "my-project")
         assert "SQLite" in results

@@ -5,8 +5,8 @@ Run: python examples/basic_agent.py
 """
 
 from agentcore import Agent, AgentConfig
-from agentcore.memory import MemoryManager, InMemoryBackend
-from agentcore.runtimes.base import RuntimeAdapter, RuntimeResponse, FinishReason
+from agentcore.memory import InMemoryBackend, MemoryManager
+from agentcore.runtimes.base import FinishReason, RuntimeAdapter, RuntimeResponse
 
 
 class EchoRuntime(RuntimeAdapter):

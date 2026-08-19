@@ -2,26 +2,25 @@
 Tests for AgentCore event system (Phase 4).
 
 Tests cover:
-- Event model: creation, IDs, timestamps, event types, task IDs, iteration, metadata
+- Event model: creation, IDs, timestamps, event types, task IDs, iteration,
+  metadata
 - Serialization: to_dict(), enums, datetime, Path, nested structures, JSON
-- EventBus: subscribe, multiple subscribers, unsubscribe, ordering, failure isolation, no subscribers
+- EventBus: subscribe, multiple subscribers, unsubscribe, ordering, failure
+  isolation, no subscribers
 - Agent integration: task start/completion/failure, iteration, model request/response,
   tool start/completion/failure, routing, planning, verification
 """
 
 import json
-import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
 from agentcore.events import (
     AgentEvent,
-    EventType,
     EventBus,
-    EventHandler,
+    EventType,
     create_event,
 )
 
@@ -55,15 +54,27 @@ class TestEventModel:
     def test_event_types_all_defined(self):
         """All EventType members from the spec should exist."""
         expected = {
-            "TASK_STARTED", "TASK_COMPLETED", "TASK_FAILED", "TASK_CANCELLED",
-            "ITERATION_STARTED", "ITERATION_COMPLETED",
+            "TASK_STARTED",
+            "TASK_COMPLETED",
+            "TASK_FAILED",
+            "TASK_CANCELLED",
+            "ITERATION_STARTED",
+            "ITERATION_COMPLETED",
             "ROUTE_SELECTED",
-            "PLAN_CREATED", "PLAN_UPDATED",
-            "MODEL_REQUEST_STARTED", "MODEL_RESPONSE_RECEIVED", "MODEL_ERROR",
-            "TOOL_CALL_STARTED", "TOOL_CALL_COMPLETED", "TOOL_CALL_FAILED",
+            "PLAN_CREATED",
+            "PLAN_UPDATED",
+            "MODEL_REQUEST_STARTED",
+            "MODEL_RESPONSE_RECEIVED",
+            "MODEL_ERROR",
+            "TOOL_CALL_STARTED",
+            "TOOL_CALL_COMPLETED",
+            "TOOL_CALL_FAILED",
             "OBSERVATION_CREATED",
-            "VERIFICATION_STARTED", "VERIFICATION_COMPLETED",
-            "SKILL_DISCOVERED", "SKILL_SELECTED", "SKILL_LOADED",
+            "VERIFICATION_STARTED",
+            "VERIFICATION_COMPLETED",
+            "SKILL_DISCOVERED",
+            "SKILL_SELECTED",
+            "SKILL_LOADED",
             "RUNTIME_ERROR",
         }
         actual = {e.name for e in EventType}
@@ -136,7 +147,7 @@ class TestSerialization:
         assert d["metadata"]["finish_reason"] == "model.error"
 
     def test_to_dict_datetime_serialized(self):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         event = AgentEvent(
             event_type=EventType.TASK_STARTED,
             data={"created": now},
@@ -214,7 +225,10 @@ class TestEventBus:
     def test_unsubscribe(self):
         bus = EventBus()
         received = []
-        handler = lambda e: received.append(e)
+
+        def handler(e):
+            return received.append(e)
+
         bus.subscribe(handler)
         bus.emit(AgentEvent(event_type=EventType.TASK_STARTED))
         assert len(received) == 1
@@ -259,8 +273,13 @@ class TestEventBus:
     def test_subscriber_count(self):
         bus = EventBus()
         assert bus.subscriber_count == 0
-        h1 = lambda e: None
-        h2 = lambda e: None
+
+        def h1(e):
+            return None
+
+        def h2(e):
+            return None
+
         bus.subscribe(h1)
         assert bus.subscriber_count == 1
         bus.subscribe(h2)
@@ -275,7 +294,10 @@ class TestEventBus:
 
     def test_unsubscribe_non_registered_is_noop(self):
         bus = EventBus()
-        handler = lambda e: None
+
+        def handler(e):
+            return None
+
         # Should not raise
         bus.unsubscribe(handler)
 
@@ -285,20 +307,29 @@ class TestAgentEventIntegration:
 
     def _make_agent_with_bus(self, tmp_path, responses=None):
         """Create an Agent with a MockRuntime and EventBus."""
-        from tests.test_mock_runtime import MockRuntime
         from agentcore.memory import MemoryBackend, MemoryManager
+        from tests.test_mock_runtime import MockRuntime
 
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
@@ -310,6 +341,7 @@ class TestAgentEventIntegration:
         bus = EventBus()
 
         from agentcore import create_agent
+
         agent = create_agent(
             runtime=runtime,
             memory=memory,
@@ -351,36 +383,48 @@ class TestAgentEventIntegration:
         assert any(e.event_type == EventType.MODEL_RESPONSE_RECEIVED for e in received)
 
     def test_tool_call_events(self, tmp_path):
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.runtimes.base import ToolCall, RuntimeResponse, FinishReason
         from agentcore.memory import MemoryBackend, MemoryManager
+        from agentcore.runtimes.base import FinishReason, RuntimeResponse, ToolCall
+        from tests.test_mock_runtime import MockRuntime
 
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
-        runtime = MockRuntime(responses=[
-            RuntimeResponse(
-                content="I'll run a command",
-                tool_calls=[ToolCall(tool="run_command", arguments={"command": "echo test"})],
-                finish_reason=FinishReason.TOOL_CALLS,
-            ),
-            RuntimeResponse(content="Done", finish_reason=FinishReason.STOP),
-        ])
+        runtime = MockRuntime(
+            responses=[
+                RuntimeResponse(
+                    content="I'll run a command",
+                    tool_calls=[ToolCall(tool="run_command", arguments={"command": "echo test"})],
+                    finish_reason=FinishReason.TOOL_CALLS,
+                ),
+                RuntimeResponse(content="Done", finish_reason=FinishReason.STOP),
+            ]
+        )
         memory = MemoryManager(InMemoryBackend())
         bus = EventBus()
 
         from agentcore import create_agent
+
         agent = create_agent(
             runtime=runtime,
             memory=memory,
@@ -398,36 +442,48 @@ class TestAgentEventIntegration:
         assert any(e.event_type == EventType.TOOL_CALL_COMPLETED for e in received)
 
     def test_tool_call_failure_event(self, tmp_path):
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.runtimes.base import ToolCall, RuntimeResponse, FinishReason
         from agentcore.memory import MemoryBackend, MemoryManager
+        from agentcore.runtimes.base import FinishReason, RuntimeResponse, ToolCall
+        from tests.test_mock_runtime import MockRuntime
 
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
-                mem = {"id": f"mem-{len(self._store)}", "type": type, "content": content, "project": project}
+                mem = {
+                    "id": f"mem-{len(self._store)}",
+                    "type": type,
+                    "content": content,
+                    "project": project,
+                }
                 self._store.append(mem)
                 return mem
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return self._store
 
-        runtime = MockRuntime(responses=[
-            RuntimeResponse(
-                content="I'll run a bad command",
-                tool_calls=[ToolCall(tool="unknown_tool", arguments={})],
-                finish_reason=FinishReason.TOOL_CALLS,
-            ),
-            RuntimeResponse(content="Done", finish_reason=FinishReason.STOP),
-        ])
+        runtime = MockRuntime(
+            responses=[
+                RuntimeResponse(
+                    content="I'll run a bad command",
+                    tool_calls=[ToolCall(tool="unknown_tool", arguments={})],
+                    finish_reason=FinishReason.TOOL_CALLS,
+                ),
+                RuntimeResponse(content="Done", finish_reason=FinishReason.STOP),
+            ]
+        )
         memory = MemoryManager(InMemoryBackend())
         bus = EventBus()
 
         from agentcore import create_agent
+
         agent = create_agent(
             runtime=runtime,
             memory=memory,
@@ -494,20 +550,24 @@ class TestAgentEventIntegration:
 
     def test_runtime_error_event_on_timeout(self, tmp_path):
         """When max_iterations is 0, the loop exits quickly."""
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.memory import MemoryBackend, MemoryManager
         from agentcore.agent import Agent, AgentConfig
         from agentcore.config import AgentCoreConfig
+        from agentcore.memory import MemoryBackend, MemoryManager
+        from tests.test_mock_runtime import MockRuntime
 
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
                 return {"id": "1", "content": content}
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return []
 
@@ -515,7 +575,6 @@ class TestAgentEventIntegration:
         memory = MemoryManager(InMemoryBackend())
         bus = EventBus()
 
-        from agentcore import ConfigLoader
         agent = Agent(
             runtime=runtime,
             memory=memory,
@@ -535,20 +594,24 @@ class TestAgentEventIntegration:
 
     def test_backward_compatibility_no_event_bus(self, tmp_path):
         """Agent works normally when no EventBus is supplied."""
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.memory import MemoryBackend, MemoryManager
         from agentcore.agent import Agent, AgentConfig
         from agentcore.config import AgentCoreConfig
+        from agentcore.memory import MemoryBackend, MemoryManager
+        from tests.test_mock_runtime import MockRuntime
 
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
                 return {"id": "1"}
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return []
 
@@ -567,34 +630,41 @@ class TestAgentEventIntegration:
         assert "success" in result
 
     def test_observation_created_event(self, tmp_path):
-        from tests.test_mock_runtime import MockRuntime
-        from agentcore.runtimes.base import ToolCall, RuntimeResponse, FinishReason
         from agentcore.memory import MemoryBackend, MemoryManager
+        from agentcore.runtimes.base import FinishReason, RuntimeResponse, ToolCall
+        from tests.test_mock_runtime import MockRuntime
 
         class InMemoryBackend(MemoryBackend):
             def __init__(self):
                 self._store = []
+
             def search(self, query, project=None, limit=20):
                 return []
+
             def store(self, type, content, project=None, importance=0.5):
                 return {"id": "1"}
+
             def update(self, memory_id, content):
                 return {}
+
             def list(self, project=None, type=None, limit=50):
                 return []
 
-        runtime = MockRuntime(responses=[
-            RuntimeResponse(
-                content="I'll run a command",
-                tool_calls=[ToolCall(tool="run_command", arguments={"command": "echo test"})],
-                finish_reason=FinishReason.TOOL_CALLS,
-            ),
-            RuntimeResponse(content="Done", finish_reason=FinishReason.STOP),
-        ])
+        runtime = MockRuntime(
+            responses=[
+                RuntimeResponse(
+                    content="I'll run a command",
+                    tool_calls=[ToolCall(tool="run_command", arguments={"command": "echo test"})],
+                    finish_reason=FinishReason.TOOL_CALLS,
+                ),
+                RuntimeResponse(content="Done", finish_reason=FinishReason.STOP),
+            ]
+        )
         memory = MemoryManager(InMemoryBackend())
         bus = EventBus()
 
         from agentcore import create_agent
+
         agent = create_agent(
             runtime=runtime,
             memory=memory,

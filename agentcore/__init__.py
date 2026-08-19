@@ -1,135 +1,168 @@
 __version__ = "0.1.0"
 
+from .adapters.hermes_event_bridge import HermesEventBridge
 from .agent import Agent, AgentConfig, create_agent
-from .task import Task, TaskState, Hypothesis
-from .router import SkillRouter, RoutingResult, SkillMatch
-from .context import ProjectContext, discover_project_context
-from .memory import (
-    MemoryManager,
-    MemoryBackend,
-    MemoryRecord,
-    MemoryType,
-    InMemoryBackend,
-)
-from .verifier import Verifier, VerificationReport, CheckResult
-from .tools import ToolManager, ToolResult, FileReadResult, FileWriteResult, SearchResult
-from .runtimes.base import RuntimeAdapter, RuntimeResponse, ToolCall, FinishReason, RuntimeCapabilities
-from .runtimes.hermes import HermesRuntime, create_hermes_runtime
-from .runtimes.registry import RuntimeRegistry, get_default_registry
-from .planner import Planner
-from .task import PlanStep
-from .config import (
-    AgentCoreConfig,
-    ConfigLoader,
-    SkillConfig,
-    MemoryConfig,
-    ToolLimits,
-    VerificationConfig,
-)
-from .events import (
-    AgentEvent,
-    EventType,
-    EventBus,
-    EventHandler,
-    create_event,
-)
-from .persistence import (
-    PersistenceBackend,
-    InMemoryPersistenceBackend,
-    FilesystemPersistenceBackend,
-    EventStore,
-    InMemoryEventStore,
-    FilesystemEventStore,
-    TaskPersistenceManager,
-    create_persistence_manager,
-)
-from .errors import (
-    AgentCoreError,
-    TaskAlreadyRunningError,
-    TaskNotFoundError,
-    TaskRecoveryError,
-    TaskLockError,
-    ShutdownError,
-    ConfigurationError,
-)
-from .task_registry import (
-    TaskRegistry,
-    TaskRecord,
-    TaskRecordStatus,
-)
 from .agentcore import (
     AgentCore,
     AgentCoreLimits,
     create_agent_core,
 )
+from .config import (
+    AgentCoreConfig,
+    ConfigLoader,
+    MemoryConfig,
+    SkillConfig,
+    ToolLimits,
+    VerificationConfig,
+)
+from .context import ProjectContext, discover_project_context
+from .control import ControlResult
+from .desktop_task_coordinator import DesktopTaskCoordinator
+from .errors import (
+    AgentCoreError,
+    ConfigurationError,
+    ShutdownError,
+    TaskAlreadyRunningError,
+    TaskLockError,
+    TaskNotFoundError,
+    TaskRecoveryError,
+)
+from .events import (
+    AgentEvent,
+    EventBus,
+    EventHandler,
+    EventType,
+    create_event,
+)
+from .harvesting import (
+    HarvestResult,
+    MemoryCandidate,
+    MemoryHarvester,
+)
+from .memory import (
+    InMemoryBackend,
+    MemoryBackend,
+    MemoryConfidence,
+    MemoryManager,
+    MemoryRecord,
+    MemoryType,
+)
+from .observations import (
+    InMemoryObservationStore,
+    Observation,
+    ObservationCollector,
+    ObservationStore,
+    ObservationType,
+)
+from .persistence import (
+    EventStore,
+    FilesystemEventStore,
+    FilesystemPersistenceBackend,
+    InMemoryEventStore,
+    InMemoryPersistenceBackend,
+    PersistenceBackend,
+    TaskPersistenceManager,
+    create_persistence_manager,
+)
+from .planner import Planner
+from .router import RoutingResult, SkillMatch, SkillRouter
+from .runtimes.base import (
+    FinishReason,
+    RuntimeAdapter,
+    RuntimeCapabilities,
+    RuntimeResponse,
+    ToolCall,
+)
+from .runtimes.hermes import HermesRuntime, create_hermes_runtime
+from .runtimes.registry import RuntimeRegistry, get_default_registry
+from .task import Hypothesis, PlanStep, Task, TaskState
+from .task_registry import (
+    TaskRecord,
+    TaskRecordStatus,
+    TaskRegistry,
+)
+from .tools import FileReadResult, FileWriteResult, SearchResult, ToolManager, ToolResult
+from .verifier import CheckResult, VerificationReport, Verifier
 
 __all__ = [
-    "__version__",
     "Agent",
     "AgentConfig",
+    "AgentCore",
     "AgentCoreConfig",
-    "ConfigLoader",
+    "AgentCoreError",
+    "AgentCoreLimits",
     "AgentEvent",
-    "EventType",
+    "CheckResult",
+    "ConfigLoader",
+    "ConfigurationError",
+    "ControlResult",
+    "DesktopTaskCoordinator",
     "EventBus",
     "EventHandler",
-    "create_event",
-    "Task",
-    "TaskState",
-    "Hypothesis",
-    "SkillRouter",
-    "RoutingResult",
-    "SkillMatch",
-    "ProjectContext",
-    "discover_project_context",
-    "MemoryManager",
-    "MemoryBackend",
-    "MemoryRecord",
-    "MemoryType",
-    "InMemoryBackend",
-    "Verifier",
-    "VerificationReport",
-    "CheckResult",
-    "ToolManager",
-    "ToolResult",
+    "EventStore",
+    "EventType",
     "FileReadResult",
     "FileWriteResult",
-    "SearchResult",
-    "RuntimeAdapter",
-    "RuntimeResponse",
-    "ToolCall",
-    "FinishReason",
-    "RuntimeCapabilities",
-    "HermesRuntime",
-    "create_hermes_runtime",
-    "RuntimeRegistry",
-    "get_default_registry",
-    "Planner",
-    "PlanStep",
-    "create_agent",
-    "SkillConfig",
-    "MemoryConfig",
-    "ToolLimits",
-    "VerificationConfig",
-    "PersistenceBackend",
-    "InMemoryPersistenceBackend",
-    "FilesystemPersistenceBackend",
-    "EventStore",
-    "InMemoryEventStore",
     "FilesystemEventStore",
-    "TaskPersistenceManager",
-    "create_persistence_manager",
-    "AgentCoreError",
-    "TaskAlreadyRunningError",
-    "TaskNotFoundError",
-    "TaskRecoveryError",
-    "TaskLockError",
+    "FilesystemPersistenceBackend",
+    "FinishReason",
+    "HarvestResult",
+    "HermesEventBridge",
+    "HermesRuntime",
+    "Hypothesis",
+    "InMemoryBackend",
+    "InMemoryEventStore",
+    "InMemoryObservationStore",
+    "InMemoryPersistenceBackend",
+    "MemoryBackend",
+    "MemoryCandidate",
+    "MemoryConfidence",
+    "MemoryConfig",
+    "MemoryHarvester",
+    "MemoryManager",
+    "MemoryRecord",
+    "MemoryType",
+    "Observation",
+    "ObservationCollector",
+    "ObservationStore",
+    "ObservationType",
+    "PersistenceBackend",
+    "PlanStep",
+    "Planner",
+    "ProjectContext",
+    "RoutingResult",
+    "RuntimeAdapter",
+    "RuntimeCapabilities",
+    "RuntimeRegistry",
+    "RuntimeResponse",
+    "SearchResult",
     "ShutdownError",
-    "ConfigurationError",
-    "TaskRegistry",
+    "SkillConfig",
+    "SkillMatch",
+    "SkillRouter",
+    "Task",
+    "TaskAlreadyRunningError",
+    "TaskLockError",
+    "TaskNotFoundError",
+    "TaskPersistenceManager",
     "TaskRecord",
     "TaskRecordStatus",
-    "AgentCore",
-    "AgentCoreLimits",
+    "TaskRecoveryError",
+    "TaskRegistry",
+    "TaskState",
+    "ToolCall",
+    "ToolLimits",
+    "ToolManager",
+    "ToolResult",
+    "VerificationConfig",
+    "VerificationReport",
+    "Verifier",
+    "__version__",
+    "create_agent",
     "create_agent_core",
+    "create_event",
+    "create_hermes_runtime",
+    "create_persistence_manager",
+    "discover_project_context",
+    "get_default_registry",
 ]

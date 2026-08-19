@@ -1,8 +1,6 @@
-import os
-import re
 import subprocess
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 class ProjectContext:
@@ -106,12 +104,14 @@ class ProjectContext:
                 text=True,
                 timeout=10,
             )
-            lines = [l for l in result.stdout.strip().split("\n") if l]
+            lines = [line for line in result.stdout.strip().split("\n") if line]
             return {
                 "is_git_repo": True,
                 "changed_files": len(lines),
-                "staged": len([l for l in lines if l.startswith("M") or l.startswith("A")]),
-                "unstaged": len([l for l in lines if l.startswith(" M")]),
+                "staged": len(
+                    [line for line in lines if line.startswith("M") or line.startswith("A")]
+                ),
+                "unstaged": len([line for line in lines if line.startswith(" M")]),
             }
         except Exception:
             return {"is_git_repo": True, "error": "Could not read git status"}
@@ -144,14 +144,22 @@ class ProjectContext:
         return configs
 
     def _find_test_files(self) -> list[str]:
-        test_patterns = ["test_*.py", "*_test.py", "tests/*.py", "*_test.ts", "*.test.ts", "tests/*.rs", "*_test.go"]
+        test_patterns = [
+            "test_*.py",
+            "*_test.py",
+            "tests/*.py",
+            "*_test.ts",
+            "*.test.ts",
+            "tests/*.rs",
+            "*_test.go",
+        ]
         tests = []
         for pattern in test_patterns:
             for f in self.project_path.rglob(pattern):
                 tests.append(str(f.relative_to(self.project_path)))
         return tests[:20]
 
-    def _find_readme(self) -> Optional[str]:
+    def _find_readme(self) -> str | None:
         readme_names = ["README.md", "README.rst", "README.txt", "readme.md"]
         for name in readme_names:
             if (self.project_path / name).exists():

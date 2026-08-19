@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
 import uuid
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from enum import Enum, StrEnum
+from typing import Any
 
 
 class TaskState(Enum):
@@ -25,7 +25,7 @@ class TaskState(Enum):
     IMPLEMENTING = "IMPLEMENTING"
 
 
-_VALID_TRANSITIONS: Dict[TaskState, set[TaskState]] = {
+_VALID_TRANSITIONS: dict[TaskState, set[TaskState]] = {
     TaskState.CREATED: {
         TaskState.ANALYZING,
         TaskState.CANCELLED,
@@ -118,7 +118,7 @@ _TERMINAL_STATES = {
 }
 
 
-class StepStatus(str, Enum):
+class StepStatus(StrEnum):
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"
@@ -131,8 +131,8 @@ class PlanStep:
     action: str
     description: str
     status: StepStatus = StepStatus.PENDING
-    outcome: Optional[str] = None
-    error: Optional[str] = None
+    outcome: str | None = None
+    error: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -146,7 +146,7 @@ class PlanStep:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "PlanStep":
+    def from_dict(cls, data: dict[str, Any]) -> PlanStep:
         status = data.get("status", StepStatus.PENDING)
         if isinstance(status, str):
             status = StepStatus(status)
@@ -172,21 +172,21 @@ class Task:
     task_id: str = field(default_factory=lambda: f"task-{uuid.uuid4().hex[:8]}")
     user_request: str = ""
     project: str = ""
-    selected_skills: List[str] = field(default_factory=list)
+    selected_skills: list[str] = field(default_factory=list)
     attributes: dict[str, Any] = field(default_factory=dict)
     project_context: dict[str, Any] = field(default_factory=dict)
     memory_context: dict[str, Any] = field(default_factory=dict)
     current_state: TaskState = TaskState.CREATED
-    plan: List[Dict[str, Any]] = field(default_factory=list)
-    actions: List[Dict[str, Any]] = field(default_factory=list)
-    tool_results: List[Dict[str, Any]] = field(default_factory=list)
-    changes: List[Dict[str, Any]] = field(default_factory=list)
+    plan: list[dict[str, Any]] = field(default_factory=list)
+    actions: list[dict[str, Any]] = field(default_factory=list)
+    tool_results: list[dict[str, Any]] = field(default_factory=list)
+    changes: list[dict[str, Any]] = field(default_factory=list)
     test_results: dict[str, Any] = field(default_factory=dict)
     verification: dict[str, Any] = field(default_factory=dict)
-    errors: List[str] = field(default_factory=list)
-    hypotheses: List[Dict[str, Any]] = field(default_factory=list)
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    errors: list[str] = field(default_factory=list)
+    hypotheses: list[dict[str, Any]] = field(default_factory=list)
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def transition(self, new_state: TaskState, reason: str = "") -> None:
         if self.current_state in _TERMINAL_STATES and new_state not in _TERMINAL_STATES:
@@ -197,13 +197,13 @@ class Task:
             raise InvalidStateTransitionError(self.current_state, new_state)
 
         self.current_state = new_state
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
 
     def update_state(self, state: TaskState) -> None:
         self.current_state = state
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
 
-    def _select_next_step(self, plan: List[PlanStep]) -> Optional[PlanStep]:
+    def _select_next_step(self, plan: list[PlanStep]) -> PlanStep | None:
         for step in plan:
             status = step.status
             if isinstance(status, str):
@@ -215,7 +215,7 @@ class Task:
     def is_terminal(self) -> bool:
         return self.current_state in _TERMINAL_STATES
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "task_id": self.task_id,
             "user_request": self.user_request,
@@ -238,7 +238,7 @@ class Task:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Task":
+    def from_dict(cls, data: dict[str, Any]) -> Task:
         return cls(
             task_id=data["task_id"],
             user_request=data["user_request"],
@@ -277,7 +277,7 @@ class Hypothesis:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Hypothesis":
+    def from_dict(cls, data: dict[str, Any]) -> Hypothesis:
         return cls(
             statement=data["statement"],
             supporting_evidence=data["supporting_evidence"],

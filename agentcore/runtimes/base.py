@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Any, List, Optional, TypedDict
 from dataclasses import dataclass, field
+from enum import StrEnum
+from typing import Any, TypedDict
 
 
 class RuntimeCapabilities(TypedDict, total=False):
@@ -11,6 +11,7 @@ class RuntimeCapabilities(TypedDict, total=False):
     All fields are optional. Runtimes should advertise only the capabilities
     they actually support.
     """
+
     text_generation: bool
     tool_calls: bool
     external_tool_execution: bool
@@ -21,6 +22,7 @@ class RuntimeCapabilities(TypedDict, total=False):
 @dataclass
 class ToolCall:
     """A tool invocation requested by a runtime (model layer)."""
+
     tool: str
     arguments: dict[str, Any] = field(default_factory=dict)
     thought: str = ""
@@ -44,12 +46,14 @@ class ToolCall:
         )
 
 
-class FinishReason(str, Enum):
+class FinishReason(StrEnum):
     """Why a runtime response ended."""
-    STOP = "stop"           # Model produced final text, no more work needed
+
+    STOP = "stop"  # Model produced final text, no more work needed
     TOOL_CALLS = "tool_calls"  # Model requested tool calls
-    TIMEOUT = "timeout"      # Runtime timed out
-    ERROR = "error"          # Runtime error occurred
+    TIMEOUT = "timeout"  # Runtime timed out
+    ERROR = "error"  # Runtime error occurred
+    CANCELLED = "cancelled"  # Request was cancelled by caller
 
 
 @dataclass
@@ -59,8 +63,9 @@ class RuntimeResponse:
 
     The Agent processes this without knowing which runtime produced it.
     """
+
     content: str = ""
-    tool_calls: List[ToolCall] = field(default_factory=list)
+    tool_calls: list[ToolCall] = field(default_factory=list)
     finish_reason: FinishReason = FinishReason.STOP
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -76,7 +81,9 @@ class RuntimeResponse:
         return {
             "content": self.content,
             "tool_calls": [tc.to_dict() for tc in self.tool_calls],
-            "finish_reason": self.finish_reason.value if isinstance(self.finish_reason, FinishReason) else self.finish_reason,
+            "finish_reason": self.finish_reason.value
+            if isinstance(self.finish_reason, FinishReason)
+            else self.finish_reason,
             "metadata": self.metadata,
         }
 
@@ -103,10 +110,10 @@ class ToolResult:
         error: str = "",
         exit_code: int = 0,
         duration: float = 0.0,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
         # backward-compat aliases
-        stdout: Optional[str] = None,
-        stderr: Optional[str] = None,
+        stdout: str | None = None,
+        stderr: str | None = None,
     ):
         self.success = success
         self.tool = tool
@@ -181,7 +188,7 @@ class RuntimeAdapter(ABC):
         pass
 
     @property
-    def default_model(self) -> Optional[str]:
+    def default_model(self) -> str | None:
         """Return the default model name, if any."""
         return None
 
@@ -197,7 +204,7 @@ class HermesAPI:
             parts.append(f"Project: {task.get('project', 'unknown')}")
             parts.append(f"State: {task.get('current_state', 'CREATED')}")
 
-        if "project_context" in context and context["project_context"]:
+        if context.get("project_context"):
             parts.append("Project Context:")
             for key, value in list(context["project_context"].items())[:10]:
                 if isinstance(value, (str, int, bool)):
@@ -205,13 +212,13 @@ class HermesAPI:
                 elif isinstance(value, list):
                     parts.append(f"  {key}: {len(value)} items")
 
-        if "memory" in context and context["memory"]:
+        if context.get("memory"):
             parts.append("Relevant Memory:")
             for item in context["memory"][:3]:
                 content = item.get("content", "")[:200]
                 parts.append(f"  {content}...")
 
-        if "skills" in context and context["skills"]:
+        if context.get("skills"):
             parts.append(f"Selected Skills: {', '.join(context['skills'])}")
 
         if "instructions" in context:

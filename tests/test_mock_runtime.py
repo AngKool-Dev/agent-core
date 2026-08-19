@@ -1,14 +1,12 @@
-import pytest
-from typing import Optional, List, Any, Dict
+from typing import Any
+
 from agentcore.runtimes.base import (
+    FinishReason,
     RuntimeAdapter,
     RuntimeResponse,
     ToolCall,
-    ToolResult,
-    FinishReason,
 )
 from agentcore.tools import ToolManager
-from pathlib import Path
 
 
 class MockRuntime(RuntimeAdapter):
@@ -22,13 +20,13 @@ class MockRuntime(RuntimeAdapter):
 
     def __init__(
         self,
-        responses: Optional[List[Any]] = None,
-        tool_calls: Optional[List[ToolCall]] = None,
+        responses: list[Any] | None = None,
+        tool_calls: list[ToolCall] | None = None,
     ):
-        self._responses: List[RuntimeResponse] = []
+        self._responses: list[RuntimeResponse] = []
         self._response_index = 0
         self._tool_call_index = 0
-        self._last_response: Optional[RuntimeResponse] = None
+        self._last_response: RuntimeResponse | None = None
 
         # Convert legacy response formats (strings, dicts, ToolCalls) into RuntimeResponse
         for resp in responses or []:
@@ -36,11 +34,13 @@ class MockRuntime(RuntimeAdapter):
 
         # Also accept an explicit list of ToolCall objects
         for tc in tool_calls or []:
-            self._responses.append(RuntimeResponse(
-                content="",
-                tool_calls=[tc],
-                finish_reason=FinishReason.TOOL_CALLS,
-            ))
+            self._responses.append(
+                RuntimeResponse(
+                    content="",
+                    tool_calls=[tc],
+                    finish_reason=FinishReason.TOOL_CALLS,
+                )
+            )
 
     def _coerce(self, resp: Any) -> RuntimeResponse:
         """Convert various input formats into a RuntimeResponse."""
@@ -60,11 +60,10 @@ class MockRuntime(RuntimeAdapter):
                     finish_reason=FinishReason.TOOL_CALLS,
                 )
             if "response" in resp:
-                complete = resp.get("complete", True)
                 return RuntimeResponse(
                     content=resp["response"],
                     tool_calls=[],
-                    finish_reason=FinishReason.STOP if complete else FinishReason.STOP,
+                    finish_reason=FinishReason.STOP,
                 )
             # Fallback: stringify
             return RuntimeResponse(content=str(resp), finish_reason=FinishReason.STOP)
@@ -72,7 +71,7 @@ class MockRuntime(RuntimeAdapter):
         text = str(resp) if not isinstance(resp, str) else resp
         return RuntimeResponse(content=text, finish_reason=FinishReason.STOP)
 
-    def respond(self, context: Dict[str, Any]) -> RuntimeResponse:
+    def respond(self, context: dict[str, Any]) -> RuntimeResponse:
         if not self._responses:
             response = RuntimeResponse(
                 content="Task completed",
@@ -110,7 +109,7 @@ class MockRuntime(RuntimeAdapter):
         pass
 
     @property
-    def default_model(self) -> Optional[str]:
+    def default_model(self) -> str | None:
         return "mock-model"
 
     # --- Backward-compatible helpers ---
@@ -124,7 +123,7 @@ class MockRuntime(RuntimeAdapter):
             return self._last_response.is_complete
         return False
 
-    def get_pending_tool_calls(self) -> List[ToolCall]:
+    def get_pending_tool_calls(self) -> list[ToolCall]:
         if self._last_response:
             return self._last_response.tool_calls
         return []
@@ -154,7 +153,7 @@ class TestMockRuntime:
         # Create the test file so read_file succeeds
         (tmp_path / "test.txt").write_text("Mock content of test.txt\nLine 2\nLine 3\n")
 
-        runtime = MockRuntime()
+        MockRuntime()
         tool_call = ToolCall(tool="read_file", arguments={"path": "test.txt"})
 
         tm = ToolManager(project_path=tmp_path)
