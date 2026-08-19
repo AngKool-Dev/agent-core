@@ -180,7 +180,50 @@ The principle: **AgentCore should sit above the runtime, not replace the runtime
 
 ---
 
-## 5. Start with InMemoryBackend (default)
+## 5. First Task: Integrate AgentCore into the existing agent
+
+Follow these steps in order. Do not skip the inspection phase.
+
+1. **Inspect the host project.** Understand its architecture, agent runtime,
+   execution flow, and existing tests before making any changes.
+2. **Identify its agent/runtime implementation.** Find where the agent executes
+   tasks, how it receives prompts, and how it produces output.
+3. **Determine whether AgentCore is already installed.**
+   ```bash
+   python -c "import agentcore; print(agentcore.__version__)"
+   ```
+4. **Install AgentCore if authorized and necessary.** Use the GitHub install
+   method described in section 2.
+5. **Check for an existing RuntimeAdapter.** Look in `agentcore/runtimes/` and
+   check the `RuntimeRegistry` for a compatible adapter.
+6. **If one exists, use it.** Do not rewrite working integration code.
+7. **If none exists, inspect whether the runtime can implement `RuntimeAdapter`.**
+   The runtime must receive a structured context dict and return a `RuntimeResponse`.
+8. **Do not replace the existing runtime simply because Hermes is documented.**
+   Hermes is one verified adapter, not a requirement.
+9. **Preserve existing agent behavior.** AgentCore should wrap the runtime,
+   not alter it.
+10. **Integrate AgentCore above the runtime.** AgentCore handles orchestration,
+    lifecycle, events, observations, and memory. The runtime handles execution.
+11. **Add integration tests** that verify task lifecycle, events, observations,
+    and memory harvesting work through the new runtime.
+12. **Run the host project's tests** to confirm nothing is broken.
+13. **Verify a real task flows through AgentCore.** Execute a task and confirm
+    the full lifecycle completes.
+14. **Verify task lifecycle/events.** Check that task states transition correctly.
+15. **Verify observations.** Check that events are captured.
+16. **Verify memory if enabled.** Check that memories are harvested and stored.
+17. **Report exactly what changed.** Document files modified, tests run, and
+    verification results.
+
+> **NEVER assume Hermes is the runtime.**
+> First inspect the host project's actual agent architecture.
+
+> **AgentCore should sit above the runtime, not replace the runtime.**
+
+---
+
+## 6. Start with InMemoryBackend (default)
 
 AgentCore defaults to `InMemoryBackend` — no configuration needed:
 
@@ -295,7 +338,7 @@ agent -r my-runtime "Your task here"
 
 ---
 
-## 8. Run the project's existing tests
+## 7. Run the project's existing tests
 
 ```bash
 pytest tests/ -q
@@ -306,13 +349,13 @@ new tests, place them in the project's test directory and ensure they pass.
 
 ---
 
-## 9. Report what was changed
+## 8. Report what was changed
 
 After integration, report **exactly** what was done:
 
 - Was AgentCore installed? (version, method)
 - Was db-obsidian installed for persistence?
-- Was a runtime adapter configured? (hermes / custom)
+- Was a runtime adapter configured? (hermes / echo / custom)
 - Which commands were run to verify?
 - Which tests were run and their results?
 - What files were created or modified?
@@ -322,7 +365,7 @@ Example report:
 ```
 Installed AgentCore v0.1.0 from GitHub (pip install).
 db-obsidian v0.2.1 was already installed.
-Runtime: Hermes Desktop (hermes -z mode, black-box).
+Runtime: Echo (tool-aware, AgentCore executes tools).
 Verified: python -c "import agentcore" → 0.1.0
 Verified: argus --help → working
 Tests: pytest tests/ -q → 971 passed, 3 skipped
@@ -332,7 +375,7 @@ Backend: InMemoryBackend (default — no persistent memory configured).
 
 ---
 
-## 10. Quick reference card (copy-paste)
+## 9. Quick reference card (copy-paste)
 
 ```bash
 # Detect
@@ -349,7 +392,7 @@ pytest tests/ -q
 ruff check .
 ruff format --check .
 
-# Obsess
+# Inspect
 argus task list
 argus task show <task_id>
 argus task events <task_id> --limit 50
@@ -361,11 +404,12 @@ argus memory confidence <memory_id>
 
 ---
 
-## Key takeaways for AI agents
+## 10. Key takeaways for AI agents
 
 1. **Inspect before installing.** Always check the project first.
 2. **Install only if authorized.** User permission is required for package installation.
 3. **Start simple.** Use InMemoryBackend unless persistent memory is explicitly requested.
 4. **Don't disrupt the host.** AgentCore wraps the existing runtime; it does not replace it.
-5. **Verify everything.** Run tests, check CLI, confirm imports.
-6. **Report transparently.** Document what was changed and what was verified.
+5. **Never assume Hermes.** Detect the host project's actual runtime first.
+6. **Verify everything.** Run tests, check CLI, confirm imports.
+7. **Report transparently.** Document what was changed and what was verified.

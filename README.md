@@ -76,7 +76,7 @@ agent "Fix the launcher crash"
 argus task list
 ```
 
-> **Python 3.11+** is required. AgentCore has **no required dependencies**.
+> **Python 3.11+** is required. AgentCore has **no required dependencies.**
 > Runtimes, memory backends, and tools are optional and loaded lazily.
 
 ### What's installed
@@ -88,31 +88,114 @@ argus task list
 
 ---
 
-## First Time Running a Task
+## Run Your First AgentCore Task
 
-With Hermes Desktop installed:
+AgentCore is designed to sit **above** an existing agent runtime. It provides
+orchestration, lifecycle, events, observations, and memory — the runtime
+performs the actual execution.
+
+The general flow:
+
+```
+User / Application
+       │
+       ▼
+  AgentCore task
+       │
+       ▼
+  RuntimeRegistry
+       │
+       ▼
+  RuntimeAdapter
+       │
+       ▼
+  Agent execution
+       │
+       ├── events
+       ├── output
+       └── result
+       │
+       ▼
+  AgentCore EventBus
+       │
+       ├── Task lifecycle
+       ├── Observations
+       └── Memory harvesting
+       │
+       ▼
+  argus task show <task_id>
+  argus task events <task_id>
+  argus task memories <task_id>
+```
+
+### Case 1 — Existing AgentCore-compatible runtime
+
+If the project already has an AgentCore runtime adapter (e.g. Hermes, Echo):
 
 ```bash
-# Run a task against the current project
-agent "Why does the login handler fail on edge cases?"
-
-# Target a specific project
-agent -p /path/to/project "Implement pagination in the results view"
-
-# Choose a model
-agent -r hermes -m claude-sonnet-4 "Refactor the auth module"
-
-# List available runtimes
+# List available adapters
 agent --list-runtimes
+
+# Run a task through the adapter
+agent -r <runtime-name> "Your task here"
+
+# Inspect results
+argus task list
+argus task show <task_id>
+argus task events <task_id>
+argus task memories <task_id>
 ```
 
 AgentCore will:
 1. Discover project context (language, files, structure)
 2. Plan the task (investigate → implement → verify)
-3. Delegate to the runtime for language model calls
+3. Route to the runtime for execution
 4. Harvest memories with confidence scoring
 5. Verify results with format/build/test checks
 6. Persist everything for later inspection via `argus`
+
+### Case 2 — Existing agent runtime, no AgentCore adapter
+
+**Do NOT replace the existing agent runtime.**
+
+Inspect its execution interface and determine whether a `RuntimeAdapter` can
+integrate it. The architecture is:
+
+```
+Existing Agent
+       │
+       ▼
+RuntimeAdapter
+       │
+       ▼
+AgentCore
+```
+
+The runtime remains responsible for execution. AgentCore becomes responsible
+for orchestration, lifecycle, events, observations, and memory.
+
+See [`docs/runtime-adapters.md`](docs/runtime-adapters.md) for how to implement
+a `RuntimeAdapter`.
+
+### Case 3 — No existing runtime
+
+AgentCore can still be used as the orchestration foundation, but an actual
+runtime/agent implementation is required to perform LLM work.
+
+AgentCore itself does **not** provide an LLM.
+
+### Runtime selection
+
+| Your situation | What to do |
+|---|---|
+| Using Hermes Desktop | Use `HermesRuntime` |
+| Using an existing supported AgentCore runtime | Use that adapter |
+| Using another agent/runtime | Implement or add a `RuntimeAdapter` |
+| Building a new agent | Build the runtime around `RuntimeAdapter` |
+| Need persistent memory | Configure DB-Obsidian |
+| Need simple local testing | Use `InMemoryBackend` |
+
+**Hermes is NOT required. DB-Obsidian is NOT required. AgentCore does NOT require a specific LLM. AgentCore does NOT replace the agent runtime.**
 
 ---
 
