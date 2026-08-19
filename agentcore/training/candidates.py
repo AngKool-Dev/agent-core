@@ -2389,6 +2389,138 @@ _add(
 )
 
 
+# ============================================================
+# V3 REGRESSION FIX — safety: resource limits
+# ============================================================
+
+_add(
+    "What resource limits does AgentCore apply to running tasks?",
+    "AgentCore applies resource limits through AgentConfig: max_iterations "
+    "(default 10), max_tool_calls (default 50), max_runtime_seconds (default 300), "
+    "and timeout (default 300s). The OrchestrationEngine checks these limits "
+    "during the agent loop. The HermesRuntime enforces timeout via "
+    "subprocess.communicate(timeout=self.timeout). If exceeded, TimeoutExpired "
+    "is caught, _cancel_in_flight() terminates the subprocess, and "
+    "FinishReason.TIMEOUT is returned.",
+    "agentcore source",
+    ["safety", "runtime"],
+)
+
+_add(
+    "How does HermesRuntime handle a runtime timeout?",
+    "When HermesRuntime's subprocess exceeds the configured timeout, "
+    "TimeoutExpired is caught and _cancel_in_flight() terminates the process "
+    "via process.terminate(), escalating to process.kill() if it does not "
+    "exit within 5 seconds. The OrchestrationEngine receives "
+    "FinishReason.TIMEOUT and can retry (max_replans default 3) or transition "
+    "to FAILED. This prevents runaway execution.",
+    "agentcore source",
+    ["safety", "runtime", "cancellation"],
+)
+
+# ============================================================
+# V3 REGRESSION FIX — safety: security boundaries
+# ============================================================
+
+_add(
+    "How are security boundaries maintained between runtime adapters?",
+    "AgentCore maintains security boundaries through process isolation. "
+    "Each runtime adapter runs in its own subprocess via HermesRuntime.spawn(). "
+    "The orchestration layer communicates only through the RuntimeAdapter "
+    "interface — adapters cannot access MemoryBackend, TaskRegistry, or "
+    "ObservationStore directly. Process-level isolation ensures runtimes have "
+    "separate memory spaces and cannot inspect each other's state. A runtime "
+    "crash is contained within its subprocess boundary by the OS.",
+    "agentcore source",
+    ["safety", "runtime", "runtime_adapter"],
+)
+
+_add(
+    "Do runtimes share memory or state in AgentCore?",
+    "No — runtimes in AgentCore are strictly isolated by process boundaries. "
+    "Each runtime adapter operates in its own subprocess with its own memory "
+    "space. The orchestration layer communicates with runtimes exclusively "
+    "through the RuntimeAdapter interface (respond(), capabilities(), cancel()). "
+    "A runtime has no direct function calls or memory access to other runtimes "
+    "or the orchestrator's internal state. Any data sharing must go through "
+    "the orchestration layer, which applies appropriate filtering and "
+    "isolation guarantees.",
+    "agentcore source",
+    ["safety", "runtime", "orchestration"],
+)
+
+# ============================================================
+# V3 REGRESSION FIX — events: runtime event propagation
+# ============================================================
+
+_add(
+    "How does HermesRuntime propagate completion events to the orchestration layer?",
+    "HermesRuntime propagates completion events through the "
+    "ObservationCollector and EventBus. After a RuntimeResponse is parsed, "
+    "_emit() creates AgentEvent objects with structured data (event type, "
+    "task_id, iteration, outcome). The ObservationCollector subscribes to "
+    "these events and translates them into Observations with stable "
+    "correlation IDs (observation.id, session_id, task_id, turn_id). These "
+    "Observations are stored in the ObservationStore for retrieval by the "
+    "MemoryHarvester. The EventBus propagates events synchronously to "
+    "subscribed observers, carrying typed event data for state transitions "
+    "and monitoring.",
+    "agentcore source",
+    ["events", "runtime_adapter", "events"],
+)
+
+_add(
+    "What event types does HermesRuntime emit on task completion?",
+    "HermesRuntime emits the following event types on task completion: "
+    "TOOL_CALL_COMPLETED (if tool calls were executed), RUNTIME_ERROR "
+    "(if the runtime failed), TASK_COMPLETED (if the task succeeded), or "
+    "TASK_FAILED (if the task failed). Each event carries metadata "
+    "including task_id, iteration, and outcome data. The "
+    "ObservationCollector correlates these events to observations using "
+    "deterministic correlation IDs, enabling the MemoryHarvester to extract "
+    "memory candidates from the task's execution history.",
+    "agentcore source",
+    ["events", "task_lifecycle", "runtime"],
+)
+
+# ============================================================
+# V3 REGRESSION FIX — execution: resource limits during delegation
+# ============================================================
+
+_add(
+    "How does execution delegation work when a runtime is selected?",
+    "When AgentCore delegates execution to a runtime adapter, the "
+    "orchestration layer builds a context dict and calls "
+    "RuntimeAdapter.respond(context). The runtime adapter formats the context "
+    "into a prompt, invokes the backend, and parses the response. Resource "
+    "limits (max_iterations, max_tool_calls, max_runtime_seconds, timeout) "
+    "are checked by the OrchestrationEngine before and during execution. "
+    "If a runtime exceeds its timeout, TimeoutExpired is caught and the "
+    "subprocess is terminated. The OrchestrationEngine then checks "
+    "max_replans and either retries or transitions the task to FAILED. "
+    "This ensures execution delegation operates within bounded resource "
+    "constraints.",
+    "agentcore source",
+    ["execution", "runtime", "safety"],
+)
+
+_add(
+    "What resource guards prevent unbounded consumption during execution delegation?",
+    "AgentCore uses multiple defense-in-depth layers to prevent "
+    "unbounded resource consumption. The OrchestrationAgentConfig enforces "
+    "max_iterations (default 10), max_tool_calls (default 50), "
+    "max_runtime_seconds (default 300), and timeout (default 300s). The "
+    "HermesRuntime enforces process-level timeouts via "
+    "subprocess.communicate(timeout=). If the timeout is exceeded, the "
+    "process is terminated. The OrchestrationEngine monitors finish_reason "
+    "and can retry (up to max_replans) or fail the task. The ToolManager "
+    "also limits individual tool call execution, maintaining resource "
+    "guards throughout the agent loop.",
+    "agentcore source",
+    ["execution", "safety", "runtime_adapter"],
+)
+
+
 def get_all_experiences() -> list[Experience]:
     """Return all training candidates as Experience objects.
 
