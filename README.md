@@ -331,6 +331,7 @@ result = agent.execute("Fix the failing tests")
 ```python
 from agentcore.runtimes.base import RuntimeAdapter, RuntimeResponse, FinishReason
 
+
 class MyRuntime(RuntimeAdapter):
     def respond(self, context):
         return RuntimeResponse(
@@ -347,8 +348,10 @@ class MyRuntime(RuntimeAdapter):
             "cancellation": False,
         }
 
+
 # Register it
 from agentcore.runtimes import get_default_registry
+
 registry = get_default_registry()
 registry.register("my-runtime", lambda **kw: MyRuntime())
 ```
@@ -359,8 +362,10 @@ registry.register("my-runtime", lambda **kw: MyRuntime())
 from pathlib import Path
 from agentcore.tools import ToolManager, ToolResult
 
+
 def my_tool(args: dict, work_dir: Path, start: float) -> ToolResult:
     return ToolResult(success=True, tool="my_tool", output="done")
+
 
 manager = ToolManager(project_path=".")
 manager.register_tool("my_tool", my_tool)
