@@ -2,37 +2,186 @@
 
 ## Overview
 
-AgentCore is a universal AI coding-agent framework with pluggable runtime adapters.
+AgentCore is a runtime-agnostic orchestration layer for AI coding agents.
 
 ## Core Components
 
 ```
-                    USER
-                     │
-                     ▼
-              ┌─────────────┐
-              │  AgentCore  │
-              └──────┬──────┘
-                     │
-          ┌──────────┼──────────┐
-          ▼          ▼          ▼
-       Context     Skills     Memory
-          │          │          │
-          └──────────┼──────────┘
-                     ▼
-                  Planner
-                     │
-                     ▼
-              Runtime Adapter
-                     │
-                     ▼
-                  Hermes
+                    AgentCore
+                       │
+             ┌─────────┴─────────┐
+             │   RuntimeAdapter  │
+             └─────────┬─────────┘
+                       │
+          ┌────────────┼────────────┐
+          ▼            ▼            ▼
+       Hermes         Echo       Future
+          │            │         runtimes
+          ▼            ▼
+       execution    execution
+          │            │
+          └──────┬─────┘
+                 ▼
+              EventBus
+                 │
+        ┌────────┼─────────┐
+        ▼        ▼         ▼
+      Tasks  Observations Memory
+                           │
+                           ▼
+                       DB-Obsidian
 ```
+
+## Runtime Adapter Architecture
+
+AgentCore's runtime layer is built on three abstractions: `RuntimeAdapter`,
+`RuntimeRegistry`, and `RuntimeCapabilities`.
+
+### RuntimeAdapter
+
+`RuntimeAdapter` is the abstract interface that every runtime must implement:
+
+```python
+class RuntimeAdapter(ABC):
+    @abstractmethod
+    def respond(self, context: dict[str, Any]) -> RuntimeResponse:
+        """Send prompt/context to the runtime and return a structured response."""
+
+    @abstractmethod
+    def capabilities(self) -> dict[str, Any]:
+        """Return a dict describing what this runtime supports."""
+
+    def cancel(self) -> None:
+        """Request cancellation of an in-flight request. Default: no-op."""
+
+    @property
+    def default_model(self) -> str | None:
+        """Return the default model name, if any."""
+        return None
+```
+
+### RuntimeResponse
+
+All runtimes return a `RuntimeResponse`:
+
+```python
+@dataclass
+class RuntimeResponse:
+    content: str = ""
+    tool_calls: list[ToolCall] = field(default_factory=list)
+    finish_reason: FinishReason = FinishReason.STOP
+    metadata: dict[str, Any] = field(default_factory=dict)
+```
+
+`FinishReason` values:
+- `STOP` — Model produced final text, no more work needed
+- `TOOL_CALLS` — Model requested tool calls
+- `TIMEOUT` — Runtime timed out
+- `ERROR` — Runtime error occurred
+- `CANCELLED` — Request was cancelled by caller
+
+### RuntimeCapabilities
+
+Runtimes advertise capabilities via `capabilities()`:
+
+| Key | Type | Meaning |
+|---|---|---|
+| `text_generation` | `bool` | Runtime produces text responses |
+| `tool_calls` | `bool` | Runtime exposes structured `ToolCall` objects to AgentCore |
+| `external_tool_execution` | `bool` | AgentCore executes those tools via `ToolManager` |
+| `streaming` | `bool` | Runtime supports streaming responses |
+| `cancellation` | `bool` | Runtime supports cancellation |
+
+Additional metadata keys are allowed (e.g. `adapter`, `model`, `provider`, `timeout`).
+
+### RuntimeRegistry
+
+`RuntimeRegistry` stores runtime factories by name and resolves them at
+execution time:
+
+```python
+from agentcore.runtimes import get_default_registry
+
+reg = get_default_registry()
+# Create a runtime by name
+runtime = reg.create("hermes")
+# List all registered runtimes
+print(reg.list_runtimes())
+# Query capabilities without instantiating
+print(reg.get_capabilities("echo"))
+```
+
+Built-in runtimes are registered in `_register_builtin_runtimes()`. Third-party
+runtimes can register themselves without modifying AgentCore core:
+
+```python
+reg.register("my-runtime", lambda **kw: MyRuntime(), info={...})
+```
+
+### Execution Boundary
+
+The execution boundary between AgentCore and the runtime is `RuntimeAdapter.respond()`.
+AgentCore builds a context dict and calls `respond()`. The runtime translates that
+context into its own execution model, produces a `RuntimeResponse`, and returns it.
+AgentCore never calls into the runtime's internal APIs.
+
+### Cancellation Boundary
+
+Cancellation flows through `RuntimeAdapter.cancel()`. AgentCore calls `cancel()`
+when the user requests shutdown or a timeout is exceeded. The runtime is
+responsible for terminating its own execution (subprocess, thread, session, etc.).
+
+### Event Boundary
+
+Events flow from the runtime → AgentCore's `EventBus` → `ObservationCollector`.
+The runtime does not write directly to the observation store or memory backend.
+AgentCore's event system provides the decoupling.
+
+### Observation Boundary
+
+Observations are collected by `ObservationCollector`, which subscribes to
+`EventBus` events. The runtime's execution events become `Observation` objects
+with stable correlation IDs (observation.id, session_id, task_id, turn_id).
+
+### Memory Harvesting Boundary
+
+`MemoryHarvester` subscribes to observations and extracts `MemoryCandidate`
+objects. The runtime does not participate in memory harvesting — it only
+produces observations. AgentCore's harvesting layer operates identically
+regardless of which runtime produced the observations.
+
+### Lifecycle Flow
+
+```
+Agent
+  ↓
+Task
+  ↓
+RuntimeRegistry.resolve(runtime_name)
+  ↓
+RuntimeAdapter.respond(context)
+  ↓
+Runtime execution
+  ↓
+RuntimeResponse
+  ↓
+Events (via EventBus)
+  ↓
+ObservationCollector
+  ↓
+MemoryHarvester
+  ↓
+MemoryBackend
+```
+
+This architecture allows Hermes, Echo, and future runtimes to share the same
+AgentCore infrastructure. The runtime handles execution; AgentCore handles
+everything else.
 
 ## Key Design Principles
 
 1. **Runtime Independence**: The agent brain is separate from the runtime.
-2. **Pluggable Architecture**: New runtimes (Kilo, OpenCode) can be added without changing core.
+2. **Pluggable Architecture**: New runtimes can be added without changing core.
 3. **Skill Composition**: Skills are discovered and composed automatically.
 4. **Structured State**: All task state is serializable for persistence.
 5. **Investigation-First**: The agent investigates before acting.

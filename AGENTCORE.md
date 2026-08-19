@@ -121,7 +121,7 @@ Expected results:
 | `python -c "import agentcore; print(agentcore.__version__)"` | `0.1.0` |
 | `argus --help` | Shows `task` and `memory` subcommands |
 | `agent --help` | Shows options: `-p`, `-r`, `--list-runtimes`, `-m`, etc. |
-| `pytest tests/ -q` | ~962 passed, 3 skipped (real_runtime only) |
+| `pytest tests/ -q` | ~971 passed, 3 skipped (real_runtime only) |
 
 ---
 
@@ -129,13 +129,54 @@ Expected results:
 
 | Host project has... | Action |
 |---|---|
-| Hermes Desktop running | Use `hermes` runtime adapter (reference integration, verified) |
+| Existing AgentCore adapter (e.g. `hermes`) | Use it — do not replace it |
 | Custom Python agent | Build a `RuntimeAdapter` implementation |
-| Kilo / OpenCode available | Future adapter — implement against `RuntimeAdapter` interface |
+| Kilo / OpenCode available | Implement `RuntimeAdapter` for that agent |
 | No runtime | AgentCore works with `InMemoryBackend`; `argus` CLI is still fully functional |
 
-**Do not replace the host project's existing agent runtime unless explicitly
-instructed.** AgentCore integrates *around* an existing runtime.
+**Critical: If the host project already has an agent runtime, do not replace it
+with Hermes or any other runtime.** Determine whether an AgentCore
+`RuntimeAdapter` can wrap or integrate the existing runtime. AgentCore should
+sit *above* the runtime, not replace it.
+
+### Multi-Runtime Integration
+
+AgentCore supports multiple runtimes simultaneously. The runtime registry
+resolves adapters by name at execution time:
+
+```python
+from agentcore.runtimes import get_default_registry
+
+reg = get_default_registry()
+print(reg.list_runtimes())  # ['echo', 'hermes']
+```
+
+The verified runtimes are:
+
+| Runtime | Type | Tool Calls | External Tool Execution |
+|---|---|---|---|
+| `hermes` | Black-box | No | No |
+| `echo` | Tool-aware | Yes | Yes |
+
+If the host project already has an agent runtime, follow this decision process:
+
+1. **Detect the existing runtime.** Identify the agent's execution entry point
+   (CLI, library, API, subprocess).
+2. **Inspect its execution interface.** What inputs does it accept? What outputs
+   does it produce? Does it emit events or expose hooks?
+3. **Determine whether an existing AgentCore adapter exists.** Check
+   `agentcore/runtimes/` and the `RuntimeRegistry`.
+4. **If one exists, use it.** Do not rewrite working integration code.
+5. **If one does not exist, determine whether implementing `RuntimeAdapter`
+   is appropriate.** The runtime must be able to receive a structured context
+   dict and return a `RuntimeResponse`.
+6. **Preserve the host project's existing runtime.** AgentCore wraps around it.
+7. **Avoid modifying AgentCore core orchestration** unless genuinely required.
+8. **Add integration tests** that verify task lifecycle, events, observations,
+   and memory harvesting work through the new runtime.
+9. **Verify** that tasks, events, observations, and memory work end-to-end.
+
+The principle: **AgentCore should sit above the runtime, not replace the runtime.**
 
 ---
 
@@ -284,7 +325,7 @@ db-obsidian v0.2.1 was already installed.
 Runtime: Hermes Desktop (hermes -z mode, black-box).
 Verified: python -c "import agentcore" → 0.1.0
 Verified: argus --help → working
-Tests: pytest tests/ -q → 962 passed, 3 skipped
+Tests: pytest tests/ -q → 971 passed, 3 skipped
 Files changed: None (AgentCore installed externally).
 Backend: InMemoryBackend (default — no persistent memory configured).
 ```

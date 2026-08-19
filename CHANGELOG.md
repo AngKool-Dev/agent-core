@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Echo runtime** (`EchoRuntime`) — second `RuntimeAdapter` implementation,
+  tool-aware, demonstrating multi-runtime architecture
+- **Multi-runtime integration tests** — 9 tests proving Hermes and Echo coexist
+  in the same `RuntimeRegistry` and route tasks independently
+- **Non-Hermes observation collection** — verified that `ObservationCollector`
+  works with a non-Hermes runtime
+- **Non-Hermes memory harvesting** — verified that `MemoryHarvester` extracts
+  memories from observations produced by a non-Hermes runtime
+- **AGENTCORE.md** — copy-pasteable integration guide for AI coding agents
+- **Multi-runtime capability documentation** — README and docs updated to
+  reflect verified multi-runtime support
+
+### Changed
+- README architecture diagram updated to show `RuntimeAdapter` layer and
+  multi-runtime support (Hermes + Echo + future runtimes)
+- README "What AgentCore Does" section now clearly distinguishes AgentCore
+  responsibilities from runtime responsibilities
+- README installation section corrected to use GitHub-only install method
+  (PyPI `agentcore` package is a different project)
+- AGENTCORE.md expanded with multi-runtime integration decision process
+- `docs/runtime-adapters.md` rewritten as canonical runtime adapter guide
+- `docs/architecture.md` expanded with formal Runtime Adapter Architecture
+  section documenting execution, cancellation, event, observation, and
+  memory harvesting boundaries
+
 ## [0.1.0] - 2026-08-19
 
 ### Added

@@ -6,34 +6,35 @@ AgentCore is **not** Hermes, Kilo, OpenCode, Claude Code, or any other AI coding
 It is the orchestration layer that sits *above* them:
 
 ```
-                    ┌─────────────────────────┐
-                    │       AGENTCORE          │
-                    │  Universal Orchestration │
-                    │          Layer            │
-                    ├─────────────────────────┤
-                    │  Task Lifecycle            │
-                    │  EventBus                  │
-                    │  Observations              │
-                    │  Memory Harvesting         │
-                    │  Confidence Scoring        │
-                    │  Persistence               │
-                    │  Runtime Adapters          │
-                    └────────────┬────────────┘
-                                 │
-             ┌───────────────────┼───────────────────┐
-             ▼                   ▼                   ▼
-         ┌────────┐          ┌────────┐          ┌──────────┐
-         │ Hermes │          │  Kilo  │          │ OpenCode │
-         └────────┘          └────────┘          └──────────┘
-             │                   │                   │
-             └───────────────────┼───────────────────┘
-                                 ▼
-                      Persistent Memory (DB-Obsidian)
+                    AgentCore
+                       │
+             ┌─────────┴─────────┐
+             │   RuntimeAdapter  │
+             └─────────┬─────────┘
+                       │
+          ┌────────────┼────────────┐
+          ▼            ▼            ▼
+       Hermes         Echo       Future
+          │            │         runtimes
+          ▼            ▼
+       execution    execution
+          │            │
+          └──────┬─────┘
+                 ▼
+              EventBus
+                 │
+        ┌────────┼─────────┐
+        ▼        ▼         ▼
+      Tasks  Observations Memory
+                           │
+                           ▼
+                       DB-Obsidian
 ```
 
-Plug in any coding agent runtime — Hermes today, Kilo and OpenCode tomorrow —
-without changing AgentCore's logic. AgentCore handles task lifecycle,
-memory, verification, and orchestration so your runtime doesn't have to.
+AgentCore provides the task lifecycle, event bus, observations, memory harvesting,
+and verification infrastructure. The runtime performs the actual agent execution.
+Different runtimes can have different capabilities — the same AgentCore
+infrastructure operates across all of them.
 
 ---
 
@@ -59,14 +60,16 @@ python -m venv .venv
 
 # Windows:
 .venv\Scripts\activate
-
 # Linux/macOS:
 source .venv/bin/activate
 
-# Install AgentCore — zero required dependencies
-pip install agentcore
+# Install AgentCore from GitHub (not yet on PyPI)
+pip install "agentcore @ git+https://github.com/AngKool-Dev/agent-core.git"
 
-# Run a task (requires Hermes — see below)
+# Verify
+python -c "import agentcore; print(agentcore.__version__)"
+
+# Run a task (requires a runtime adapter)
 agent "Fix the launcher crash"
 
 # Inspect results without a runtime
@@ -99,17 +102,60 @@ agent -p /path/to/project "Implement pagination in the results view"
 # Choose a model
 agent -r hermes -m claude-sonnet-4 "Refactor the auth module"
 
-# List installed runtimes
+# List available runtimes
 agent --list-runtimes
 ```
 
 AgentCore will:
 1. Discover project context (language, files, structure)
 2. Plan the task (investigate → implement → verify)
-3. Delegate to the Hermes runtime for language model calls
+3. Delegate to the runtime for language model calls
 4. Harvest memories with confidence scoring
 5. Verify results with format/build/test checks
 6. Persist everything for later inspection via `argus`
+
+---
+
+## Multi-Runtime Architecture
+
+AgentCore is a **verified multi-runtime orchestration layer**. The same task
+lifecycle, event system, observations, and memory pipeline operate across
+different runtimes without any changes to AgentCore core logic.
+
+This is not merely a planned extension — it has been integration-tested with
+multiple runtimes.
+
+### Verified runtimes
+
+| Runtime | Tool Calls | External Tool Execution | Role |
+|---|---:|---:|---|
+| **Hermes** | No | No | Black-box runtime — executes tools internally |
+| **Echo** | Yes | Yes | Tool-aware runtime — AgentCore executes tools |
+| Future runtimes | varies | varies | Kilo, OpenCode, custom adapters |
+
+The capability difference matters:
+
+- **Hermes** (`-z` mode) is a black-box runtime. It internally executes tools
+  and returns only the final synthesized text. AgentCore sees `tool_calls=[]`
+  and skips the tool-execution state machine.
+- **Echo** is a tool-aware runtime. It returns `ToolCall` objects in its
+  response and expects AgentCore to execute them via `ToolManager`.
+
+Both runtimes share the same AgentCore infrastructure: task lifecycle, event
+bus, observation collection, memory harvesting, and CLI observability.
+
+### Runtime routing
+
+Tasks are explicitly routed to a runtime via the `-r` flag:
+
+```bash
+agent -r hermes "Fix the bug"     # Uses Hermes runtime (black-box)
+agent -r echo "Echo this"         # Uses Echo runtime (tool-aware)
+agent --list-runtimes             # Shows all available adapters
+```
+
+The runtime adapter is resolved at execution time from the `RuntimeRegistry`.
+No AgentCore core code changes are needed to add a new runtime.
 
 ---
 
@@ -120,7 +166,7 @@ AgentCore will:
                  │
                  ▼
         ┌──────────────┐
-        │   AgentCore   │   ← Task lifecycle, persistence, limits
+        │   AgentCore   │   ← Task lifecycle, persistence, limits, events
         └──────┬───────┘
                │
    ┌──────────┼──────────┐
@@ -132,10 +178,10 @@ Context    Skills     Memory
           Planner
               │
               ▼
-       Runtime Adapter    ← Hermes, Kilo, OpenCode
+       RuntimeAdapter    ← Hermes, Echo, Kilo, OpenCode
               │
               ▼
-            Hermes
+         Execution system
 ```
 
 ### Layer table
@@ -147,9 +193,19 @@ Context    Skills     Memory
 | **Skills** | Skill discovery from filesystem, prompt-based routing |
 | **Memory** | Optional memory storage (InMemoryBackend default, DB-Obsidian adapter optional) |
 | **Planner** | Plan generation and replanning |
-| **Runtime Adapter** | Abstract interface to LLM runtimes (Hermes, Kilo, OpenCode) |
+| **RuntimeAdapter** | Abstract interface to runtime execution (Hermes, Echo, Kilo, OpenCode) |
 | **Verifier** | Post-completion verification (format, build, tests) with scope control |
 | **Argus** | Read-only CLI for inspecting tasks, observations, and memory |
+
+### What AgentCore does NOT do
+
+AgentCore is infrastructure, not an agent. It does **not**:
+
+- Generate code or provide a coding model
+- Provide an LLM or model backend (delegated to the runtime adapter)
+- Replace Hermes, Kilo, OpenCode, Claude Code, or any other agent
+- Replace an agent's user interface
+- Automatically integrate with every agent (an adapter is required per agent)
 
 ### Data flow
 
@@ -197,7 +253,9 @@ Runtimes declare what they support via `capabilities()`:
 Hermes v0.20+ in `-z` mode is a black-box runtime — AgentCore sees
 `tool_calls=[]` and skips the tool-execution state machine.
 
-### Built-in: Hermes Runtime
+### Built-in runtimes
+
+**Hermes Runtime** (reference integration):
 
 ```python
 from agentcore import HermesRuntime
@@ -207,8 +265,42 @@ response = runtime.respond({"user_request": "Explain dependency injection"})
 # RuntimeResponse(content="...", finish_reason=FinishReason.STOP)
 ```
 
+**Echo Runtime** (reference implementation):
+
+```python
+from agentcore import EchoRuntime
+
+runtime = EchoRuntime()
+response = runtime.respond({"user_request": "Hello"})
+# RuntimeResponse(content="Echo: Hello", finish_reason=FinishReason.STOP)
+```
+
 See [`docs/runtime-adapters.md`](docs/runtime-adapters.md) for the full adapter
 contract and how to integrate Kilo, OpenCode, or your own runtime.
+
+---
+
+## Adding a New Runtime
+
+A new runtime does not require rewriting AgentCore. The integration model is:
+
+1. **Implement `RuntimeAdapter`** — subclass and implement `respond()` and
+   `capabilities()`
+2. **Declare capabilities** — advertise what the runtime supports via the
+   standardized `RuntimeCapabilities` keys
+3. **Implement execution** — translate AgentCore context into runtime-specific
+   execution, return `RuntimeResponse`
+4. **Implement cancellation/shutdown** — where supported, implement
+   `RuntimeAdapter.cancel()`
+5. **Register the runtime** — add a factory to `RuntimeRegistry`
+6. **Add integration tests** — verify task lifecycle, observations, and memory
+   harvesting work through the new runtime
+7. **Verify** — run `pytest tests/ -q` and confirm no regressions
+
+Echo exists partly as a minimal reference/example runtime proving the adapter
+boundary. Hermes is the production integration.
+
+See [`docs/runtime-adapters.md`](docs/runtime-adapters.md) for the complete guide.
 
 ---
 
@@ -278,24 +370,15 @@ integration details.
 
 ## Installation
 
-### From PyPI
+### From GitHub (current method)
 
 ```bash
-pip install agentcore
+pip install "agentcore @ git+https://github.com/AngKool-Dev/agent-core.git"
 ```
 
-### With optional extras
-
-```bash
-# Development tools (pytest, ruff, build)
-pip install agentcore[dev]
-
-# Persistent memory backend
-pip install agentcore[db-obsidian]
-
-# All extras
-pip install agentcore[dev,db-obsidian]
-```
+> **Note:** `pip install agentcore` from PyPI currently installs a *different*
+> package (an agentsea library). AgentCore is not yet published to PyPI under
+> its own name. Always use the GitHub installation method above.
 
 ### From source
 
@@ -310,7 +393,7 @@ pip install -e ".[dev]"
 ## Python API
 
 ```python
-from agentcore import Agent, AgentConfig, AgentCoreConfig, create_agent, create_agent_core
+from agentcore import Agent, AgentConfig, AgentCoreConfig, create_agent_core
 
 # Create the AgentCore facade (task lifecycle, persistence)
 core = create_agent_core(config=AgentCoreConfig(default_runtime="hermes"))
@@ -324,51 +407,6 @@ config = AgentConfig(max_iterations=10, enable_verification=True)
 
 agent = Agent(runtime=runtime, memory=memory, config=config)
 result = agent.execute("Fix the failing tests")
-```
-
-### Custom runtime
-
-```python
-from agentcore.runtimes.base import RuntimeAdapter, RuntimeResponse, FinishReason
-
-
-class MyRuntime(RuntimeAdapter):
-    def respond(self, context):
-        return RuntimeResponse(
-            content="Hello from my runtime",
-            finish_reason=FinishReason.STOP,
-        )
-
-    def capabilities(self):
-        return {
-            "text_generation": True,
-            "tool_calls": False,
-            "external_tool_execution": False,
-            "streaming": False,
-            "cancellation": False,
-        }
-
-
-# Register it
-from agentcore.runtimes import get_default_registry
-
-registry = get_default_registry()
-registry.register("my-runtime", lambda **kw: MyRuntime())
-```
-
-### Custom tool
-
-```python
-from pathlib import Path
-from agentcore.tools import ToolManager, ToolResult
-
-
-def my_tool(args: dict, work_dir: Path, start: float) -> ToolResult:
-    return ToolResult(success=True, tool="my_tool", output="done")
-
-
-manager = ToolManager(project_path=".")
-manager.register_tool("my_tool", my_tool)
 ```
 
 See `examples/` for working examples:
@@ -399,6 +437,7 @@ db_path = "~/.agentcore/memory.db"
 [limits]
 max_iterations = 10            # Max agent loop iterations per task
 max_tool_calls = 50            # Max tool calls per task
+max_runtime_seconds = 300      # Max total runtime per task
 timeout = 300                  # Per-request timeout (seconds)
 
 [verification]
@@ -432,7 +471,7 @@ AGENTCORE_REAL_RUNTIME=1 pytest -m real_runtime -q
 |---|---|---|
 | Unit | Mocked | Yes |
 | Integration | Deterministic/mock | Yes |
-| Real runtime | Hermes/Kilo/OpenCode | No |
+| Real runtime | Hermes | No — opt-in |
 
 The default `pytest -q` suite runs unit and deterministic integration tests only.
 Real-runtime tests are opt-in via the `AGENTCORE_REAL_RUNTIME` environment variable
@@ -455,13 +494,14 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for development guidelines.
 
 ## Documentation
 
-| Doc | Description |
+| If you want to... | Read |
 |---|---|
-| [`docs/architecture.md`](docs/architecture.md) | System architecture and design |
-| [`docs/cli-reference.md`](docs/cli-reference.md) | Argus CLI command reference |
-| [`docs/runtime-adapters.md`](docs/runtime-adapters.md) | Runtime adapter interface and capability contract |
-| [`docs/hermes-integration.md`](docs/hermes-integration.md) | Hermes Desktop integration and identity model |
-| [`docs/memory.md`](docs/memory.md) | Memory harvesting, confidence, and backends |
+| Understand the architecture | [`docs/architecture.md`](docs/architecture.md) |
+| Implement a runtime adapter | [`docs/runtime-adapters.md`](docs/runtime-adapters.md) |
+| Use the Argus CLI | [`docs/cli-reference.md`](docs/cli-reference.md) |
+| Integrate Hermes Desktop | [`docs/hermes-integration.md`](docs/hermes-integration.md) |
+| Understand memory & confidence | [`docs/memory.md`](docs/memory.md) |
+| Integrate as an AI coding agent | [`AGENTCORE.md`](AGENTCORE.md) |
 
 ---
 
@@ -477,6 +517,21 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for development guidelines.
 - The verifier runs format/build/test checks but does not auto-apply fixes.
 - Real-runtime tests require Hermes Desktop to be installed on the host system.
 - Confidence classification is rule-based, not learned.
+
+---
+
+## Roadmap
+
+| Phase | Focus | Status |
+|---|---|---|
+| 6A | Training dataset v016 | Complete |
+| 6B | Release audit (lint, CI, packaging) | Complete |
+| 6C | Release candidate hardening | Complete |
+| 6D | Release documentation | Complete |
+| 6E | GitHub release | Complete |
+| Multi-runtime proof | Echo runtime + integration tests | Complete |
+| 7 | Advanced memory consolidation (eviction, promotion) | Planned |
+| 8 | Multi-runtime orchestration | Planned |
 
 ---
 
