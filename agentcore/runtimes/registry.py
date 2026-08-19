@@ -122,3 +122,24 @@ def _register_builtin_runtimes(registry: RuntimeRegistry) -> None:
         )
     except ImportError:
         pass
+
+    try:
+        from .echo import create_echo_runtime
+
+        registry.register(
+            "echo",
+            create_echo_runtime,
+            info={
+                "description": "Echo runtime — returns the user request",
+                "adapter": "echo",
+                "capabilities": {
+                    "text_generation": True,
+                    "tool_calls": True,
+                    "external_tool_execution": True,
+                    "streaming": False,
+                    "cancellation": False,
+                },
+            },
+        )
+    except ImportError:
+        pass

@@ -73,6 +73,7 @@ from .runtimes.base import (
     RuntimeResponse,
     ToolCall,
 )
+from .runtimes.echo import EchoRuntime, create_echo_runtime
 from .runtimes.hermes import HermesRuntime, create_hermes_runtime
 from .runtimes.registry import RuntimeRegistry, get_default_registry
 from .task import Hypothesis, PlanStep, Task, TaskState
@@ -97,6 +98,7 @@ __all__ = [
     "ConfigurationError",
     "ControlResult",
     "DesktopTaskCoordinator",
+    "EchoRuntime",
     "EventBus",
     "EventHandler",
     "EventStore",
@@ -160,6 +162,7 @@ __all__ = [
     "__version__",
     "create_agent",
     "create_agent_core",
+    "create_echo_runtime",
     "create_event",
     "create_hermes_runtime",
     "create_persistence_manager",
