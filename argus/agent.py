@@ -17,6 +17,7 @@ from agentcore.runtimes.base import RuntimeAdapter, ToolCall, ToolResult
 
 from argus.context import ConversationContext, ProjectContext, discover_project_context
 from argus.model import ModelProvider, build_messages, parse_model_output
+from argus.skills import Skill, SkillRegistry, SkillRouter
 from argus.tools import ToolRegistry
 from argus.tools.bash import BashTool
 from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
@@ -71,6 +72,7 @@ class ArgusAgent:
         memory: Optional[MemoryManager] = None,
         status_callback: Optional[StatusCallback] = None,
         model: Optional[ModelProvider] = None,
+        skill_paths: Optional[List[Path]] = None,
     ):
         self.project_path = Path(project_path) if project_path else Path.cwd()
         self.config = config or ArgusAgentConfig()
@@ -81,6 +83,10 @@ class ArgusAgent:
 
         self._tool_registry = ToolRegistry()
         self._register_default_tools()
+
+        self._skill_registry = SkillRegistry(skill_paths)
+        self._skill_router = SkillRouter(self._skill_registry)
+        self._active_skills: List[Skill] = []
 
         self._conversation = ConversationContext()
         self._last_result: Optional[Dict[str, Any]] = None
@@ -106,11 +112,24 @@ class ArgusAgent:
         if self._status_callback:
             self._status_callback(message)
 
+    def discover_skills(self, paths: Optional[List[Path]] = None) -> List[Skill]:
+        return self._skill_registry.discover(paths)
+
+    def route_skills(self, request: str) -> List[Skill]:
+        self._skill_router = SkillRouter(self._skill_registry)
+        self._active_skills = self._skill_router.route(request, self._project_context.to_dict())
+        return self._active_skills
+
+    def active_skills(self) -> List[Skill]:
+        return list(self._active_skills)
+
     def execute(self, request: str) -> Dict[str, Any]:
         self._start_time = time.time()
         self._iterations = 0
         self._tools_used = 0
         self._conversation.add_user(request)
+
+        self.route_skills(request)
 
         result = {
             "request": request,
@@ -120,6 +139,7 @@ class ArgusAgent:
             "tools_used": 0,
             "tool_results": [],
             "observations": [],
+            "skills": [s.name for s in self._active_skills],
             "final_response": "",
             "success": False,
         }
@@ -264,6 +284,8 @@ class ArgusAgent:
 
     def _build_context(self, request: str, results: Dict[str, Any]) -> Dict[str, Any]:
         recent_observations = results.get("observations", [])[-3:]
+        active_skills = getattr(self, "_active_skills", [])
+        skill_instructions = "\n\n".join(s.to_context() for s in active_skills)
         return {
             "user_request": request,
             "project_context": self._project_context.to_dict(),
@@ -272,6 +294,8 @@ class ArgusAgent:
             "recent_tool_results": [tr.to_dict() for tr in results.get("tool_results", [])[-5:]],
             "recent_observations": recent_observations,
             "current_step": results.get("plan", [{}])[0].get("action", "investigate"),
+            "active_skills": [s.to_dict() for s in active_skills],
+            "skill_instructions": skill_instructions,
             "instructions": [
                 "You are Argus, an AI coding agent.",
                 "Work iteratively: analyze, act, observe, refine.",
@@ -292,6 +316,8 @@ class ArgusAgent:
             available_tools=context.get("available_tools", []),
             recent_observations=context.get("recent_observations", []),
             current_step=context.get("current_step", "investigate"),
+            active_skills=context.get("active_skills"),
+            skill_instructions=context.get("skill_instructions", ""),
         )
 
         model_name = self.config.model or "gpt-4o"

@@ -623,3 +623,135 @@ class TestGitTools:
         tool = GitCommitTool()
         result = tool.execute(project_path=str(tmp_path), message="  ")
         assert result.success is False
+
+
+class TestArgusSkills:
+    def test_builtin_skills_discovered(self):
+        from argus.skills import SkillRegistry
+        from pathlib import Path
+
+        registry = SkillRegistry(skill_paths=[Path("argus/skills/builtin")])
+        skills = registry.discover()
+        names = [s.name for s in skills]
+        assert "debugging" in names
+        assert "testing" in names
+        assert "git-workflow" in names
+
+    def test_skill_loader_skips_missing_skill_md(self, tmp_path):
+        from argus.skills import SkillRegistry
+
+        registry = SkillRegistry(skill_paths=[tmp_path])
+        skills = registry.discover()
+        assert skills == []
+
+    def test_skill_matches_triggers(self):
+        from argus.skills import Skill
+
+        skill = Skill(
+            name="debugging",
+            description="Debug bugs",
+            triggers=["bug", "crash", "error"],
+        )
+        assert skill.matches("Fix the bug")
+        assert skill.matches("Application crash on startup")
+        assert not skill.matches("Add a feature")
+
+    def test_skill_to_context(self):
+        from argus.skills import Skill
+
+        skill = Skill(
+            name="debugging",
+            description="Debug bugs",
+            instructions="1. Read the traceback\n2. Locate the bug",
+            triggers=["bug"],
+        )
+        ctx = skill.to_context()
+        assert "## Skill: debugging" in ctx
+        assert "1. Read the traceback" in ctx
+
+    def test_skill_router_returns_matching_skills(self):
+        from argus.skills import SkillRegistry, SkillRouter, Skill
+
+        registry = SkillRegistry()
+        registry.register(Skill(name="debugging", description="Debug", triggers=["bug", "crash"]))
+        registry.register(Skill(name="testing", description="Test", triggers=["test", "pytest"]))
+        registry.register(Skill(name="git-workflow", description="Git", triggers=["git", "commit"]))
+
+        router = SkillRouter(registry)
+        matches = router.route("Fix the bug and run tests")
+        assert any(s.name == "debugging" for s in matches)
+        assert any(s.name == "testing" for s in matches)
+
+    def test_skill_router_deduplicates(self):
+        from argus.skills import SkillRegistry, SkillRouter, Skill
+
+        registry = SkillRegistry()
+        registry.register(Skill(name="testing", description="Test", triggers=["test", "pytest"]))
+        router = SkillRouter(registry)
+        matches = router.route("run tests and pytest")
+        names = [s.name for s in matches]
+        assert names.count("testing") == 1
+
+    def test_skill_router_empty_request(self):
+        from argus.skills import SkillRegistry, SkillRouter, Skill
+
+        registry = SkillRegistry()
+        registry.register(Skill(name="testing", description="Test", triggers=["test"]))
+        router = SkillRouter(registry)
+        matches = router.route("hello")
+        assert matches == []
+
+    def test_skill_registry_search(self):
+        from argus.skills import SkillRegistry, Skill
+
+        registry = SkillRegistry()
+        registry.register(Skill(name="rust-development", description="Rust code", triggers=["rust", "cargo"]))
+        matches = registry.search("rust")
+        assert any(s.name == "rust-development" for s in matches)
+
+    def test_skill_registry_get(self):
+        from argus.skills import SkillRegistry, Skill
+
+        registry = SkillRegistry()
+        skill = Skill(name="testing", description="Test")
+        registry.register(skill)
+        assert registry.get("testing") is skill
+        assert registry.get("nonexistent") is None
+
+    def test_agent_route_skills(self):
+        from argus.agent import ArgusAgent
+        from argus.skills import SkillRegistry, Skill
+
+        registry = SkillRegistry()
+        registry.register(Skill(name="debugging", description="Debug", triggers=["bug"]))
+        agent = ArgusAgent(project_path=".", skill_paths=[])
+        agent._skill_registry = registry
+        agent.route_skills("Fix the bug")
+        assert any(s.name == "debugging" for s in agent.active_skills())
+
+    def test_agent_route_skills_empty_when_no_match(self):
+        from argus.agent import ArgusAgent
+        from argus.skills import SkillRegistry, Skill
+
+        registry = SkillRegistry()
+        registry.register(Skill(name="testing", description="Test", triggers=["test"]))
+        agent = ArgusAgent(project_path=".", skill_paths=[])
+        agent._skill_registry = registry
+        agent.route_skills("hello world")
+        assert agent.active_skills() == []
+
+    def test_skill_to_dict(self):
+        from argus.skills import Skill
+
+        skill = Skill(
+            name="debugging",
+            description="Debug bugs",
+            instructions="Read traceback",
+            triggers=["bug"],
+            metadata={"version": "1.0"},
+            path=Path("/tmp/debugging"),
+        )
+        data = skill.to_dict()
+        assert data["name"] == "debugging"
+        assert data["triggers"] == ["bug"]
+        assert data["metadata"]["version"] == "1.0"

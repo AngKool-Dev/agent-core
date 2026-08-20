@@ -12,8 +12,16 @@ def build_messages(
     available_tools: List[Dict[str, Any]],
     recent_observations: List[str],
     current_step: str = "investigate",
+    active_skills: Optional[List[Dict[str, Any]]] = None,
+    skill_instructions: str = "",
 ) -> List[Message]:
-    system = _build_system_prompt(project_context, available_tools, current_step)
+    system = _build_system_prompt(
+        project_context,
+        available_tools,
+        current_step,
+        active_skills=active_skills,
+        skill_instructions=skill_instructions,
+    )
     messages = [Message(role="system", content=system)]
 
     for msg in conversation[-20:]:
@@ -35,6 +43,8 @@ def _build_system_prompt(
     project_context: Dict[str, Any],
     available_tools: List[Dict[str, Any]],
     current_step: str,
+    active_skills: Optional[List[Dict[str, Any]]] = None,
+    skill_instructions: str = "",
 ) -> str:
     lines = [
         "You are Argus, an autonomous coding agent.",
@@ -72,6 +82,22 @@ def _build_system_prompt(
 
     for tool in available_tools:
         lines.append(f"- {tool.get('name')}: {tool.get('description', '')}")
+
+    if active_skills:
+        lines.extend([
+            "",
+            "## Active Skills",
+            "The following skills are active for this task. Follow their guidance when relevant:",
+        ])
+        for skill in active_skills:
+            lines.append(f"- {skill.get('name')}: {skill.get('description', '')}")
+
+    if skill_instructions:
+        lines.extend([
+            "",
+            "## Skill Instructions",
+            skill_instructions,
+        ])
 
     lines.extend([
         "",

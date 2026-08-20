@@ -18,6 +18,9 @@ def handle(repl) -> str:
         ("config show", "Show all config"),
         ("tools list", "List available tools"),
         ("tools run <name> <args>", "Run a tool directly"),
+        ("skills list", "List discovered skills"),
+        ("skills search <query>", "Search skills"),
+        ("skills show <name>", "Show skill details"),
         ("agent <request>", "Send a request to the agent"),
     ]
     lines = ["Available commands:"]

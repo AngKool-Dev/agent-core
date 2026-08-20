@@ -45,7 +45,10 @@ class ArgusConfig:
                 "timeout_seconds": 300,
             },
             "skills": {
-                "paths": ["D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills"],
+                "paths": [
+                    "D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills",
+                    "D:/agent-core/argus/skills/builtin",
+                ],
             },
             "memory": {
                 "backend": "db_obsidian",

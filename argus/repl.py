@@ -52,7 +52,9 @@ class ArgusREPL:
             config=self._build_agent_config(),
             status_callback=self._status_update,
             model=self._build_model(),
+            skill_paths=self._build_skill_paths(),
         )
+        self.agent.discover_skills()
 
         self.commands = build_registry()
         self._running = False
@@ -80,6 +82,19 @@ class ArgusREPL:
             model=self.config.get("model.name"),
             provider=self.config.get("model.provider"),
         )
+
+    def _build_skill_paths(self):
+        from pathlib import Path
+        paths = []
+        builtin = Path(__file__).parent / "skills" / "builtin"
+        if builtin.exists():
+            paths.append(builtin)
+
+        config_paths = self.config.get("skills.paths", [])
+        for p in config_paths:
+            paths.append(Path(p))
+
+        return paths
 
     def _build_model(self):
         model_config = {
