@@ -22,6 +22,7 @@ from argus.skills import Skill, SkillRegistry, SkillRouter
 from argus.tools import ToolRegistry
 from argus.tools.bash import BashTool
 from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
+from argus.tools.git import GitAddTool, GitCommitTool, GitDiffTool, GitLogTool, GitStatusTool, GitWorkflowTool
 from argus.tools.memory import MemoryAddTool, MemorySearchTool, set_agent as set_memory_agent
 from argus.tools.search import GlobTool, GrepTool
 
@@ -66,6 +67,7 @@ class ArgusAgentConfig:
     run_build_check: bool = True
     run_tests: bool = True
     workspace_boundaries_enabled: bool = True
+    commit_approval_callback: Optional[Callable[[str], bool]] = None
 
 
 class ArgusAgent:
@@ -78,9 +80,12 @@ class ArgusAgent:
         status_callback: Optional[StatusCallback] = None,
         model: Optional[ModelProvider] = None,
         skill_paths: Optional[List[Path]] = None,
+        commit_approval_callback: Optional[Callable[[str], bool]] = None,
     ):
         self.project_path = Path(project_path) if project_path else Path.cwd()
         self.config = config or ArgusAgentConfig()
+        if commit_approval_callback is not None:
+            self.config.commit_approval_callback = commit_approval_callback
         self._runtime = runtime
         self._memory_manager = memory
         self._status_callback = status_callback
@@ -119,6 +124,12 @@ class ArgusAgent:
         self._tool_registry.register(BashTool())
         self._tool_registry.register(GrepTool())
         self._tool_registry.register(GlobTool())
+        self._tool_registry.register(GitStatusTool())
+        self._tool_registry.register(GitDiffTool())
+        self._tool_registry.register(GitLogTool())
+        self._tool_registry.register(GitAddTool())
+        self._tool_registry.register(GitCommitTool())
+        self._tool_registry.register(GitWorkflowTool())
         self._tool_registry.register(MemoryAddTool())
         self._tool_registry.register(MemorySearchTool())
 
@@ -542,7 +553,7 @@ class ArgusAgent:
         if not isinstance(arguments, dict):
             arguments = {}
 
-        if self.config.workspace_boundaries_enabled and tool_name in ("read_file", "write_file", "edit_file", "list_dir", "grep", "glob"):
+        if self.config.workspace_boundaries_enabled and tool_name in ("read_file", "write_file", "edit_file", "list_dir", "grep", "glob", "git_status", "git_diff", "git_log", "git_add", "git_commit"):
             arguments.setdefault("workspace", str(self.project_path))
 
         self._tools_used += 1
@@ -550,7 +561,41 @@ class ArgusAgent:
         result = self._tool_registry.execute(tool_name, **arguments)
         status = "success" if result.success else "failed"
         self._status(f"Tool {tool_name} {status}")
+
+        if self._handle_workflow_approval(tool_name, result):
+            return result
+
         return result
+
+    def _handle_workflow_approval(self, tool_name: str, result: ToolResult) -> bool:
+        if tool_name != "git_workflow":
+            return False
+
+        metadata = result.metadata or {}
+        if not metadata.get("needs_approval"):
+            return False
+
+        approval_message = metadata.get("approval_message", "")
+        if not approval_message or not self.config.commit_approval_callback:
+            return False
+
+        approved = self.config.commit_approval_callback(approval_message)
+        tool = self._tool_registry.get("git_workflow")
+        if tool and hasattr(tool, "_workflows"):
+            project_path = str(self.project_path)
+            if project_path in tool._workflows:
+                workflow = tool._workflows[project_path]
+                commit_message = metadata.get("commit_message", "")
+                if not commit_message:
+                    diff_info = metadata.get("diff", {})
+                    relevant = metadata.get("relevant", [])
+                    if relevant:
+                        commit_message = f"Update {', '.join(relevant[:3])}"
+                    else:
+                        commit_message = "Apply changes"
+                workflow.set_approved(approved, commit_message)
+
+        return approved
 
     def _next_step(self, plan: List["PlanStep"], completed: set) -> Optional["PlanStep"]:
         for step in plan:

@@ -48,6 +48,12 @@ TOOL_CATEGORY_MAP = {
     "edit_file": "write",
     "bash": "bash",
     "browser": "browser",
+    "git_status": "git",
+    "git_diff": "git",
+    "git_log": "git",
+    "git_add": "git",
+    "git_commit": "git",
+    "git_workflow": "git",
 }
 
 

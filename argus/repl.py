@@ -16,7 +16,7 @@ from argus.tools import ToolRegistry
 from argus.tools.bash import BashTool
 from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
 from argus.tools.search import GlobTool, GrepTool
-from argus.tools.git import GitAddTool, GitCommitTool, GitDiffTool, GitLogTool, GitStatusTool
+from argus.tools.git import GitAddTool, GitCommitTool, GitDiffTool, GitLogTool, GitStatusTool, GitWorkflowTool
 from argus.tools.memory import MemoryAddTool, MemorySearchTool
 
 
@@ -55,6 +55,7 @@ class ArgusREPL:
             status_callback=self._status_update,
             model=self._build_model(),
             skill_paths=self._build_skill_paths(),
+            commit_approval_callback=self._commit_approval_prompt,
         )
         self.agent.discover_skills()
 
@@ -76,6 +77,7 @@ class ArgusREPL:
         self.tool_registry.register(GitLogTool())
         self.tool_registry.register(GitAddTool())
         self.tool_registry.register(GitCommitTool())
+        self.tool_registry.register(GitWorkflowTool())
         self.tool_registry.register(MemoryAddTool())
         self.tool_registry.register(MemorySearchTool())
 
@@ -118,6 +120,12 @@ class ArgusREPL:
     def _permission_prompt(self, prompt: str, tool: str) -> bool:
         print(f"\n[PERMISSION] {prompt}")
         answer = input("Allow? [y/N]: ").strip().lower()
+        return answer == "y"
+
+    def _commit_approval_prompt(self, summary: str) -> bool:
+        print()
+        print(summary)
+        answer = input("Commit these changes? [y/N]: ").strip().lower()
         return answer == "y"
 
     def _status_update(self, message: str) -> None:

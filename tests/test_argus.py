@@ -1232,3 +1232,386 @@ class TestAgentReliability:
             "RUNTIME_ERROR", "CANCELLED"
         )
         assert "failure_reason" in result
+
+
+class TestGitWorkflow:
+    def _init_repo(self, tmpdir):
+        import subprocess
+
+        subprocess.run(["git", "init"], cwd=tmpdir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=tmpdir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test"], cwd=tmpdir, check=True, capture_output=True)
+        Path(tmpdir, "README.md").write_text("# Test Project\n")
+        subprocess.run(["git", "add", "README.md"], cwd=tmpdir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "initial"], cwd=tmpdir, check=True, capture_output=True)
+        return tmpdir
+
+    def test_workflow_inspect_clean_repo(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+
+        self._init_repo(tmp_path)
+        tool = GitWorkflowTool()
+        result = tool.execute(stage="inspect", project_path=str(tmp_path))
+        assert result.success is True
+        assert result.metadata["stage"] == "inspect"
+        state = result.metadata["repo_state"]
+        assert state["is_git_repo"] is True
+        assert state["branch"] != ""
+
+    def test_workflow_inspect_modified_repo(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "src.txt").write_text("hello")
+        tool = GitWorkflowTool()
+        result = tool.execute(stage="inspect", project_path=str(tmp_path))
+        assert result.success is True
+        state = result.metadata["repo_state"]
+        assert "src.txt" in state.get("all_changes", [])
+
+    def test_workflow_review_diff(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "README.md").write_text("changed")
+        tool = GitWorkflowTool()
+        result = tool.execute(stage="review", project_path=str(tmp_path))
+        assert result.success is True
+        assert result.metadata["stage"] == "review"
+        diff = result.metadata["diff"]
+        assert diff["success"] is True
+        assert "README.md" in diff["files"]
+
+    def test_workflow_identify_relevant_files(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "auth.py").write_text("login")
+        Path(tmp_path, "README.md").write_text("updated readme")
+        tool = GitWorkflowTool()
+        result = tool.execute(
+            stage="review",
+            project_path=str(tmp_path),
+            task_request="Fix login bug in auth module",
+            recent_tools=["edit_file", "write_file"],
+            recent_arguments=[{"path": "auth.py"}],
+        )
+        assert result.success is True
+        relevant = result.metadata["relevant"]
+        unrelated = result.metadata["unrelated"]
+        assert "auth.py" in relevant
+        assert "README.md" in unrelated
+
+    def test_workflow_approve_approved(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "README.md").write_text("changed")
+        tool = GitWorkflowTool()
+        result = tool.execute(
+            stage="approve",
+            project_path=str(tmp_path),
+            task_request="Update README",
+        )
+        assert result.success is True
+        assert result.metadata["needs_approval"] is True
+        workflow_key = str(Path(tmp_path).resolve())
+        tool._workflows[workflow_key].set_approved(True, "Update README")
+        assert tool._workflows[workflow_key].is_approved() is True
+
+    def test_workflow_approve_rejected(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "file.txt").write_text("changed")
+        tool = GitWorkflowTool()
+
+        def ask(summary):
+            return False
+
+        result = tool.execute(
+            stage="approve",
+            project_path=str(tmp_path),
+            task_request="Update file",
+            ask_callback=ask,
+        )
+        assert result.success is True
+        assert result.metadata["needs_approval"] is True
+        assert tool._workflows[str(tmp_path)].is_approved() is False
+
+    def test_workflow_commit_after_approval(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "README.md").write_text("changed")
+        tool = GitWorkflowTool()
+        result = tool.execute(stage="approve", project_path=str(tmp_path), task_request="Update README")
+        assert result.success is True
+        workflow_key = str(Path(str(tmp_path)).resolve())
+        tool._workflows[workflow_key].set_approved(True, "Update README")
+
+        result = tool.execute(
+            stage="commit",
+            project_path=str(tmp_path),
+            task_request="Update README",
+            recent_tools=["write_file"],
+            recent_arguments=[{"path": "README.md"}],
+        )
+        assert result.success is True
+        assert result.metadata["stage"] == "commit"
+        assert "README.md" in result.metadata["committed_files"]
+
+    def test_workflow_commit_without_approval_fails(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "file.txt").write_text("changed")
+        tool = GitWorkflowTool()
+        result = tool.execute(stage="commit", project_path=str(tmp_path))
+        assert result.success is False
+        assert "not approved" in result.error.lower()
+
+    def test_workflow_unrelated_files_not_staged(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+        from argus.tools.git import GitAddTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "README.md").write_text("updated readme")
+        Path(tmp_path, "auth.py").write_text("login")
+        tool = GitWorkflowTool()
+        result = tool.execute(stage="approve", project_path=str(tmp_path), task_request="Update README")
+        assert result.success is True
+        workflow_key = str(Path(str(tmp_path)).resolve())
+        tool._workflows[workflow_key].set_approved(True, "Update README")
+
+        result = tool.execute(
+            stage="commit",
+            project_path=str(tmp_path),
+            task_request="Update README",
+            recent_tools=["write_file"],
+            recent_arguments=[{"path": "README.md"}],
+        )
+        assert result.success is True
+        committed = result.metadata["committed_files"]
+        assert "README.md" in committed
+        assert "auth.py" not in committed
+
+    def test_workflow_non_git_repo(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+
+        tool = GitWorkflowTool()
+        result = tool.execute(stage="inspect", project_path=str(tmp_path))
+        assert result.success is False
+        assert "not a git repository" in result.error.lower() or "fatal" in result.error.lower() or result.error
+
+    def test_workflow_unknown_stage(self, tmp_path):
+        from argus.tools.git import GitWorkflowTool
+
+        self._init_repo(tmp_path)
+        tool = GitWorkflowTool()
+        result = tool.execute(stage="invalid", project_path=str(tmp_path))
+        assert result.success is False
+        assert "unknown" in result.error.lower()
+
+    def test_git_tools_workspace_boundary(self, tmp_path):
+        from argus.tools.git import GitStatusTool, GitDiffTool, GitAddTool, GitCommitTool
+
+        status_tool = GitStatusTool()
+        result = status_tool.execute(project_path=str(tmp_path), workspace="D:/agent-core")
+        assert result.success is False
+        assert "outside workspace" in result.error.lower()
+
+        diff_tool = GitDiffTool()
+        result = diff_tool.execute(project_path=str(tmp_path), workspace="D:/agent-core")
+        assert result.success is False
+        assert "outside workspace" in result.error.lower()
+
+        add_tool = GitAddTool()
+        result = add_tool.execute(project_path=str(tmp_path), paths=["file.txt"], workspace="D:/agent-core")
+        assert result.success is False
+        assert "outside workspace" in result.error.lower()
+
+        commit_tool = GitCommitTool()
+        result = commit_tool.execute(project_path=str(tmp_path), message="test", workspace="D:/agent-core")
+        assert result.success is False
+        assert "outside workspace" in result.error.lower()
+
+    def test_workflow_agent_integration_with_approval(self):
+        from argus.agent import ArgusAgent, ArgusAgentConfig
+        from argus.permissions import PermissionConfig
+        from argus.tools import ToolRegistry
+        from argus.tools.git import GitWorkflowTool
+        from unittest.mock import MagicMock
+
+        mock_memory = MagicMock()
+        mock_memory.search.return_value = []
+        mock_memory.retrieve_relevant_memory.return_value = ""
+        mock_memory.list.return_value = []
+
+        approvals = []
+
+        def approval_callback(summary):
+            approvals.append(summary)
+            return True
+
+        config = ArgusAgentConfig(
+            max_iterations=5,
+            commit_approval_callback=approval_callback,
+        )
+        agent = ArgusAgent(project_path=".", memory=mock_memory, config=config)
+        agent._tool_registry.set_permissions(PermissionConfig(git="allow"))
+
+        result = agent._execute_tool_call({
+            "tool": "git_workflow",
+            "arguments": {
+                "stage": "approve",
+                "project_path": ".",
+                "task_request": "Fix bug",
+            },
+        })
+        assert result.success is True
+        assert result.metadata.get("needs_approval") is True
+        assert len(approvals) == 1
+        assert "Fix bug" in approvals[0]
+
+    def test_workflow_agent_integration_rejected(self):
+        from argus.agent import ArgusAgent, ArgusAgentConfig
+        from argus.permissions import PermissionConfig
+        from argus.tools.git import GitWorkflowTool
+        from unittest.mock import MagicMock
+
+        mock_memory = MagicMock()
+        mock_memory.search.return_value = []
+        mock_memory.retrieve_relevant_memory.return_value = ""
+        mock_memory.list.return_value = []
+
+        def approval_callback(summary):
+            return False
+
+        config = ArgusAgentConfig(
+            max_iterations=5,
+            commit_approval_callback=approval_callback,
+        )
+        agent = ArgusAgent(project_path=".", memory=mock_memory, config=config)
+        agent._tool_registry.set_permissions(PermissionConfig(git="allow"))
+
+        result = agent._execute_tool_call({
+            "tool": "git_workflow",
+            "arguments": {
+                "stage": "approve",
+                "project_path": ".",
+                "task_request": "Fix bug",
+            },
+        })
+        assert result.success is True
+        assert result.metadata.get("needs_approval") is True
+        tool = agent._tool_registry.get("git_workflow")
+        workflow_key = str(Path(".").resolve())
+        assert tool._workflows[workflow_key].is_approved() is False
+
+    def test_workflow_end_to_end_acceptance(self, tmp_path):
+        import subprocess
+        from argus.tools.git import GitWorkflowTool, GitStatusTool
+
+        subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True, capture_output=True)
+
+        Path(tmp_path, "README.md").write_text("# Project\n")
+        Path(tmp_path, "src").mkdir(exist_ok=True)
+        Path(tmp_path, "src", "example.py").write_text("def add(a, b):\n    return a + b\n")
+        Path(tmp_path, "tests").mkdir(exist_ok=True)
+        Path(tmp_path, "tests", "test_example.py").write_text("def test_add():\n    assert add(1, 2) == 3\n")
+
+        subprocess.run(["git", "add", "."], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "initial"], cwd=tmp_path, check=True, capture_output=True)
+
+        Path(tmp_path, "config.toml").write_text("unrelated_change = true\n")
+        Path(tmp_path, "src", "example.py").write_text("def add(a, b):\n    return a + b + 1\n")
+        Path(tmp_path, "tests", "test_example.py").write_text("def test_add():\n    assert add(1, 2) == 4\n")
+
+        tool = GitWorkflowTool()
+
+        inspect_result = tool.execute(stage="inspect", project_path=str(tmp_path))
+        assert inspect_result.success is True
+        state = inspect_result.metadata["repo_state"]
+        assert "config.toml" in state.get("all_changes", [])
+        assert "src/example.py" in state.get("all_changes", [])
+        assert "tests/test_example.py" in state.get("all_changes", [])
+
+        review_result = tool.execute(
+            stage="review",
+            project_path=str(tmp_path),
+            task_request="Fix addition bug in example.py",
+            recent_tools=["write_file", "edit_file"],
+            recent_arguments=[
+                {"path": "src/example.py"},
+                {"path": "tests/test_example.py"},
+            ],
+        )
+        assert review_result.success is True
+        relevant = review_result.metadata["relevant"]
+        unrelated = review_result.metadata["unrelated"]
+        assert "src/example.py" in relevant
+        assert "tests/test_example.py" in relevant
+        assert "config.toml" in unrelated
+
+        workflow_key = str(Path(str(tmp_path)).resolve())
+        tool._workflows[workflow_key].set_approved(True, "Fix addition bug")
+
+        commit_result = tool.execute(
+            stage="commit",
+            project_path=str(tmp_path),
+            task_request="Fix addition bug in example.py",
+            recent_tools=["write_file", "edit_file"],
+            recent_arguments=[
+                {"path": "src/example.py"},
+                {"path": "tests/test_example.py"},
+            ],
+        )
+        assert commit_result.success is True
+        assert "src/example.py" in commit_result.metadata["committed_files"]
+        assert "tests/test_example.py" in commit_result.metadata["committed_files"]
+        assert "config.toml" not in commit_result.metadata["committed_files"]
+
+        status = GitStatusTool().execute(project_path=str(tmp_path))
+        assert "config.toml" in status.output
+        assert "src/example.py" not in status.output or "nothing to commit" in status.output.lower()
+
+    def test_workflow_end_to_end_rejection(self, tmp_path):
+        import subprocess
+        from argus.tools.git import GitWorkflowTool, GitStatusTool
+
+        subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True, capture_output=True)
+
+        Path(tmp_path, "README.md").write_text("# Project\n")
+        Path(tmp_path, "src").mkdir(exist_ok=True)
+        Path(tmp_path, "src", "example.py").write_text("def add(a, b):\n    return a + b\n")
+
+        subprocess.run(["git", "add", "."], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "initial"], cwd=tmp_path, check=True, capture_output=True)
+
+        Path(tmp_path, "config.toml").write_text("unrelated_change = true\n")
+        Path(tmp_path, "src", "example.py").write_text("def add(a, b):\n    return a + b + 1\n")
+
+        tool = GitWorkflowTool()
+        tool.execute(stage="inspect", project_path=str(tmp_path))
+
+        workflow_key = str(Path(str(tmp_path)).resolve())
+        tool._workflows[workflow_key].set_approved(False, "")
+
+        result = tool.execute(
+            stage="commit",
+            project_path=str(tmp_path),
+            task_request="Fix addition bug",
+            recent_tools=["write_file"],
+            recent_arguments=[{"path": "src/example.py"}],
+        )
+        assert result.success is False
+        assert "not approved" in result.error.lower()
+
+        status = GitStatusTool().execute(project_path=str(tmp_path))
+        assert "src/example.py" in status.output
+        assert "config.toml" in status.output
