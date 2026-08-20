@@ -1,0 +1,155 @@
+"""Argus interactive REPL."""
+
+import os
+import sys
+from pathlib import Path
+from typing import Optional
+
+from .agent import ArgusAgent
+from .commands import CommandContext
+from .config import ArgusConfig
+from .session import SessionManager
+from .tools import ToolRegistry
+from .tools.bash import BashTool
+from .tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
+from .tools.search import GlobTool, GrepTool
+
+
+class ArgusREPL:
+    def __init__(
+        self,
+        project_path: Optional[Path] = None,
+        config: Optional[ArgusConfig] = None,
+    ):
+        self.project_path = project_path or Path.cwd()
+        self.config = config or ArgusConfig()
+
+        self.tool_registry = ToolRegistry()
+        self._register_tools()
+
+        self.session_manager = SessionManager(
+            self.config.get("memory.session_location", "~/.agentcore/sessions")
+        )
+        self.session: Optional = None
+
+        self.agent = ArgusAgent(
+            project_path=self.project_path,
+            config=self._build_agent_config(),
+        )
+
+        self.commands = CommandContext(self)
+        self._running = False
+
+    def _register_tools(self) -> None:
+        self.tool_registry.register(ReadFileTool())
+        self.tool_registry.register(WriteFileTool())
+        self.tool_registry.register(EditFileTool())
+        self.tool_registry.register(ListDirTool())
+        self.tool_registry.register(BashTool())
+        self.tool_registry.register(GrepTool())
+        self.tool_registry.register(GlobTool())
+
+    def _build_agent_config(self):
+        from agentcore import AgentConfig
+
+        return AgentConfig(
+            max_iterations=self.config.get("agent.max_iterations", 10),
+            max_tools=self.config.get("agent.max_tools", 20),
+            timeout=self.config.get("agent.timeout_seconds", 300),
+        )
+
+    def run(self) -> int:
+        self._running = True
+        prompt = self.config.get("repl.prompt", "argus> ")
+
+        if not self.session:
+            default_name = f"session-{self.project_path.name}"
+            self.session = self.session_manager.create(default_name, str(self.project_path))
+
+        print(f"Argus v0.1.0 — Type /help for commands, /agent <request> to run the agent")
+        print(f"Project: {self.project_path}")
+        print(f"Session: {self.session.name}")
+        print()
+
+        while self._running:
+            try:
+                try:
+                    line = input(prompt)
+                except EOFError:
+                    break
+
+                line = line.strip()
+                if not line:
+                    continue
+
+                if line.startswith("/"):
+                    response = self._handle_command(line)
+                    if response:
+                        print(response)
+                else:
+                    self._handle_message(line)
+
+            except KeyboardInterrupt:
+                print()
+                continue
+            except SystemExit:
+                break
+            except Exception as e:
+                print(f"Error: {e}")
+
+        self.session_manager.save_current()
+        return 0
+
+    def _handle_command(self, line: str) -> str:
+        parts = line[1:].split()
+        if not parts:
+            return ""
+
+        command = parts[0]
+        args = parts[1:]
+        return self.commands.handle(command, args)
+
+    def _handle_message(self, message: str) -> None:
+        self.session.add_message("user", message)
+
+        try:
+            result = self.agent.execute(message)
+            response = self._format_result(result)
+            print(response)
+            self.session.add_message("assistant", response, result=result)
+        except Exception as e:
+            error_msg = f"Error: {e}"
+            print(error_msg)
+            self.session.add_message("assistant", error_msg, error=str(e))
+
+    def _format_result(self, result: Dict[str, Any]) -> str:
+        lines = []
+        task = result.get("task", {})
+        status = result.get("status", {})
+
+        lines.append(f"Task: {task.get('task_id', 'N/A')}")
+        lines.append(f"State: {task.get('current_state', 'N/A')}")
+        lines.append(f"Skills: {', '.join(task.get('selected_skills', [])) or 'None'}")
+        lines.append(f"Tools used: {task.get('tools_used', 0)}")
+        lines.append(f"Iterations: {task.get('iterations', 0)}")
+
+        verification = result.get("verification", {})
+        if verification.get("format_check"):
+            status_str = "PASSED" if verification["format_check"].get("passed") else "FAILED"
+            lines.append(f"Format check: {status_str}")
+        if verification.get("build_check"):
+            status_str = "PASSED" if verification["build_check"].get("passed") else "FAILED"
+            lines.append(f"Build check: {status_str}")
+        if verification.get("test_results"):
+            status_str = "PASSED" if verification["test_results"].get("passed") else "FAILED"
+            lines.append(f"Tests: {status_str}")
+
+        if result.get("success"):
+            lines.append("Verification PASSED")
+        else:
+            lines.append("Verification FAILED")
+
+        return "\n".join(lines)
+
+    def stop(self) -> None:
+        self._running = False

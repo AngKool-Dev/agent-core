@@ -1,0 +1,191 @@
+"""Tests for Argus core components."""
+
+import os
+import tempfile
+from pathlib import Path
+
+import pytest
+
+from argus.config import ArgusConfig
+from argus.session import Session, SessionManager
+from argus.tools import ToolRegistry
+from argus.tools.bash import BashTool
+from argus.tools.file import (
+    EditFileTool,
+    ListDirTool,
+    ReadFileTool,
+    WriteFileTool,
+)
+from argus.tools.search import GlobTool, GrepTool
+
+
+class TestArgusConfig:
+    def test_default_config(self):
+        config = ArgusConfig()
+        assert config.get("agent.default_runtime") == "hermes"
+        assert config.get("agent.max_iterations") == 10
+        assert config.get("repl.prompt") == "argus> "
+
+    def test_set_and_get(self):
+        config = ArgusConfig()
+        config.set("agent.max_iterations", 20)
+        assert config.get("agent.max_iterations") == 20
+
+    def test_missing_key_returns_default(self):
+        config = ArgusConfig()
+        assert config.get("nonexistent.key", "fallback") == "fallback"
+
+
+class TestSession:
+    def test_create_session(self):
+        session = Session(name="test", project_path="/tmp")
+        assert session.name == "test"
+        assert session.project_path == "/tmp"
+        assert len(session.messages) == 0
+
+    def test_add_message(self):
+        session = Session(name="test")
+        session.add_message("user", "hello")
+        assert len(session.messages) == 1
+        assert session.messages[0]["role"] == "user"
+        assert session.messages[0]["content"] == "hello"
+
+    def test_to_dict_and_from_dict(self):
+        session = Session(name="test", project_path="/tmp")
+        session.add_message("user", "hello")
+        data = session.to_dict()
+        restored = Session.from_dict(data)
+        assert restored.name == "test"
+        assert len(restored.messages) == 1
+
+
+class TestSessionManager:
+    def test_create_and_list(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manager = SessionManager(tmpdir)
+            manager.create("session1")
+            manager.create("session2")
+            sessions = manager.list_sessions()
+            assert "session1" in sessions
+            assert "session2" in sessions
+
+    def test_save_and_load(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manager = SessionManager(tmpdir)
+            session = manager.create("session1")
+            session.add_message("user", "hello")
+            manager.save_current()
+
+            loaded = manager.load("session1")
+            assert len(loaded.messages) == 1
+            assert loaded.messages[0]["content"] == "hello"
+
+    def test_delete(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manager = SessionManager(tmpdir)
+            manager.create("session1")
+            assert "session1" in manager.list_sessions()
+            manager.delete("session1")
+            assert "session1" not in manager.list_sessions()
+
+
+class TestFileTools:
+    def test_read_file(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write("line1\nline2\nline3\n")
+            path = f.name
+
+        try:
+            tool = ReadFileTool()
+            result = tool.execute(path=path)
+            assert result.success is True
+            assert "line1" in result.output
+            assert "line2" in result.output
+        finally:
+            os.unlink(path)
+
+    def test_write_file(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "test.txt"
+            tool = WriteFileTool()
+            result = tool.execute(path=str(path), content="hello world")
+            assert result.success is True
+            assert path.read_text() == "hello world"
+
+    def test_edit_file(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write("hello world")
+            path = f.name
+
+        try:
+            tool = EditFileTool()
+            result = tool.execute(path=path, old_string="hello", new_string="goodbye")
+            assert result.success is True
+            assert Path(path).read_text() == "goodbye world"
+        finally:
+            os.unlink(path)
+
+    def test_list_dir(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            Path(tmpdir, "file1.txt").touch()
+            Path(tmpdir, "file2.txt").touch()
+            tool = ListDirTool()
+            result = tool.execute(path=tmpdir)
+            assert result.success is True
+            assert "file1.txt" in result.output
+            assert "file2.txt" in result.output
+
+
+class TestBashTool:
+    def test_simple_command(self):
+        tool = BashTool()
+        if os.name == "nt":
+            result = tool.execute(command="echo hello")
+        else:
+            result = tool.execute(command="echo hello")
+        assert result.success is True
+        assert "hello" in result.output.lower()
+
+
+class TestSearchTools:
+    def test_grep(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write("hello world\nfoo bar\nhello again\n")
+            path = f.name
+
+        try:
+            tool = GrepTool()
+            result = tool.execute(pattern="hello", path=path)
+            assert result.success is True
+            assert "hello world" in result.output
+            assert "hello again" in result.output
+        finally:
+            os.unlink(path)
+
+    def test_glob(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            Path(tmpdir, "a.txt").touch()
+            Path(tmpdir, "b.txt").touch()
+            Path(tmpdir, "c.py").touch()
+
+            tool = GlobTool()
+            result = tool.execute(pattern="*.txt", path=tmpdir)
+            assert result.success is True
+            assert "a.txt" in result.output
+            assert "b.txt" in result.output
+            assert "c.py" not in result.output
+
+
+class TestToolRegistry:
+    def test_register_and_get(self):
+        registry = ToolRegistry()
+        registry.register(ReadFileTool())
+        assert registry.get("read_file") is not None
+        assert registry.get("nonexistent") is None
+
+    def test_list_tools(self):
+        registry = ToolRegistry()
+        registry.register(ReadFileTool())
+        tools = registry.list_tools()
+        assert len(tools) >= 1
+        assert any(t["name"] == "read_file" for t in tools)
