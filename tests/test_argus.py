@@ -271,6 +271,57 @@ class TestArgusModel:
         provider = create_provider("ollama")
         assert provider is not None
 
+    def test_create_model_from_config(self):
+        from argus.model import create_model_from_config
+
+        provider = create_model_from_config({"provider": "ollama", "name": "llama3"})
+        assert provider is not None
+
+    def test_build_messages_contains_project_context(self):
+        from argus.model import build_messages
+
+        messages = build_messages(
+            user_request="fix the bug",
+            conversation=[],
+            project_context={"name": "test", "language": "python", "path": "."},
+            available_tools=[{"name": "read_file", "description": "Read a file"}],
+            recent_observations=[],
+            current_step="investigate",
+        )
+        assert any(m.role == "system" for m in messages)
+        assert any(m.role == "user" for m in messages)
+        system_msg = next(m for m in messages if m.role == "system")
+        assert "Argus" in system_msg.content
+        assert "read_file" in system_msg.content
+
+    def test_parse_model_output_with_tool_calls(self):
+        from argus.model import parse_model_output
+
+        content = '{"tool_calls": [{"tool_name": "read_file", "arguments": {"path": "test.txt"}}], "content": "Reading file"}'
+        text, tool_calls = parse_model_output(content)
+        assert len(tool_calls) == 1
+        assert tool_calls[0].tool_name == "read_file"
+        assert tool_calls[0].arguments["path"] == "test.txt"
+        assert "Reading file" in text
+
+    def test_parse_model_output_final_answer(self):
+        from argus.model import parse_model_output
+
+        text, tool_calls = parse_model_output("The fix has been applied successfully.")
+        assert text == "The fix has been applied successfully."
+        assert len(tool_calls) == 0
+
+    def test_agent_with_model_provider(self):
+        from argus.agent import ArgusAgent
+        from argus.model.ollama import OllamaProvider
+
+        provider = OllamaProvider()
+        agent = ArgusAgent(project_path=".", model=provider)
+        result = agent.execute("hello")
+        assert "request" in result
+        assert result["request"] == "hello"
+        assert "status" in result
+
 
 class TestArgusPermissions:
     def test_default_permissions(self):

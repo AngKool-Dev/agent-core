@@ -1,20 +1,22 @@
-"""Argus model factory."""
+"""Argus model package."""
 
-from typing import Optional
-
+from .factory import create_model_from_config, create_provider
+from .messages import build_messages, parse_model_output
+from .provider import Message, ModelProvider, ModelResponse
 from .anthropic import AnthropicProvider
 from .openai import OpenAIProvider
 from .ollama import OllamaProvider
-from .provider import ModelProvider
 
-
-def create_provider(provider_type: str, **kwargs) -> ModelProvider:
-    provider_type = provider_type.lower()
-    if provider_type == "openai":
-        return OpenAIProvider(**kwargs)
-    elif provider_type == "anthropic":
-        return AnthropicProvider(**kwargs)
-    elif provider_type == "ollama":
-        return OllamaProvider(**kwargs)
-    else:
-        raise ValueError(f"Unknown provider: {provider_type}")
+__all__ = [
+    "Message",
+    "ModelResponse",
+    "ModelProvider",
+    "ToolCall",
+    "OpenAIProvider",
+    "AnthropicProvider",
+    "OllamaProvider",
+    "create_provider",
+    "create_model_from_config",
+    "build_messages",
+    "parse_model_output",
+]

@@ -8,6 +8,7 @@ from typing import Optional
 from argus.agent import ArgusAgent, ArgusAgentConfig
 from argus.commands import build_registry
 from argus.config import ArgusConfig
+from argus.model import create_model_from_config
 from argus.permissions import PermissionConfig
 from argus.session import SessionManager
 from argus.tools import ToolRegistry
@@ -49,6 +50,7 @@ class ArgusREPL:
             project_path=self.project_path,
             config=self._build_agent_config(),
             status_callback=self._status_update,
+            model=self._build_model(),
         )
 
         self.commands = build_registry()
@@ -69,7 +71,20 @@ class ArgusREPL:
             max_iterations=self.config.get("agent.max_iterations", 10),
             max_tool_calls=self.config.get("agent.max_tools", 20),
             max_runtime_seconds=self.config.get("agent.timeout_seconds", 300),
+            model=self.config.get("model.name"),
+            provider=self.config.get("model.provider"),
         )
+
+    def _build_model(self):
+        model_config = {
+            "provider": self.config.get("model.provider", "ollama"),
+            "name": self.config.get("model.name", "llama3"),
+        }
+        if self.config.get("model.api_key"):
+            model_config["api_key"] = self.config.get("model.api_key")
+        if self.config.get("model.base_url"):
+            model_config["base_url"] = self.config.get("model.base_url")
+        return create_model_from_config(model_config)
 
     def _permission_prompt(self, prompt: str, tool: str) -> bool:
         print(f"\n[PERMISSION] {prompt}")

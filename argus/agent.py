@@ -16,6 +16,7 @@ from agentcore import Agent, AgentConfig, MemoryManager, create_agent
 from agentcore.runtimes.base import RuntimeAdapter, ToolCall, ToolResult
 
 from argus.context import ConversationContext, ProjectContext, discover_project_context
+from argus.model import ModelProvider, build_messages, parse_model_output
 from argus.tools import ToolRegistry
 from argus.tools.bash import BashTool
 from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
@@ -69,12 +70,14 @@ class ArgusAgent:
         runtime: Optional[RuntimeAdapter] = None,
         memory: Optional[MemoryManager] = None,
         status_callback: Optional[StatusCallback] = None,
+        model: Optional[ModelProvider] = None,
     ):
         self.project_path = Path(project_path) if project_path else Path.cwd()
         self.config = config or ArgusAgentConfig()
         self._runtime = runtime
         self._memory = memory
         self._status_callback = status_callback
+        self._model = model
 
         self._tool_registry = ToolRegistry()
         self._register_default_tools()
@@ -205,7 +208,9 @@ class ArgusAgent:
             context = self._build_context(request, results)
 
             try:
-                if self._runtime:
+                if self._model:
+                    runtime_response = self._model_reason(context, request)
+                elif self._runtime:
                     runtime_response = self._runtime.respond(context)
                 else:
                     runtime_response = self._default_reason(context, request, results)
@@ -274,6 +279,41 @@ class ArgusAgent:
                 "After observing results, decide whether to continue, retry, or finish.",
                 "Always verify changes with tests when possible.",
             ],
+        }
+
+    def _model_reason(self, context: Dict[str, Any], request: str) -> Dict[str, Any]:
+        if not self._model:
+            return self._default_reason(context, request, {})
+
+        messages = build_messages(
+            user_request=request,
+            conversation=context.get("conversation", []),
+            project_context=context.get("project_context", {}),
+            available_tools=context.get("available_tools", []),
+            recent_observations=context.get("recent_observations", []),
+            current_step=context.get("current_step", "investigate"),
+        )
+
+        model_name = self.config.model or "gpt-4o"
+        response = self._model.complete(
+            messages=messages,
+            model=model_name,
+            tools=context.get("available_tools", []),
+        )
+
+        text, tool_calls = parse_model_output(response.content)
+
+        if tool_calls:
+            return {
+                "complete": False,
+                "response": text or "Using tools...",
+                "tool_calls": [tc.__dict__ for tc in tool_calls],
+            }
+
+        return {
+            "complete": True,
+            "response": text or response.content or "Done",
+            "tool_calls": [],
         }
 
     def _observe_batch(self, tool_results: List[ToolResult], step: Optional["PlanStep"]) -> str:

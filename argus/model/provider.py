@@ -1,7 +1,7 @@
 """Argus model provider abstraction."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 
@@ -12,19 +12,41 @@ class Message:
 
 
 @dataclass
+class ToolCall:
+    tool_name: str
+    arguments: Dict[str, Any]
+    call_id: str = ""
+
+
+@dataclass
 class ModelResponse:
     content: str
     model: str
-    usage: Dict[str, int] = None
+    finish_reason: str = "stop"
+    tool_calls: List[ToolCall] = field(default_factory=list)
+    reasoning: Optional[str] = None
+    usage: Dict[str, int] = field(default_factory=dict)
 
-    def __post_init__(self):
-        if self.usage is None:
-            self.usage = {}
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "content": self.content,
+            "model": self.model,
+            "finish_reason": self.finish_reason,
+            "tool_calls": [tc.__dict__ for tc in self.tool_calls],
+            "reasoning": self.reasoning,
+            "usage": self.usage,
+        }
 
 
 class ModelProvider(ABC):
     @abstractmethod
-    def complete(self, messages: List[Message], model: Optional[str] = None, **kwargs) -> ModelResponse:
+    def complete(
+        self,
+        messages: List[Message],
+        model: Optional[str] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        **kwargs,
+    ) -> ModelResponse:
         ...
 
     @abstractmethod

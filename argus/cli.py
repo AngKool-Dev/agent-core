@@ -73,10 +73,22 @@ def main(args=None) -> int:
 
     if parsed.request:
         from argus.agent import ArgusAgent
+        from argus.model import create_model_from_config
+
+        model_config = {
+            "provider": config.get("model.provider", "ollama"),
+            "name": config.get("model.name", "llama3"),
+        }
+        if config.get("model.api_key"):
+            model_config["api_key"] = config.get("model.api_key")
+        if config.get("model.base_url"):
+            model_config["base_url"] = config.get("model.base_url")
+        model = create_model_from_config(model_config)
 
         agent = ArgusAgent(
             project_path=project_path,
             config=repl._build_agent_config(),
+            model=model,
         )
         result = agent.execute(parsed.request)
         print(repl._format_result(result))
