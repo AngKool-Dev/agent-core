@@ -43,6 +43,9 @@ class ArgusConfig:
                 "max_iterations": 10,
                 "max_tools": 20,
                 "timeout_seconds": 300,
+                "max_consecutive_failures": 3,
+                "max_no_progress": 3,
+                "workspace_boundaries_enabled": True,
             },
             "skills": {
                 "paths": [

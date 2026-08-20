@@ -4,6 +4,8 @@ import re
 from pathlib import Path
 from typing import List, Optional
 
+from argus.workspace import validate_path, WorkspaceBoundaryError
+
 from . import Tool, ToolResult
 
 
@@ -18,10 +20,18 @@ class GrepTool(Tool):
         include: Optional[str] = None,
         ignore_case: bool = False,
         limit: int = 100,
+        workspace: Optional[str] = None,
         **kwargs,
     ) -> ToolResult:
         try:
+            workspace_path = Path(workspace) if workspace else None
             base = Path(path)
+            if workspace_path:
+                try:
+                    base = validate_path(path, workspace_path)
+                except WorkspaceBoundaryError:
+                    return ToolResult(tool=self.name, success=False, error=f"Path '{path}' is outside workspace")
+
             if not base.exists():
                 return ToolResult(tool=self.name, success=False, error=f"Path not found: {path}")
 
@@ -75,9 +85,16 @@ class GlobTool(Tool):
     name = "glob"
     description = "Find files matching a glob pattern"
 
-    def execute(self, pattern: str, path: str = ".", **kwargs) -> ToolResult:
+    def execute(self, pattern: str, path: str = ".", workspace: Optional[str] = None, **kwargs) -> ToolResult:
         try:
+            workspace_path = Path(workspace) if workspace else None
             base = Path(path)
+            if workspace_path:
+                try:
+                    base = validate_path(path, workspace_path)
+                except WorkspaceBoundaryError:
+                    return ToolResult(tool=self.name, success=False, error=f"Path '{path}' is outside workspace")
+
             if not base.exists():
                 return ToolResult(tool=self.name, success=False, error=f"Path not found: {path}")
 

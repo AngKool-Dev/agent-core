@@ -1,6 +1,7 @@
 """Argus interactive REPL."""
 
 import os
+import signal
 import sys
 from pathlib import Path
 from typing import Optional
@@ -60,6 +61,7 @@ class ArgusREPL:
         self.commands = build_registry()
         self._running = False
         self._last_status = ""
+        self._original_sigint = signal.getsignal(signal.SIGINT)
 
     def _register_tools(self) -> None:
         self.tool_registry.register(ReadFileTool())
@@ -82,6 +84,9 @@ class ArgusREPL:
             max_iterations=self.config.get("agent.max_iterations", 10),
             max_tool_calls=self.config.get("agent.max_tools", 20),
             max_runtime_seconds=self.config.get("agent.timeout_seconds", 300),
+            max_consecutive_failures=self.config.get("agent.max_consecutive_failures", 3),
+            max_no_progress=self.config.get("agent.max_no_progress", 3),
+            workspace_boundaries_enabled=self.config.get("agent.workspace_boundaries_enabled", True),
             model=self.config.get("model.name"),
             provider=self.config.get("model.provider"),
         )
@@ -160,6 +165,7 @@ class ArgusREPL:
 
             except KeyboardInterrupt:
                 print()
+                self.agent.cancel()
                 continue
             except SystemExit:
                 break
@@ -186,6 +192,11 @@ class ArgusREPL:
             response = self._format_result(result)
             print(response)
             self.session.add_message("assistant", response, result=result)
+        except KeyboardInterrupt:
+            self._clear_status()
+            self.agent.cancel()
+            print("\n[CANCELLED] Task was interrupted")
+            self.session.add_message("assistant", "Task was cancelled", error="user_cancellation")
         except Exception as e:
             self._clear_status()
             error_msg = f"Error: {e}"

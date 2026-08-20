@@ -980,3 +980,255 @@ class TestArgusEndToEnd:
             "plan": [{"action": "investigate"}]
         })
         assert "Fixed authentication bug" in context["memory_context"]
+
+
+class TestAgentReliability:
+    def test_consecutive_failures_stops_loop(self):
+        from argus.agent import ArgusAgent, ArgusAgentConfig
+        from argus.permissions import PermissionConfig
+        from argus.tools import ToolRegistry
+        from argus.tools.bash import BashTool
+        from unittest.mock import MagicMock
+
+        mock_memory = MagicMock()
+        mock_memory.search.return_value = []
+        mock_memory.retrieve_relevant_memory.return_value = ""
+        mock_memory.list.return_value = []
+
+        agent = ArgusAgent(
+            project_path=".",
+            memory=mock_memory,
+            config=ArgusAgentConfig(max_iterations=20, max_consecutive_failures=2, max_no_progress=10),
+        )
+        agent._tool_registry.set_permissions(PermissionConfig(bash="allow"))
+
+        failing_tool = BashTool()
+        failing_tool.execute = lambda **kwargs: ToolResult(
+            tool="bash", success=False, error="command not found"
+        )
+        agent._tool_registry.register(failing_tool)
+
+        call_count = 0
+
+        class FailingRuntime:
+            def respond(self, context):
+                nonlocal call_count
+                call_count += 1
+                return {
+                    "complete": False,
+                    "response": "Retrying...",
+                    "tool_calls": [{"tool": "bash", "arguments": {"command": "fail"}}],
+                }
+
+        agent._runtime = FailingRuntime()
+        result = agent.execute("run a failing command")
+        assert result["status"] == "FAILED"
+        assert result["failure_reason"] == "consecutive_tool_failures"
+        assert call_count > 1
+
+    def test_no_progress_stops_loop(self):
+        from argus.agent import ArgusAgent, ArgusAgentConfig
+        from argus.permissions import PermissionConfig
+        from argus.tools import ToolRegistry
+        from argus.tools.bash import BashTool
+        from unittest.mock import MagicMock
+
+        mock_memory = MagicMock()
+        mock_memory.search.return_value = []
+        mock_memory.retrieve_relevant_memory.return_value = ""
+        mock_memory.list.return_value = []
+
+        agent = ArgusAgent(
+            project_path=".",
+            memory=mock_memory,
+            config=ArgusAgentConfig(max_iterations=20, max_consecutive_failures=10, max_no_progress=2),
+        )
+        agent._tool_registry.set_permissions(PermissionConfig(bash="allow"))
+
+        calls = []
+
+        def repeat_tool(**kwargs):
+            calls.append(kwargs)
+            return ToolResult(tool="bash", success=True, output="same output")
+
+        failing_tool = BashTool()
+        failing_tool.execute = repeat_tool
+        agent._tool_registry.register(failing_tool)
+
+        class RepeatingRuntime:
+            def respond(self, context):
+                return {
+                    "complete": False,
+                    "response": "Trying again...",
+                    "tool_calls": [{"tool": "bash", "arguments": {"command": "echo same"}}],
+                }
+
+        agent._runtime = RepeatingRuntime()
+        result = agent.execute("run same command repeatedly")
+        assert result["status"] == "FAILED"
+        assert result["failure_reason"] == "no_progress"
+        assert len(calls) > 1
+
+    def test_workspace_boundary_blocks_file_read(self):
+        from argus.tools.file import ReadFileTool
+
+        tool = ReadFileTool()
+        result = tool.execute(path="C:/Windows/System32/config", workspace="D:/agent-core")
+        assert result.success is False
+        assert "outside workspace" in result.error.lower()
+
+    def test_workspace_boundary_blocks_write(self):
+        from argus.tools.file import WriteFileTool
+
+        tool = WriteFileTool()
+        result = tool.execute(path="C:/Windows/System32/test.txt", content="test", workspace="D:/agent-core")
+        assert result.success is False
+        assert "outside workspace" in result.error.lower()
+
+    def test_workspace_boundary_blocks_edit(self):
+        from argus.tools.file import EditFileTool
+
+        tool = EditFileTool()
+        result = tool.execute(path="C:/Windows/System32/config", old_string="a", new_string="b", workspace="D:/agent-core")
+        assert result.success is False
+        assert "outside workspace" in result.error.lower()
+
+    def test_workspace_boundary_blocks_list_dir(self):
+        from argus.tools.file import ListDirTool
+
+        tool = ListDirTool()
+        result = tool.execute(path="C:/Windows/System32", workspace="D:/agent-core")
+        assert result.success is False
+        assert "outside workspace" in result.error.lower()
+
+    def test_workspace_boundary_blocks_grep(self):
+        from argus.tools.search import GrepTool
+
+        tool = GrepTool()
+        result = tool.execute(pattern="test", path="C:/Windows/System32", workspace="D:/agent-core")
+        assert result.success is False
+        assert "outside workspace" in result.error.lower()
+
+    def test_workspace_boundary_blocks_glob(self):
+        from argus.tools.search import GlobTool
+
+        tool = GlobTool()
+        result = tool.execute(pattern="*.txt", path="C:/Windows/System32", workspace="D:/agent-core")
+        assert result.success is False
+        assert "outside workspace" in result.error.lower()
+
+    def test_workspace_boundary_allows_inside_workspace(self):
+        from argus.tools.file import ReadFileTool
+
+        tool = ReadFileTool()
+        result = tool.execute(path="README.md", workspace="D:/agent-core")
+        assert result.success is True
+
+    def test_bash_blocks_dangerous_rm(self):
+        from argus.tools.bash import BashTool
+
+        tool = BashTool()
+        result = tool.execute(command="rm -rf /")
+        assert result.success is False
+        assert "Dangerous command blocked" in result.error
+
+    def test_bash_blocks_dangerous_del(self):
+        from argus.tools.bash import BashTool
+
+        tool = BashTool()
+        result = tool.execute(command="del C:\\Windows\\System32")
+        assert result.success is False
+        assert "Dangerous command blocked" in result.error
+
+    def test_bash_blocks_dangerous_rmdir(self):
+        from argus.tools.bash import BashTool
+
+        tool = BashTool()
+        result = tool.execute(command="rmdir C:\\Windows /s")
+        assert result.success is False
+        assert "Dangerous command blocked" in result.error
+
+    def test_bash_blocks_dangerous_format(self):
+        from argus.tools.bash import BashTool
+
+        tool = BashTool()
+        result = tool.execute(command="format C:")
+        assert result.success is False
+        assert "Dangerous command blocked" in result.error
+
+    def test_bash_blocks_git_reset(self):
+        from argus.tools.bash import BashTool
+
+        tool = BashTool()
+        result = tool.execute(command="git reset --hard")
+        assert result.success is False
+        assert "Dangerous command blocked" in result.error
+
+    def test_bash_blocks_git_clean(self):
+        from argus.tools.bash import BashTool
+
+        tool = BashTool()
+        result = tool.execute(command="git clean -fd")
+        assert result.success is False
+        assert "Dangerous command blocked" in result.error
+
+    def test_bash_blocks_command_chaining(self):
+        from argus.tools.bash import BashTool
+
+        tool = BashTool()
+        result = tool.execute(command="echo hello && echo world")
+        assert result.success is False
+        assert "Command chaining is not allowed" in result.error
+
+    def test_bash_allows_safe_command(self):
+        from argus.tools.bash import BashTool
+
+        tool = BashTool()
+        result = tool.execute(command="echo hello")
+        assert result.success is True
+
+    def test_tool_call_with_missing_tool_name(self):
+        from argus.agent import ArgusAgent
+        from unittest.mock import MagicMock
+
+        mock_memory = MagicMock()
+        mock_memory.search.return_value = []
+        mock_memory.retrieve_relevant_memory.return_value = ""
+        mock_memory.list.return_value = []
+
+        agent = ArgusAgent(project_path=".", memory=mock_memory)
+        result = agent._execute_tool_call({"arguments": {}})
+        assert result.success is False
+        assert "Unknown tool" in result.error
+
+    def test_tool_call_with_malformed_arguments(self):
+        from argus.agent import ArgusAgent
+        from unittest.mock import MagicMock
+
+        mock_memory = MagicMock()
+        mock_memory.search.return_value = []
+        mock_memory.retrieve_relevant_memory.return_value = ""
+        mock_memory.list.return_value = []
+
+        agent = ArgusAgent(project_path=".", memory=mock_memory)
+        result = agent._execute_tool_call({"tool": "read_file", "arguments": "not-a-dict"})
+        assert result.success is False
+
+    def test_failure_states_are_distinct(self):
+        from argus.agent import ArgusAgent, ArgusAgentConfig
+        from unittest.mock import MagicMock
+
+        mock_memory = MagicMock()
+        mock_memory.search.return_value = []
+        mock_memory.retrieve_relevant_memory.return_value = ""
+        mock_memory.list.return_value = []
+
+        config = ArgusAgentConfig(max_iterations=1, max_consecutive_failures=1, max_no_progress=1)
+        agent = ArgusAgent(project_path=".", memory=mock_memory, config=config)
+
+        result = agent.execute("do something")
+        assert result["status"] in (
+            "COMPLETED", "FAILED", "TIMEOUT", "TOOL_LIMIT",
+            "RUNTIME_ERROR", "CANCELLED"
+        )
+        assert "failure_reason" in result

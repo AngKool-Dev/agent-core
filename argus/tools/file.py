@@ -4,16 +4,32 @@ import os
 from pathlib import Path
 from typing import Optional
 
+from argus.workspace import validate_path, WorkspaceBoundaryError
+
 from . import Tool, ToolResult
+
+
+def _resolve_path(path: str, workspace: Optional[Path] = None, enforce_boundary: bool = True) -> Optional[Path]:
+    if not enforce_boundary or workspace is None:
+        return Path(path)
+    try:
+        return validate_path(path, workspace)
+    except WorkspaceBoundaryError:
+        return None
 
 
 class ReadFileTool(Tool):
     name = "read_file"
     description = "Read the contents of a file"
 
-    def execute(self, path: str, offset: int = 0, limit: int = 2000, **kwargs) -> ToolResult:
+    def execute(self, path: str, offset: int = 0, limit: int = 2000, workspace: Optional[str] = None, **kwargs) -> ToolResult:
         try:
-            file_path = Path(path)
+            workspace_path = Path(workspace) if workspace else None
+            resolved = _resolve_path(path, workspace_path, enforce_boundary=True)
+            if resolved is None:
+                return ToolResult(tool=self.name, success=False, error=f"Path '{path}' is outside workspace")
+
+            file_path = resolved
             if not file_path.exists():
                 return ToolResult(tool=self.name, success=False, error=f"File not found: {path}")
 
@@ -39,9 +55,14 @@ class WriteFileTool(Tool):
     name = "write_file"
     description = "Write content to a file"
 
-    def execute(self, path: str, content: str, mode: str = "overwrite", **kwargs) -> ToolResult:
+    def execute(self, path: str, content: str, mode: str = "overwrite", workspace: Optional[str] = None, **kwargs) -> ToolResult:
         try:
-            file_path = Path(path)
+            workspace_path = Path(workspace) if workspace else None
+            resolved = _resolve_path(path, workspace_path, enforce_boundary=True)
+            if resolved is None:
+                return ToolResult(tool=self.name, success=False, error=f"Path '{path}' is outside workspace")
+
+            file_path = resolved
             file_path.parent.mkdir(parents=True, exist_ok=True)
 
             if mode == "append":
@@ -64,9 +85,14 @@ class EditFileTool(Tool):
     name = "edit_file"
     description = "Edit a file by replacing old_string with new_string"
 
-    def execute(self, path: str, old_string: str, new_string: str, **kwargs) -> ToolResult:
+    def execute(self, path: str, old_string: str, new_string: str, workspace: Optional[str] = None, **kwargs) -> ToolResult:
         try:
-            file_path = Path(path)
+            workspace_path = Path(workspace) if workspace else None
+            resolved = _resolve_path(path, workspace_path, enforce_boundary=True)
+            if resolved is None:
+                return ToolResult(tool=self.name, success=False, error=f"Path '{path}' is outside workspace")
+
+            file_path = resolved
             if not file_path.exists():
                 return ToolResult(tool=self.name, success=False, error=f"File not found: {path}")
 
@@ -95,9 +121,14 @@ class ListDirTool(Tool):
     name = "list_dir"
     description = "List contents of a directory"
 
-    def execute(self, path: str = ".", **kwargs) -> ToolResult:
+    def execute(self, path: str = ".", workspace: Optional[str] = None, **kwargs) -> ToolResult:
         try:
-            dir_path = Path(path)
+            workspace_path = Path(workspace) if workspace else None
+            resolved = _resolve_path(path, workspace_path, enforce_boundary=True)
+            if resolved is None:
+                return ToolResult(tool=self.name, success=False, error=f"Path '{path}' is outside workspace")
+
+            dir_path = resolved
             if not dir_path.exists():
                 return ToolResult(tool=self.name, success=False, error=f"Directory not found: {path}")
 

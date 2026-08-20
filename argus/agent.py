@@ -59,10 +59,13 @@ class ArgusAgentConfig:
     max_iterations: int = 10
     max_tool_calls: int = 50
     max_runtime_seconds: int = 300
+    max_consecutive_failures: int = 3
+    max_no_progress: int = 3
     enable_verification: bool = True
     run_format_check: bool = True
     run_build_check: bool = True
     run_tests: bool = True
+    workspace_boundaries_enabled: bool = True
 
 
 class ArgusAgent:
@@ -98,6 +101,10 @@ class ArgusAgent:
         self._start_time: float = 0.0
         self._iterations: int = 0
         self._tools_used: int = 0
+        self._consecutive_failures: int = 0
+        self._no_progress_count: int = 0
+        self._last_tool_calls: List[str] = []
+        self._cancelled: bool = False
 
         self._project_context = discover_project_context(str(self.project_path))
         self._conversation.add_system(
@@ -134,6 +141,11 @@ class ArgusAgent:
         self._start_time = time.time()
         self._iterations = 0
         self._tools_used = 0
+        self._consecutive_failures = 0
+        self._no_progress_count = 0
+        self._last_tool_calls = []
+        self._cancelled = False
+        self._last_result = None
         self._conversation.add_user(request)
 
         self.route_skills(request)
@@ -149,6 +161,7 @@ class ArgusAgent:
             "skills": [s.name for s in self._active_skills],
             "final_response": "",
             "success": False,
+            "failure_reason": None,
         }
 
         try:
@@ -163,9 +176,11 @@ class ArgusAgent:
                 result["success"] = True
 
         except KeyboardInterrupt:
-            result["status"] = "INTERRUPTED"
+            result["status"] = "CANCELLED"
+            result["failure_reason"] = "user_cancellation"
         except Exception as e:
             result["status"] = "FAILED"
+            result["failure_reason"] = "unexpected_error"
             result["error"] = str(e)
 
         result["iterations"] = self._iterations
@@ -175,6 +190,9 @@ class ArgusAgent:
         final = result.get("final_response") or result.get("status", "Done")
         self._conversation.add_assistant(final, result=result)
         return result
+
+    def cancel(self) -> None:
+        self._cancelled = True
 
     def _plan(self, request: str) -> List["PlanStep"]:
         request_lower = request.lower()
@@ -216,6 +234,7 @@ class ArgusAgent:
             "tool_results": [],
             "observations": [],
             "final_response": "",
+            "failure_reason": None,
         }
 
         plan_steps = list(plan)
@@ -226,10 +245,24 @@ class ArgusAgent:
             elapsed = time.time() - self._start_time
             if elapsed > self.config.max_runtime_seconds:
                 results["status"] = "TIMEOUT"
+                results["failure_reason"] = "timeout"
                 break
 
             if self._tools_used >= self.config.max_tool_calls:
                 results["status"] = "TOOL_LIMIT"
+                results["failure_reason"] = "tool_limit"
+                break
+
+            if self._consecutive_failures >= self.config.max_consecutive_failures:
+                results["status"] = "FAILED"
+                results["failure_reason"] = "consecutive_tool_failures"
+                results["final_response"] = f"Stopped after {self._consecutive_failures} consecutive tool failures"
+                break
+
+            if self._cancelled:
+                results["status"] = "CANCELLED"
+                results["failure_reason"] = "user_cancellation"
+                results["final_response"] = "Task was cancelled by user"
                 break
 
             context = self._build_context(request, results)
@@ -243,6 +276,7 @@ class ArgusAgent:
                     runtime_response = self._default_reason(context, request, results)
             except Exception as e:
                 results["status"] = "RUNTIME_ERROR"
+                results["failure_reason"] = "model_error"
                 results["error"] = str(e)
                 break
 
@@ -273,6 +307,25 @@ class ArgusAgent:
             observation = self._observe_batch(batch_results, current_step)
             results["observations"].append(observation)
             self._status(f"Observed: {observation[:120]}")
+
+            failures = [r for r in batch_results if not r.success]
+            if failures:
+                self._consecutive_failures += 1
+            else:
+                self._consecutive_failures = 0
+
+            current_calls = [r.tool for r in batch_results]
+            if current_calls == self._last_tool_calls:
+                self._no_progress_count += 1
+            else:
+                self._no_progress_count = 0
+            self._last_tool_calls = current_calls
+
+            if self._no_progress_count >= self.config.max_no_progress:
+                results["status"] = "FAILED"
+                results["failure_reason"] = "no_progress"
+                results["final_response"] = "Stopped due to repeated identical tool calls"
+                break
 
             if self._should_stop_after_observation(batch_results, current_step):
                 results["status"] = "COMPLETED"
@@ -418,7 +471,7 @@ class ArgusAgent:
                     "complete": False,
                     "response": "Exploring project structure...",
                     "tool_calls": [
-                        ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, thought="").to_dict()
+                        ToolCall(tool="list_dir", arguments={"path": str(self.project_path), "workspace": str(self.project_path)}, thought="").to_dict()
                     ],
                 }
             if "read_file" not in recent_tools:
@@ -447,7 +500,7 @@ class ArgusAgent:
                     "complete": False,
                     "response": "Reading target file...",
                     "tool_calls": [
-                        ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, thought="").to_dict()
+                        ToolCall(tool="list_dir", arguments={"path": str(self.project_path), "workspace": str(self.project_path)}, thought="").to_dict()
                     ],
                 }
             return {
@@ -472,7 +525,7 @@ class ArgusAgent:
                 "complete": False,
                 "response": "Investigating bug...",
                 "tool_calls": [
-                            ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, thought="").to_dict()
+                            ToolCall(tool="list_dir", arguments={"path": str(self.project_path), "workspace": str(self.project_path)}, thought="").to_dict()
                 ],
             }
 
@@ -483,8 +536,14 @@ class ArgusAgent:
             tool_name = tool_call.get("tool") or tool_call.get("tool_name") or ""
             arguments = tool_call.get("arguments", {})
         else:
-            tool_name = tool_call.tool
-            arguments = tool_call.arguments
+            tool_name = getattr(tool_call, "tool", "")
+            arguments = getattr(tool_call, "arguments", {})
+
+        if not isinstance(arguments, dict):
+            arguments = {}
+
+        if self.config.workspace_boundaries_enabled and tool_name in ("read_file", "write_file", "edit_file", "list_dir", "grep", "glob"):
+            arguments.setdefault("workspace", str(self.project_path))
 
         self._tools_used += 1
         self._status(f"Running {tool_name}...")
