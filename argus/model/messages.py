@@ -2,6 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 
+from argus.context.project import ProjectProfile
 from argus.model.provider import Message, ToolCall
 
 
@@ -15,6 +16,7 @@ def build_messages(
     active_skills: Optional[List[Dict[str, Any]]] = None,
     skill_instructions: str = "",
     memory_context: str = "",
+    project_profile: Optional[ProjectProfile] = None,
 ) -> List[Message]:
     system = _build_system_prompt(
         project_context,
@@ -23,6 +25,7 @@ def build_messages(
         active_skills=active_skills,
         skill_instructions=skill_instructions,
         memory_context=memory_context,
+        project_profile=project_profile,
     )
     messages = [Message(role="system", content=system)]
 
@@ -48,6 +51,7 @@ def _build_system_prompt(
     active_skills: Optional[List[Dict[str, Any]]] = None,
     skill_instructions: str = "",
     memory_context: str = "",
+    project_profile: Optional[ProjectProfile] = None,
 ) -> str:
     lines = [
         "You are Argus, an autonomous coding agent.",
@@ -76,6 +80,14 @@ def _build_system_prompt(
         changes = git.get("changes", [])
         if changes:
             lines.append(f"- Git changes: {len(changes)} files")
+
+    if project_profile:
+        lines.extend([
+            "",
+            "## Project Profile",
+        ])
+        profile_lines = project_profile.to_context().splitlines()
+        lines.extend([f"- {line}" for line in profile_lines])
 
     lines.extend([
         "",

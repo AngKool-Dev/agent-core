@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from agentcore import Agent, AgentConfig, MemoryManager, create_agent
 from agentcore.runtimes.base import RuntimeAdapter, ToolCall, ToolResult
 
-from argus.context import ConversationContext, ProjectContext, discover_project_context
+from argus.context import ConversationContext, ProjectContext, ProjectProfile, discover_project_context
 from argus.memory import ArgusMemory
 from argus.model import ModelProvider, build_messages, parse_model_output
 from argus.skills import Skill, SkillRegistry, SkillRouter
@@ -361,6 +361,7 @@ class ArgusAgent:
         return {
             "user_request": request,
             "project_context": self._project_context.to_dict(),
+            "project_profile": self._project_context,
             "conversation": self._conversation.to_list(),
             "available_tools": self._tool_registry.list_tools(),
             "recent_tool_results": [
@@ -389,6 +390,7 @@ class ArgusAgent:
             user_request=request,
             conversation=context.get("conversation", []),
             project_context=context.get("project_context", {}),
+            project_profile=context.get("project_profile"),
             available_tools=context.get("available_tools", []),
             recent_observations=context.get("recent_observations", []),
             current_step=context.get("current_step", "investigate"),

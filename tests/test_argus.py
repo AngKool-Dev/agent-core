@@ -1,5 +1,6 @@
 """Tests for Argus core components."""
 
+import json
 import os
 import tempfile
 from pathlib import Path
@@ -1615,3 +1616,282 @@ class TestGitWorkflow:
         status = GitStatusTool().execute(project_path=str(tmp_path))
         assert "src/example.py" in status.output
         assert "config.toml" in status.output
+
+
+class TestProjectIntelligence:
+    def test_rust_detection(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "Cargo.toml").write_text("[package]\nname = \"test\"\n")
+        (tmp_path / "src").mkdir(exist_ok=True)
+        (tmp_path / "src" / "main.rs").write_text("fn main() {}")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "rust" in profile.languages
+        assert profile.build_system == "cargo"
+        assert profile.package_manager == "cargo"
+        assert profile.test_system == "cargo test"
+        assert profile.test_command == "cargo test"
+        assert profile.formatter_command == "cargo fmt"
+        assert profile.linter_command == "cargo clippy"
+
+    def test_python_detection(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "pyproject.toml").write_text("[tool.poetry]\nname = \"test\"\n")
+        (tmp_path / "pytest.ini").write_text("[pytest]\n")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "python" in profile.languages
+        assert profile.build_system == "pyproject"
+        assert profile.package_manager == "poetry"
+        assert profile.test_system == "pytest"
+        assert profile.test_command == "pytest"
+
+    def test_python_unittest_fallback(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()\n")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "python" in profile.languages
+        assert profile.test_system == "unittest"
+        assert profile.test_command == "python -m unittest discover"
+
+    def test_node_detection(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "package.json").write_text(json.dumps({
+            "name": "test",
+            "scripts": {"test": "jest", "build": "tsc", "lint": "eslint ."},
+            "devDependencies": {"jest": "^29.0.0", "eslint": "^8.0.0"}
+        }))
+        (tmp_path / "package-lock.json").write_text("")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "javascript" in profile.languages
+        assert profile.build_system == "npm"
+        assert profile.package_manager == "npm"
+        assert profile.test_system == "npm test"
+        assert profile.test_command == "jest"
+        assert profile.linter_command == "eslint"
+
+    def test_node_yarn_detection(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "package.json").write_text(json.dumps({"name": "test"}))
+        (tmp_path / "yarn.lock").write_text("")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "javascript" in profile.languages
+        assert profile.package_manager == "yarn"
+
+    def test_typescript_detection(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "package.json").write_text(json.dumps({
+            "name": "test",
+            "devDependencies": {"typescript": "^5.0.0"}
+        }))
+        (tmp_path / "tsconfig.json").write_text("{}")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "javascript" in profile.languages
+        assert "typescript" in profile.languages
+        assert "typescript" in profile.frameworks
+
+    def test_go_detection(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "go.mod").write_text("module test\ngo 1.21\n")
+        (tmp_path / "go.sum").write_text("")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "go" in profile.languages
+        assert profile.build_system == "go"
+        assert profile.package_manager == "go modules"
+        assert profile.test_system == "go test"
+        assert profile.test_command == "go test ./..."
+        assert profile.formatter_command == "gofmt"
+        assert profile.linter_command == "go vet"
+
+    def test_java_maven_detection(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "pom.xml").write_text("<project></project>")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "java" in profile.languages
+        assert profile.build_system == "maven"
+        assert profile.test_system == "maven test"
+        assert profile.test_command == "mvn test"
+
+    def test_java_gradle_detection(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "build.gradle").write_text("plugins {}")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "java" in profile.languages
+        assert profile.build_system == "gradle"
+        assert profile.test_system == "gradle test"
+        assert profile.test_command == "./gradlew test"
+
+    def test_conventions_detection(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / ".editorconfig").write_text("root = true\n")
+        (tmp_path / ".pre-commit-config.yaml").write_text("repos: []\n")
+        (tmp_path / "pyproject.toml").write_text("[tool.black]\n")
+        (tmp_path / ".eslintrc.json").write_text("{}")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "editorconfig" in profile.conventions
+        assert "pre-commit" in profile.conventions
+        assert "pyproject" in profile.conventions
+        assert "eslint" in profile.conventions
+
+    def test_git_repository_detection(self, tmp_path):
+        import subprocess
+        from argus.context import discover_project_context
+
+        subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True, capture_output=True)
+        (tmp_path / "README.md").write_text("# Test\n")
+
+        profile = discover_project_context(str(tmp_path))
+        assert profile.git_repository is True
+
+    def test_git_clean_dirty_state(self, tmp_path):
+        import subprocess
+        from argus.context import discover_project_context
+
+        subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True, capture_output=True)
+        (tmp_path / "README.md").write_text("# Test\n")
+        subprocess.run(["git", "add", "."], cwd=tmp_path, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "initial"], cwd=tmp_path, check=True, capture_output=True)
+        (tmp_path / "file.txt").write_text("changed")
+
+        profile = discover_project_context(str(tmp_path))
+        assert profile.git_repository is True
+        assert profile.git_clean is False
+
+    def test_unknown_project(self, tmp_path):
+        from argus.context import discover_project_context
+
+        profile = discover_project_context(str(tmp_path))
+        assert profile.languages == []
+        assert profile.build_system is None
+        assert profile.test_system is None
+        assert profile.git_repository is False
+
+    def test_project_profile_serialization(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "Cargo.toml").write_text("[package]\nname = \"test\"\n")
+
+        profile = discover_project_context(str(tmp_path))
+        data = profile.to_dict()
+        assert data["root"] == str(tmp_path.resolve())
+        assert "rust" in data["languages"]
+        assert data["build_system"] == "cargo"
+
+    def test_project_profile_context_formatting(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "Cargo.toml").write_text("[package]\nname = \"test\"\n")
+
+        profile = discover_project_context(str(tmp_path))
+        ctx = profile.to_context()
+        assert "Project:" in ctx
+        assert "Languages: rust" in ctx
+        assert "Build system: cargo" in ctx
+        assert "Test command: cargo test" in ctx
+
+    def test_model_context_injection(self):
+        from argus.model.messages import build_messages
+        from argus.context.project import ProjectProfile
+
+        profile = ProjectProfile(
+            root="/tmp/test",
+            name="test",
+            languages=["python"],
+            test_command="pytest",
+        )
+        messages = build_messages(
+            user_request="Fix the bug",
+            conversation=[],
+            project_context={"name": "test", "language": "python"},
+            available_tools=[],
+            recent_observations=[],
+            project_profile=profile,
+        )
+        system_content = messages[0].content
+        assert "Project Profile" in system_content
+        assert "Languages: python" in system_content
+        assert "Test command: pytest" in system_content
+
+    def test_skill_routing_uses_profile_languages(self):
+        from argus.skills import Skill, SkillRegistry, SkillRouter
+
+        skill = Skill(
+            name="rust-debugging",
+            description="Debug Rust code",
+            triggers=["rust", "debug"],
+        )
+        registry = SkillRegistry()
+        registry.register(skill)
+        router = SkillRouter(registry)
+
+        project_context = {
+            "language": "rust",
+            "languages": ["rust", "python"],
+        }
+        results = router.route("debug this", project_context=project_context)
+        assert any(s.name == "rust-debugging" for s in results)
+
+    def test_project_command_in_repl(self):
+        from argus.context.project import ProjectProfile
+        from argus.agent import ArgusAgent
+        from unittest.mock import MagicMock
+
+        mock_memory = MagicMock()
+        mock_memory.search.return_value = []
+        mock_memory.retrieve_relevant_memory.return_value = ""
+        mock_memory.list.return_value = []
+
+        agent = ArgusAgent(project_path=".", memory=mock_memory)
+
+        class FakeRepl:
+            pass
+
+        repl = FakeRepl()
+        repl.agent = agent
+
+        profile = agent._project_context
+        assert isinstance(profile, ProjectProfile)
+        output = profile.to_context()
+        assert "Project:" in output
+        assert "Languages:" in output or "unknown" in output.lower()
+
+    def test_project_profile_caching(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "Cargo.toml").write_text("[package]\nname = \"test\"\n")
+
+        profile1 = discover_project_context(str(tmp_path))
+        profile2 = discover_project_context(str(tmp_path))
+        assert profile1.root == profile2.root
+        assert profile1.languages == profile2.languages
+
+    def test_malformed_package_json_does_not_crash(self, tmp_path):
+        from argus.context import discover_project_context
+
+        (tmp_path / "package.json").write_text("{invalid json}")
+
+        profile = discover_project_context(str(tmp_path))
+        assert "javascript" in profile.languages
+        assert profile.test_command is None

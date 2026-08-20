@@ -21,6 +21,13 @@ class SkillRouter:
         request_lower = request.lower()
         candidates: List[tuple[int, Skill]] = []
 
+        project_languages: List[str] = []
+        if project_context:
+            language = project_context.get("language", "")
+            if language:
+                project_languages.append(language)
+            project_languages.extend(project_context.get("languages", []))
+
         for skill in self._registry.list():
             score = 0
             if skill.matches(request):
@@ -29,8 +36,7 @@ class SkillRouter:
                     if trigger.lower() in request_lower:
                         score += 5
 
-            if project_context:
-                language = project_context.get("language", "")
+            for language in project_languages:
                 if language and language in skill.name:
                     score += 3
 

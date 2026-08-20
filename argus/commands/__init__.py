@@ -7,6 +7,7 @@ from argus.commands.agent import handle as agent_handle
 from argus.commands.config import handle as config_handle
 from argus.commands.help import handle as help_handle
 from argus.commands.memory import handle as memory_handle
+from argus.commands.project import handle as project_handle
 from argus.commands.session import handle as session_handle
 from argus.commands.skills import handle as skills_handle
 from argus.commands.tools import handle as tools_handle
@@ -38,6 +39,7 @@ def build_registry() -> CommandRegistry:
     registry.register("tools", tools_handle)
     registry.register("skills", skills_handle)
     registry.register("memory", memory_handle)
+    registry.register("project", project_handle)
     registry.register("agent", agent_handle)
     return registry
 
