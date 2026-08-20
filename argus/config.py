@@ -56,6 +56,18 @@ class ArgusConfig:
                 "history_size": 1000,
                 "prompt": "argus> ",
             },
+            "permissions": {
+                "read": "allow",
+                "search": "allow",
+                "write": "ask",
+                "bash": "ask",
+                "git": "ask",
+                "browser": "ask",
+            },
+            "model": {
+                "provider": "ollama",
+                "name": "llama3",
+            },
         }
 
         for section, values in defaults.items():

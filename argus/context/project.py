@@ -88,15 +88,26 @@ def _discover_files(path: Path, limit: int) -> List[str]:
 
 
 def _discover_config_files(path: Path) -> List[str]:
+    exclude = {
+        ".git", "node_modules", ".venv", "venv", "__pycache__", ".pytest_cache",
+        "dist", "build", ".tox", ".mypy_cache", ".ruff_cache", "unified_folder",
+    }
     config_patterns = [
         "*.toml", "*.yaml", "*.yml", "*.json", "*.ini", "*.cfg",
         "Makefile", "Dockerfile", ".env*",
     ]
     configs = []
-    for pattern in config_patterns:
-        for f in path.glob(f"**/{pattern}"):
-            rel = f.relative_to(path)
-            configs.append(str(rel))
+    for root, dirs, filenames in os.walk(path):
+        dirs[:] = [d for d in dirs if d not in exclude]
+        for f in filenames:
+            for pattern in config_patterns:
+                if Path(f).match(pattern):
+                    full = Path(root) / f
+                    rel = full.relative_to(path)
+                    configs.append(str(rel))
+                    break
+            if len(configs) >= 50:
+                return sorted(configs)[:20]
     return sorted(configs)[:20]
 
 

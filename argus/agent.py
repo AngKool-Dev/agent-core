@@ -10,7 +10,7 @@ controlled by Hermes.
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from agentcore import Agent, AgentConfig, MemoryManager, create_agent
 from agentcore.runtimes.base import RuntimeAdapter, ToolCall, ToolResult
@@ -20,6 +20,9 @@ from argus.tools import ToolRegistry
 from argus.tools.bash import BashTool
 from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
 from argus.tools.search import GlobTool, GrepTool
+
+
+StatusCallback = Callable[[str], None]
 
 
 class _InMemoryBackend:
@@ -65,11 +68,13 @@ class ArgusAgent:
         config: Optional[ArgusAgentConfig] = None,
         runtime: Optional[RuntimeAdapter] = None,
         memory: Optional[MemoryManager] = None,
+        status_callback: Optional[StatusCallback] = None,
     ):
         self.project_path = Path(project_path) if project_path else Path.cwd()
         self.config = config or ArgusAgentConfig()
         self._runtime = runtime
         self._memory = memory
+        self._status_callback = status_callback
 
         self._tool_registry = ToolRegistry()
         self._register_default_tools()
@@ -94,6 +99,10 @@ class ArgusAgent:
         self._tool_registry.register(GrepTool())
         self._tool_registry.register(GlobTool())
 
+    def _status(self, message: str) -> None:
+        if self._status_callback:
+            self._status_callback(message)
+
     def execute(self, request: str) -> Dict[str, Any]:
         self._start_time = time.time()
         self._iterations = 0
@@ -107,6 +116,7 @@ class ArgusAgent:
             "iterations": 0,
             "tools_used": 0,
             "tool_results": [],
+            "observations": [],
             "final_response": "",
             "success": False,
         }
@@ -174,11 +184,13 @@ class ArgusAgent:
         results: Dict[str, Any] = {
             "status": "RUNNING",
             "tool_results": [],
+            "observations": [],
             "final_response": "",
         }
 
         plan_steps = list(plan)
         completed_steps = set()
+        current_step = self._next_step(plan_steps, completed_steps)
 
         while self._iterations < self.config.max_iterations:
             elapsed = time.time() - self._start_time
@@ -190,13 +202,13 @@ class ArgusAgent:
                 results["status"] = "TOOL_LIMIT"
                 break
 
-            context = self._build_context(request)
+            context = self._build_context(request, results)
 
             try:
                 if self._runtime:
                     runtime_response = self._runtime.respond(context)
                 else:
-                    runtime_response = self._default_reason(context, request)
+                    runtime_response = self._default_reason(context, request, results)
             except Exception as e:
                 results["status"] = "RUNTIME_ERROR"
                 results["error"] = str(e)
@@ -213,14 +225,30 @@ class ArgusAgent:
                 self._iterations += 1
                 break
 
+            if not tool_calls:
+                results["status"] = "COMPLETED"
+                results["final_response"] = "No further actions needed"
+                break
+
+            batch_results = []
             for tc in tool_calls:
                 if self._tools_used >= self.config.max_tool_calls:
                     break
                 tool_result = self._execute_tool_call(tc)
+                batch_results.append(tool_result)
                 results["tool_results"].append(tool_result.to_dict())
 
-            next_step = self._next_step(plan_steps, completed_steps)
-            if not next_step:
+            observation = self._observe_batch(batch_results, current_step)
+            results["observations"].append(observation)
+            self._status(f"Observed: {observation[:120]}")
+
+            if self._should_stop_after_observation(batch_results, current_step):
+                results["status"] = "COMPLETED"
+                results["final_response"] = results.get("final_response") or "Task completed"
+                break
+
+            current_step = self._next_step(plan_steps, completed_steps)
+            if not current_step and all(s.completed for s in plan_steps):
                 results["status"] = "COMPLETED"
                 results["final_response"] = results.get("final_response") or "Task completed"
                 break
@@ -229,61 +257,154 @@ class ArgusAgent:
 
         return results
 
-    def _build_context(self, request: str) -> Dict[str, Any]:
+    def _build_context(self, request: str, results: Dict[str, Any]) -> Dict[str, Any]:
+        recent_observations = results.get("observations", [])[-3:]
         return {
             "user_request": request,
             "project_context": self._project_context.to_dict(),
             "conversation": self._conversation.to_list(),
             "available_tools": self._tool_registry.list_tools(),
+            "recent_tool_results": [tr.to_dict() for tr in results.get("tool_results", [])[-5:]],
+            "recent_observations": recent_observations,
+            "current_step": results.get("plan", [{}])[0].get("action", "investigate"),
             "instructions": [
                 "You are Argus, an AI coding agent.",
                 "Work iteratively: analyze, act, observe, refine.",
                 "Use tools to explore and modify code.",
+                "After observing results, decide whether to continue, retry, or finish.",
                 "Always verify changes with tests when possible.",
             ],
         }
 
-    def _default_reason(self, context: Dict[str, Any], request: str) -> Dict[str, Any]:
-        conversation = context.get("conversation", [])
-        last_user = next((m for m in reversed(conversation) if m["role"] == "user"), None)
-        user_text = (last_user or {}).get("content", request).lower()
+    def _observe_batch(self, tool_results: List[ToolResult], step: Optional["PlanStep"]) -> str:
+        if not tool_results:
+            return "No tools executed"
 
-        if any(word in user_text for word in ["read", "show", "find", "search", "grep"]):
+        successes = [r for r in tool_results if r.success]
+        failures = [r for r in tool_results if not r.success]
+
+        parts = []
+        if step:
+            parts.append(f"Step '{step.action}': ")
+        parts.append(f"{len(successes)} succeeded, {len(failures)} failed")
+
+        if failures:
+            errors = [r.error for r in failures[:3] if r.error]
+            if errors:
+                parts.append(f"Errors: {'; '.join(errors)}")
+
+        output_preview = ""
+        for r in successes:
+            if r.output:
+                output_preview = r.output[:200]
+                break
+
+        if output_preview:
+            parts.append(f"Output preview: {output_preview}")
+
+        return ". ".join(parts)
+
+    def _should_stop_after_observation(
+        self, tool_results: List[ToolResult], step: Optional["PlanStep"]
+    ) -> bool:
+        current_calls = [r.tool for r in tool_results]
+        recent_calls = getattr(self, "_recent_tool_calls", [])
+        self._recent_tool_calls = (recent_calls + current_calls)[-20:]
+
+        if not tool_results:
+            return False
+
+        if len(self._recent_tool_calls) >= 8:
+            last_eight = self._recent_tool_calls[-8:]
+            if len(set(last_eight)) == 1:
+                return True
+
+        failures = [r for r in tool_results if not r.success]
+        if failures and step and step.action == "verify":
+            return True
+
+        if step and step.action == "investigate":
+            return any(r.tool == "read_file" and r.success for r in tool_results)
+
+        return False
+
+    def _default_reason(self, context: Dict[str, Any], request: str, results: Dict[str, Any]) -> Dict[str, Any]:
+        recent_tools = [tr.get("tool") for tr in context.get("recent_tool_results", [])]
+        recent_observations = context.get("recent_observations", [])
+        user_text = request.lower()
+
+        if "investigate" in context.get("current_step", ""):
+            if "list_dir" not in recent_tools:
+                return {
+                    "complete": False,
+                    "response": "Exploring project structure...",
+                    "tool_calls": [
+                        ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, call_id="1").to_dict()
+                    ],
+                }
+            if "read_file" not in recent_tools:
+                readme = context.get("project_context", {}).get("readme")
+                if readme:
+                    return {
+                        "complete": False,
+                        "response": "Reading README...",
+                        "tool_calls": [
+                            ToolCall(tool="read_file", arguments={"path": str(self.project_path / "README.md")}, call_id="1").to_dict()
+                        ],
+                    }
+            return {"complete": False, "response": "Investigation complete", "tool_calls": []}
+
+        if "implement" in context.get("current_step", ""):
+            if "grep" not in recent_tools and any(word in user_text for word in ["fix", "bug", "error"]):
+                return {
+                    "complete": False,
+                    "response": "Searching for error patterns...",
+                    "tool_calls": [
+                        ToolCall(tool="grep", arguments={"pattern": "panic|crash|error|traceback", "path": str(self.project_path)}, call_id="1").to_dict()
+                    ],
+                }
+            if "read_file" not in recent_tools:
+                return {
+                    "complete": False,
+                    "response": "Reading target file...",
+                    "tool_calls": [
+                        ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, call_id="1").to_dict()
+                    ],
+                }
             return {
                 "complete": False,
-                "response": "Searching...",
-                "tool_calls": [
-                    ToolCall(tool="grep", arguments={"pattern": request, "path": str(self.project_path)}, call_id="1").to_dict()
-                ],
+                "response": "Ready to apply changes",
+                "tool_calls": [],
             }
 
-        if any(word in user_text for word in ["write", "create", "generate"]):
+        if "verify" in context.get("current_step", ""):
+            if "bash" not in recent_tools:
+                return {
+                    "complete": False,
+                    "response": "Running tests...",
+                    "tool_calls": [
+                        ToolCall(tool="bash", arguments={"command": "pytest || cargo test || npm test", "cwd": str(self.project_path)}, call_id="1").to_dict()
+                    ],
+                }
+            return {"complete": True, "response": "Verification complete", "tool_calls": []}
+
+        if any(word in user_text for word in ["fix", "crash", "bug", "error", "fail"]):
             return {
                 "complete": False,
-                "response": "Writing...",
+                "response": "Investigating bug...",
                 "tool_calls": [
                     ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, call_id="1").to_dict()
                 ],
             }
 
-        if any(word in user_text for word in ["fix", "bug", "error", "crash"]):
-            return {
-                "complete": False,
-                "response": "Investigating...",
-                "tool_calls": [
-                    ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, call_id="1").to_dict()
-                ],
-            }
-
-        return {
-            "complete": True,
-            "response": f"Processed request: {request}",
-            "tool_calls": [],
-        }
+        return {"complete": True, "response": f"Processed request: {request}", "tool_calls": []}
 
     def _execute_tool_call(self, tool_call: ToolCall) -> ToolResult:
         self._tools_used += 1
+        self._status(f"Running {tool_call.tool}...")
         result = self._tool_registry.execute(tool_call.tool, **tool_call.arguments)
+        status = "success" if result.success else "failed"
+        self._status(f"Tool {tool_call.tool} {status}")
         return result
 
     def _next_step(self, plan: List["PlanStep"], completed: set) -> Optional["PlanStep"]:

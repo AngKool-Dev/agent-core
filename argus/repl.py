@@ -8,6 +8,7 @@ from typing import Optional
 from argus.agent import ArgusAgent, ArgusAgentConfig
 from argus.commands import build_registry
 from argus.config import ArgusConfig
+from argus.permissions import PermissionConfig
 from argus.session import SessionManager
 from argus.tools import ToolRegistry
 from argus.tools.bash import BashTool
@@ -24,7 +25,19 @@ class ArgusREPL:
         self.project_path = project_path or Path.cwd()
         self.config = config or ArgusConfig()
 
-        self.tool_registry = ToolRegistry()
+        permissions = PermissionConfig(
+            read=self.config.get("permissions.read", "allow"),
+            search=self.config.get("permissions.search", "allow"),
+            write=self.config.get("permissions.write", "ask"),
+            bash=self.config.get("permissions.bash", "ask"),
+            git=self.config.get("permissions.git", "ask"),
+            browser=self.config.get("permissions.browser", "ask"),
+        )
+
+        self.tool_registry = ToolRegistry(
+            permissions=permissions,
+            ask_callback=self._permission_prompt,
+        )
         self._register_tools()
 
         self.session_manager = SessionManager(
@@ -35,10 +48,12 @@ class ArgusREPL:
         self.agent = ArgusAgent(
             project_path=self.project_path,
             config=self._build_agent_config(),
+            status_callback=self._status_update,
         )
 
         self.commands = build_registry()
         self._running = False
+        self._last_status = ""
 
     def _register_tools(self) -> None:
         self.tool_registry.register(ReadFileTool())
@@ -56,6 +71,22 @@ class ArgusREPL:
             max_runtime_seconds=self.config.get("agent.timeout_seconds", 300),
         )
 
+    def _permission_prompt(self, prompt: str, tool: str) -> bool:
+        print(f"\n[PERMISSION] {prompt}")
+        answer = input("Allow? [y/N]: ").strip().lower()
+        return answer == "y"
+
+    def _status_update(self, message: str) -> None:
+        self._last_status = message
+        sys.stdout.write(f"\r\033[K> {message}")
+        sys.stdout.flush()
+
+    def _clear_status(self) -> None:
+        if self._last_status:
+            sys.stdout.write(f"\r\033[K")
+            sys.stdout.flush()
+            self._last_status = ""
+
     def run(self) -> int:
         self._running = True
         prompt = self.config.get("repl.prompt", "argus> ")
@@ -72,6 +103,7 @@ class ArgusREPL:
         while self._running:
             try:
                 try:
+                    self._clear_status()
                     line = input(prompt)
                 except EOFError:
                     break
@@ -111,10 +143,12 @@ class ArgusREPL:
 
         try:
             result = self.agent.execute(message)
+            self._clear_status()
             response = self._format_result(result)
             print(response)
             self.session.add_message("assistant", response, result=result)
         except Exception as e:
+            self._clear_status()
             error_msg = f"Error: {e}"
             print(error_msg)
             self.session.add_message("assistant", error_msg, error=str(e))
@@ -125,6 +159,20 @@ class ArgusREPL:
         lines.append(f"State: {result.get('status', 'N/A')}")
         lines.append(f"Iterations: {result.get('iterations', 0)}")
         lines.append(f"Tools used: {result.get('tools_used', 0)}")
+
+        plan = result.get("plan", [])
+        if plan:
+            lines.append("Plan:")
+            for step in plan:
+                status = "done" if step.get("completed") else "pending"
+                lines.append(f"  [{status}] {step.get('action')}: {step.get('description')}")
+
+        tool_results = result.get("tool_results", [])
+        if tool_results:
+            lines.append("Recent tool results:")
+            for tr in tool_results[-3:]:
+                status = "ok" if tr.get("success") else "FAIL"
+                lines.append(f"  [{status}] {tr.get('tool')}: {(tr.get('output') or tr.get('error', ''))[:100]}")
 
         verification = result.get("verification", {})
         if verification.get("format_check"):

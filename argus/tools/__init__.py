@@ -5,7 +5,9 @@ import subprocess
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
+
+from argus.permissions import PermissionConfig, PermissionDeniedError, check_permission
 
 
 @dataclass
@@ -43,8 +45,14 @@ class Tool(ABC):
 
 
 class ToolRegistry:
-    def __init__(self):
+    def __init__(
+        self,
+        permissions: Optional[PermissionConfig] = None,
+        ask_callback: Optional[Callable[[str, str], bool]] = None,
+    ):
         self._tools: Dict[str, Tool] = {}
+        self._permissions = permissions or PermissionConfig()
+        self._ask_callback = ask_callback
 
     def register(self, tool: Tool) -> None:
         self._tools[tool.name] = tool
@@ -59,7 +67,22 @@ class ToolRegistry:
         tool = self._tools.get(name)
         if not tool:
             return ToolResult(tool=name, success=False, error=f"Unknown tool: {name}")
+
+        try:
+            if not check_permission(name, self._permissions, self._ask_callback):
+                raise PermissionDeniedError(name, "Permission not granted")
+        except PermissionDeniedError as e:
+            return ToolResult(tool=name, success=False, error=str(e))
+
         try:
             return tool.execute(**kwargs)
+        except PermissionDeniedError as e:
+            return ToolResult(tool=name, success=False, error=str(e))
         except Exception as e:
             return ToolResult(tool=name, success=False, error=str(e))
+
+    def set_permissions(self, permissions: PermissionConfig) -> None:
+        self._permissions = permissions
+
+    def set_ask_callback(self, callback: Callable[[str, str], bool]) -> None:
+        self._ask_callback = callback

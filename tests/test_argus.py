@@ -270,3 +270,109 @@ class TestArgusModel:
 
         provider = create_provider("ollama")
         assert provider is not None
+
+
+class TestArgusPermissions:
+    def test_default_permissions(self):
+        from argus.permissions import PermissionConfig
+
+        config = PermissionConfig()
+        assert config.allows("read_file") is True
+        assert config.allows("write_file") is True
+        assert config.allows("bash") is True
+        assert config.requires_prompt("write_file") is True
+        assert config.requires_prompt("bash") is True
+        assert config.requires_prompt("read_file") is False
+
+    def test_deny_permission(self):
+        from argus.permissions import PermissionConfig
+
+        config = PermissionConfig(write="deny")
+        assert config.allows("write_file") is False
+        assert config.requires_prompt("write_file") is False
+
+    def test_tool_category_map(self):
+        from argus.permissions import _tool_category
+
+        assert _tool_category("read_file") == "read"
+        assert _tool_category("write_file") == "write"
+        assert _tool_category("bash") == "bash"
+        assert _tool_category("grep") == "search"
+
+    def test_permission_denied_error(self):
+        from argus.permissions import PermissionConfig, PermissionDeniedError, check_permission
+
+        config = PermissionConfig(write="deny")
+        with pytest.raises(PermissionDeniedError):
+            check_permission("write_file", config)
+
+    def test_tool_registry_blocks_denied(self):
+        from argus.tools import ToolRegistry
+        from argus.tools.file import WriteFileTool
+        from argus.permissions import PermissionConfig
+
+        registry = ToolRegistry(permissions=PermissionConfig(write="deny"))
+        registry.register(WriteFileTool())
+        result = registry.execute("write_file", path="test.txt", content="hello")
+        assert result.success is False
+        assert "Permission denied" in result.error
+
+    def test_tool_registry_asks_for_permission(self):
+        from argus.tools import ToolRegistry
+        from argus.tools.file import WriteFileTool
+        from argus.permissions import PermissionConfig
+
+        answers = []
+        def ask(prompt, tool):
+            answers.append((prompt, tool))
+            return False
+
+        registry = ToolRegistry(
+            permissions=PermissionConfig(write="ask"),
+            ask_callback=ask,
+        )
+        registry.register(WriteFileTool())
+        result = registry.execute("write_file", path="test.txt", content="hello")
+        assert result.success is False
+        assert len(answers) == 1
+
+
+class TestArgusAgentLoop:
+    def test_agent_execute_produces_observations(self):
+        from argus.agent import ArgusAgent
+
+        agent = ArgusAgent(project_path=".")
+        result = agent.execute("find and fix the bug")
+        assert "observations" in result
+        assert isinstance(result["observations"], list)
+
+    def test_agent_status_callback_invoked(self):
+        from argus.agent import ArgusAgent
+
+        statuses = []
+        agent = ArgusAgent(project_path=".", status_callback=lambda m: statuses.append(m))
+        agent.execute("list files")
+        assert len(statuses) >= 0
+
+    def test_agent_loop_iterates(self):
+        from argus.agent import ArgusAgent
+
+        agent = ArgusAgent(project_path=".")
+        result = agent.execute("investigate the project")
+        assert result["iterations"] >= 0
+        assert result["tools_used"] >= 0
+
+    def test_agent_switch_project(self):
+        from argus.agent import ArgusAgent
+
+        agent = ArgusAgent(project_path=".")
+        agent.switch_project(".")
+        assert agent.project_path is not None
+
+
+class TestArgusConfigPermissions:
+    def test_permission_defaults(self):
+        config = ArgusConfig()
+        assert config.get("permissions.read") == "allow"
+        assert config.get("permissions.write") == "ask"
+        assert config.get("permissions.bash") == "ask"
