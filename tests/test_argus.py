@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from argus.config import ArgusConfig
+from argus.memory import ArgusMemory
 from argus.session import Session, SessionManager
 from argus.tools import ToolRegistry
 from argus.tools.bash import BashTool
@@ -755,3 +756,175 @@ class TestArgusSkills:
         assert data["name"] == "debugging"
         assert data["triggers"] == ["bug"]
         assert data["metadata"]["version"] == "1.0"
+
+
+class TestArgusMemory:
+    def test_argus_memory_wrapper_with_manager(self):
+        from argus.memory import ArgusMemory
+        from unittest.mock import MagicMock
+
+        mock_manager = MagicMock()
+        mock_manager.search.return_value = [{"content": "Use SQLite"}]
+        memory = ArgusMemory(memory_manager=mock_manager, project_path=Path("."))
+        assert memory.available is True
+        results = memory.search("database")
+        assert len(results) == 1
+        mock_manager.search.assert_called_once_with("database", project=".", limit=10)
+
+    def test_argus_memory_wrapper_without_manager(self):
+        from argus.memory import ArgusMemory
+
+        memory = ArgusMemory()
+        assert memory.available is False
+        assert memory.search("anything") == []
+        assert memory.retrieve_relevant("anything") == ""
+
+    def test_argus_memory_retrieve_relevant_formats(self):
+        from argus.memory import ArgusMemory
+        from unittest.mock import MagicMock
+
+        mock_manager = MagicMock()
+        mock_manager.retrieve_relevant_memory.return_value = "Use SQLite for database"
+        memory = ArgusMemory(memory_manager=mock_manager, project_path=Path("."))
+        result = memory.retrieve_relevant("database choice")
+        assert "Use SQLite" in result
+        mock_manager.retrieve_relevant_memory.assert_called_once_with("database choice", ".", limit=5)
+
+    def test_argus_memory_add_observation(self):
+        from argus.memory import ArgusMemory
+        from unittest.mock import MagicMock
+
+        mock_manager = MagicMock()
+        mock_manager.store.return_value = {"id": "m1"}
+        memory = ArgusMemory(memory_manager=mock_manager, project_path=Path("."))
+        result = memory.add_observation("Bug fixed", "JWT expiry mismatch", entry_type="fix", importance=0.9)
+        assert result is not None
+        mock_manager.store.assert_called_once()
+
+    def test_argus_memory_add_decision(self):
+        from argus.memory import ArgusMemory
+        from unittest.mock import MagicMock
+
+        mock_manager = MagicMock()
+        mock_manager.store_decision.return_value = {"id": "d1"}
+        memory = ArgusMemory(memory_manager=mock_manager, project_path=Path("."))
+        result = memory.add_decision("Use async patterns", context="Discussed design")
+        assert result is not None
+        mock_manager.store_decision.assert_called_once_with("Use async patterns", project=".", context="Discussed design")
+
+    def test_argus_memory_add_lesson(self):
+        from argus.memory import ArgusMemory
+        from unittest.mock import MagicMock
+
+        mock_manager = MagicMock()
+        mock_manager.store_lesson.return_value = {"id": "l1"}
+        memory = ArgusMemory(memory_manager=mock_manager, project_path=Path("."))
+        result = memory.add_lesson("Always test edge cases")
+        assert result is not None
+        mock_manager.store_lesson.assert_called_once_with("Always test edge cases", project=".")
+
+    def test_argus_memory_add_architecture(self):
+        from argus.memory import ArgusMemory
+        from unittest.mock import MagicMock
+
+        mock_manager = MagicMock()
+        mock_manager.store_project_architecture.return_value = {"id": "a1"}
+        memory = ArgusMemory(memory_manager=mock_manager, project_path=Path("."))
+        result = memory.add_architecture("Rust workspace with CLI")
+        assert result is not None
+        mock_manager.store_project_architecture.assert_called_once_with("Rust workspace with CLI", project=".")
+
+    def test_argus_memory_list_recent(self):
+        from argus.memory import ArgusMemory
+        from unittest.mock import MagicMock
+
+        mock_manager = MagicMock()
+        mock_manager.list.return_value = [{"id": "m1", "content": "recent"}]
+        memory = ArgusMemory(memory_manager=mock_manager, project_path=Path("."))
+        results = memory.list_recent(limit=10)
+        assert len(results) == 1
+        mock_manager.list.assert_called_once_with(project=".", limit=10)
+
+    def test_argus_memory_search_returns_empty_when_unavailable(self):
+        from argus.memory import ArgusMemory
+
+        memory = ArgusMemory()
+        assert memory.search("query") == []
+
+    def test_argus_memory_handles_backend_exception(self):
+        from argus.memory import ArgusMemory
+        from unittest.mock import MagicMock
+
+        mock_manager = MagicMock()
+        mock_manager.search.side_effect = RuntimeError("backend down")
+        mock_manager.retrieve_relevant_memory.side_effect = RuntimeError("backend down")
+        memory = ArgusMemory(memory_manager=mock_manager, project_path=Path("."))
+        assert memory.search("query") == []
+        assert memory.retrieve_relevant("query") == ""
+
+    def test_memory_tool_add_observation(self):
+        from argus.tools.memory import MemoryAddTool
+        from unittest.mock import MagicMock, patch
+
+        mock_agent = MagicMock()
+        mock_agent.memory.add_observation.return_value = {"id": "m1"}
+        with patch("argus.tools.memory._get_agent", return_value=mock_agent):
+            tool = MemoryAddTool()
+            result = tool.execute(summary="Fixed bug", details="Details here", entry_type="fix")
+        assert result.success is True
+        assert "Fixed bug" in result.output
+
+    def test_memory_tool_search(self):
+        from argus.tools.memory import MemorySearchTool
+        from unittest.mock import MagicMock, patch
+
+        mock_agent = MagicMock()
+        mock_agent.memory.search.return_value = [{"type": "fix", "content": "Use SQLite"}]
+        with patch("argus.tools.memory._get_agent", return_value=mock_agent):
+            tool = MemorySearchTool()
+            result = tool.execute(query="database")
+        assert result.success is True
+        assert "Use SQLite" in result.output
+
+    def test_memory_tool_search_no_results(self):
+        from argus.tools.memory import MemorySearchTool
+        from unittest.mock import MagicMock, patch
+
+        mock_agent = MagicMock()
+        mock_agent.memory.search.return_value = []
+        with patch("argus.tools.memory._get_agent", return_value=mock_agent):
+            tool = MemorySearchTool()
+            result = tool.execute(query="nonexistent")
+        assert result.success is True
+        assert "No relevant memory found" in result.output
+
+    def test_memory_tool_unavailable(self):
+        from argus.tools.memory import MemoryAddTool
+        from unittest.mock import patch
+
+        with patch("argus.tools.memory._get_agent", return_value=None):
+            tool = MemoryAddTool()
+            result = tool.execute(summary="test", details="test")
+        assert result.success is False
+        assert "not available" in result.error
+
+    def test_agent_memory_integration_in_context(self):
+        from argus.agent import ArgusAgent
+        from unittest.mock import MagicMock
+
+        mock_memory_manager = MagicMock()
+        mock_memory_manager.retrieve_relevant_memory.return_value = "Past fix: JWT expiry"
+        mock_model = MagicMock()
+        mock_model.complete.return_value = MagicMock(content="Done", tool_calls=[])
+
+        agent = ArgusAgent(project_path=".", memory=mock_memory_manager, model=mock_model)
+        context = agent._build_context("Fix auth bug", {"observations": [], "tool_results": [], "plan": [{"action": "investigate"}]})
+        assert "Past fix: JWT expiry" in context["memory_context"]
+
+    def test_agent_memory_context_empty_when_unavailable(self):
+        from argus.agent import ArgusAgent
+
+        agent = ArgusAgent(project_path=".")
+        agent.memory = ArgusMemory()
+        context = agent._build_context("hello", {"observations": [], "tool_results": [], "plan": [{"action": "investigate"}]})
+        assert context["memory_context"] == ""

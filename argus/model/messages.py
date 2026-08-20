@@ -14,6 +14,7 @@ def build_messages(
     current_step: str = "investigate",
     active_skills: Optional[List[Dict[str, Any]]] = None,
     skill_instructions: str = "",
+    memory_context: str = "",
 ) -> List[Message]:
     system = _build_system_prompt(
         project_context,
@@ -21,6 +22,7 @@ def build_messages(
         current_step,
         active_skills=active_skills,
         skill_instructions=skill_instructions,
+        memory_context=memory_context,
     )
     messages = [Message(role="system", content=system)]
 
@@ -45,6 +47,7 @@ def _build_system_prompt(
     current_step: str,
     active_skills: Optional[List[Dict[str, Any]]] = None,
     skill_instructions: str = "",
+    memory_context: str = "",
 ) -> str:
     lines = [
         "You are Argus, an autonomous coding agent.",
@@ -97,6 +100,13 @@ def _build_system_prompt(
             "",
             "## Skill Instructions",
             skill_instructions,
+        ])
+
+    if memory_context:
+        lines.extend([
+            "",
+            "## Relevant Project Memory",
+            memory_context,
         ])
 
     lines.extend([

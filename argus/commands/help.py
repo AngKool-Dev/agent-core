@@ -21,6 +21,8 @@ def handle(repl) -> str:
         ("skills list", "List discovered skills"),
         ("skills search <query>", "Search skills"),
         ("skills show <name>", "Show skill details"),
+        ("memory summary", "Show project memory summary"),
+        ("memory search <query>", "Search project memory"),
         ("agent <request>", "Send a request to the agent"),
     ]
     lines = ["Available commands:"]

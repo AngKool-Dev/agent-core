@@ -16,11 +16,13 @@ from agentcore import Agent, AgentConfig, MemoryManager, create_agent
 from agentcore.runtimes.base import RuntimeAdapter, ToolCall, ToolResult
 
 from argus.context import ConversationContext, ProjectContext, discover_project_context
+from argus.memory import ArgusMemory
 from argus.model import ModelProvider, build_messages, parse_model_output
 from argus.skills import Skill, SkillRegistry, SkillRouter
 from argus.tools import ToolRegistry
 from argus.tools.bash import BashTool
 from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
+from argus.tools.memory import MemoryAddTool, MemorySearchTool, set_agent as set_memory_agent
 from argus.tools.search import GlobTool, GrepTool
 
 
@@ -77,12 +79,15 @@ class ArgusAgent:
         self.project_path = Path(project_path) if project_path else Path.cwd()
         self.config = config or ArgusAgentConfig()
         self._runtime = runtime
-        self._memory = memory
+        self._memory_manager = memory
         self._status_callback = status_callback
         self._model = model
 
         self._tool_registry = ToolRegistry()
         self._register_default_tools()
+
+        self.memory = ArgusMemory(memory_manager=memory, project_path=self.project_path)
+        set_memory_agent(self)
 
         self._skill_registry = SkillRegistry(skill_paths)
         self._skill_router = SkillRouter(self._skill_registry)
@@ -107,6 +112,8 @@ class ArgusAgent:
         self._tool_registry.register(BashTool())
         self._tool_registry.register(GrepTool())
         self._tool_registry.register(GlobTool())
+        self._tool_registry.register(MemoryAddTool())
+        self._tool_registry.register(MemorySearchTool())
 
     def _status(self, message: str) -> None:
         if self._status_callback:
@@ -286,6 +293,7 @@ class ArgusAgent:
         recent_observations = results.get("observations", [])[-3:]
         active_skills = getattr(self, "_active_skills", [])
         skill_instructions = "\n\n".join(s.to_context() for s in active_skills)
+        memory_context = self.memory.retrieve_relevant(request)
         return {
             "user_request": request,
             "project_context": self._project_context.to_dict(),
@@ -296,6 +304,7 @@ class ArgusAgent:
             "current_step": results.get("plan", [{}])[0].get("action", "investigate"),
             "active_skills": [s.to_dict() for s in active_skills],
             "skill_instructions": skill_instructions,
+            "memory_context": memory_context,
             "instructions": [
                 "You are Argus, an AI coding agent.",
                 "Work iteratively: analyze, act, observe, refine.",
@@ -318,6 +327,7 @@ class ArgusAgent:
             current_step=context.get("current_step", "investigate"),
             active_skills=context.get("active_skills"),
             skill_instructions=context.get("skill_instructions", ""),
+            memory_context=context.get("memory_context", ""),
         )
 
         model_name = self.config.model or "gpt-4o"
