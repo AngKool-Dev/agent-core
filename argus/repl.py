@@ -10,6 +10,8 @@ from argus.agent import ArgusAgent, ArgusAgentConfig
 from argus.commands import build_registry
 from argus.config import ArgusConfig
 from argus.model import create_model_from_config
+from argus.model.credentials import CredentialManager
+from argus.model.usage import UsageTracker
 from argus.permissions import PermissionConfig
 from argus.session import SessionManager
 from argus.tools import ToolRegistry
@@ -28,6 +30,8 @@ class ArgusREPL:
     ):
         self.project_path = project_path or Path.cwd()
         self.config = config or ArgusConfig()
+        self._credentials = CredentialManager()
+        self._usage = UsageTracker()
 
         permissions = PermissionConfig(
             read=self.config.get("permissions.read", "allow"),
@@ -126,7 +130,7 @@ class ArgusREPL:
         if not hub_config:
             return None
         try:
-            return create_router_from_config(hub_config)
+            return create_router_from_config(hub_config, usage_tracker=self._usage)
         except Exception:
             return None
 

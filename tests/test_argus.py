@@ -2128,3 +2128,220 @@ class TestModelProviderHub:
 
         config = ArgusConfig()
         assert cmd_model(config) == 0
+
+
+class TestProviderOnboarding:
+    def test_credential_manager_save_and_load(self, tmp_path, monkeypatch):
+        from argus.model.credentials import CredentialManager
+
+        cred_path = tmp_path / "credentials.json"
+        monkeypatch.setattr("argus.model.credentials.DEFAULT_CREDENTIALS_PATH", cred_path)
+
+        manager = CredentialManager()
+        manager.set("gemini", "test-key")
+        assert manager.has("gemini") is True
+        assert manager.get("gemini") == "test-key"
+        assert manager.has("openrouter") is False
+
+    def test_credential_manager_remove(self, tmp_path, monkeypatch):
+        from argus.model.credentials import CredentialManager
+
+        cred_path = tmp_path / "credentials.json"
+        monkeypatch.setattr("argus.model.credentials.DEFAULT_CREDENTIALS_PATH", cred_path)
+
+        manager = CredentialManager()
+        manager.set("gemini", "test-key")
+        manager.remove("gemini")
+        assert manager.has("gemini") is False
+
+    def test_credential_manager_list_providers(self, tmp_path, monkeypatch):
+        from argus.model.credentials import CredentialManager
+
+        cred_path = tmp_path / "credentials.json"
+        monkeypatch.setattr("argus.model.credentials.DEFAULT_CREDENTIALS_PATH", cred_path)
+
+        manager = CredentialManager()
+        manager.set("gemini", "key1")
+        manager.set("groq", "key2")
+        providers = manager.list_providers()
+        assert "gemini" in providers
+        assert providers["gemini"]["api_key"] is True
+        assert providers["groq"]["api_key"] is True
+        assert "openrouter" not in providers
+
+
+class TestTaskClassification:
+    def test_classify_general_task(self):
+        from argus.model.hub import TaskClassifier
+
+        tags = TaskClassifier.classify("What is the meaning of life?")
+        assert "general" in tags
+
+    def test_classify_coding_task(self):
+        from argus.model.hub import TaskClassifier
+
+        tags = TaskClassifier.classify("Fix the failing tests")
+        assert "coding" in tags
+
+    def test_classify_reasoning_task(self):
+        from argus.model.hub import TaskClassifier
+
+        tags = TaskClassifier.classify("Review this architecture")
+        assert "reasoning" in tags
+
+    def test_classify_tool_use_task(self):
+        from argus.model.hub import TaskClassifier
+
+        tags = TaskClassifier.classify("Run the test suite")
+        assert "tool_use" in tags
+
+    def test_requires_tool_calling(self):
+        from argus.model.hub import TaskClassifier
+
+        assert TaskClassifier.requires_tool_calling("Fix the bug") is True
+        assert TaskClassifier.requires_tool_calling("Explain this") is False
+
+    def test_requires_large_context(self):
+        from argus.model.hub import TaskClassifier
+
+        assert TaskClassifier.requires_large_context("Refactor the entire module") is True
+        assert TaskClassifier.requires_large_context("Fix this typo") is False
+
+
+class TestCapabilityRouting:
+    def test_capability_first_prefers_matching_task(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+
+        registry = ProviderRegistry()
+        general = ProviderCapability(name="openrouter", models=["model-a"], free=True, task_tags=["general"])
+        coding = ProviderCapability(name="gemini", models=["model-b"], free=True, task_tags=["coding", "general"])
+        registry.register(ProviderState(capability=general))
+        registry.register(ProviderState(capability=coding))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.CAPABILITY_FIRST)
+        state = router._select_provider(None, request="fix the bug")
+        assert state.capability.name == "gemini"
+
+    def test_capability_first_falls_back_without_request(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+
+        registry = ProviderRegistry()
+        cap = ProviderCapability(name="openrouter", models=["model-a"], free=True)
+        registry.register(ProviderState(capability=cap))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.CAPABILITY_FIRST)
+        state = router._select_provider(None)
+        assert state.capability.name == "openrouter"
+
+    def test_capability_first_penalizes_missing_tool_calling(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+
+        registry = ProviderRegistry()
+        no_tools = ProviderCapability(name="openrouter", models=["model-a"], free=True, tool_calling=False, task_tags=["general"])
+        with_tools = ProviderCapability(name="gemini", models=["model-b"], free=True, tool_calling=True, task_tags=["general"])
+        registry.register(ProviderState(capability=no_tools))
+        registry.register(ProviderState(capability=with_tools))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.CAPABILITY_FIRST)
+        state = router._select_provider(None, request="run the tests")
+        assert state.capability.name == "gemini"
+
+    def test_capability_first_penalizes_small_context(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+
+        registry = ProviderRegistry()
+        small = ProviderCapability(name="openrouter", models=["model-a"], free=True, context_window=8192, task_tags=["general"])
+        large = ProviderCapability(name="gemini", models=["model-b"], free=True, context_window=1000000, task_tags=["general"])
+        registry.register(ProviderState(capability=small))
+        registry.register(ProviderState(capability=large))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.CAPABILITY_FIRST)
+        state = router._select_provider(None, request="refactor the entire module")
+        assert state.capability.name == "gemini"
+
+
+class TestUsageTracking:
+    def test_usage_tracker_records_and_retrieves(self, tmp_path, monkeypatch):
+        from argus.model.usage import UsageTracker, UsageEntry
+
+        usage_path = tmp_path / "usage.json"
+        monkeypatch.setattr("argus.model.usage.DEFAULT_USAGE_PATH", usage_path)
+
+        tracker = UsageTracker()
+        tracker.record(UsageEntry(provider="gemini", model="gemini-2.0-flash", timestamp=1000, tokens=100, success=True))
+        tracker.record(UsageEntry(provider="openrouter", model="model-a", timestamp=1000, tokens=50, success=False, error="boom"))
+
+        stats = tracker.provider_stats()
+        assert stats["gemini"]["requests"] == 1
+        assert stats["gemini"]["tokens"] == 100
+        assert stats["openrouter"]["errors"] == 1
+
+    def test_usage_tracker_today_filters(self, tmp_path, monkeypatch):
+        from argus.model.usage import UsageTracker, UsageEntry
+        import time
+
+        usage_path = tmp_path / "usage.json"
+        monkeypatch.setattr("argus.model.usage.DEFAULT_USAGE_PATH", usage_path)
+
+        tracker = UsageTracker()
+        old_time = time.time() - 86400
+        tracker.record(UsageEntry(provider="gemini", model="gemini-2.0-flash", timestamp=old_time, tokens=100, success=True))
+        tracker.record(UsageEntry(provider="openrouter", model="model-a", timestamp=time.time(), tokens=50, success=True))
+
+        today = tracker.today()
+        assert len(today) == 1
+        assert today[0].provider == "openrouter"
+
+    def test_usage_tracker_clear(self, tmp_path, monkeypatch):
+        from argus.model.usage import UsageTracker, UsageEntry
+
+        usage_path = tmp_path / "usage.json"
+        monkeypatch.setattr("argus.model.usage.DEFAULT_USAGE_PATH", usage_path)
+
+        tracker = UsageTracker()
+        tracker.record(UsageEntry(provider="gemini", model="gemini-2.0-flash", timestamp=1000, tokens=100, success=True))
+        tracker.clear()
+        assert len(tracker.today()) == 0
+
+
+class TestCLIOnboardAndUsage:
+    def test_cli_onboard_command_exists(self):
+        import sys
+        from unittest.mock import MagicMock
+
+        sys.modules["tomli_w"] = MagicMock()
+        from argus.cli import main
+
+        try:
+            main(["onboard", "--help"])
+        except SystemExit as exc:
+            assert exc.code == 0
+
+    def test_cli_usage_command_exists(self):
+        import sys
+        from unittest.mock import MagicMock
+
+        sys.modules["tomli_w"] = MagicMock()
+        from argus.cli import main
+
+        try:
+            main(["usage", "--help"])
+        except SystemExit as exc:
+            assert exc.code == 0
+
+    def test_cli_usage_with_tracker(self, tmp_path, monkeypatch):
+        import sys
+        from unittest.mock import MagicMock
+
+        sys.modules["tomli_w"] = MagicMock()
+        from argus.cli import cmd_usage
+        from argus.config import ArgusConfig
+        from argus.model.usage import UsageTracker, UsageEntry
+
+        usage_path = tmp_path / "usage.json"
+        monkeypatch.setattr("argus.model.usage.DEFAULT_USAGE_PATH", usage_path)
+        tracker = UsageTracker()
+        tracker.record(UsageEntry(provider="gemini", model="gemini-2.0-flash", timestamp=1000, tokens=100, success=True))
+
+        config = ArgusConfig()
+        assert cmd_usage(config, tracker) == 0

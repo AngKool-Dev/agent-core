@@ -90,6 +90,7 @@ class ArgusConfig:
                         "streaming": False,
                         "context_window": 32000,
                         "capabilities": ["chat"],
+                        "task_tags": ["general", "coding", "reasoning"],
                     },
                     "gemini": {
                         "enabled": True,
@@ -99,6 +100,7 @@ class ArgusConfig:
                         "streaming": False,
                         "context_window": 1000000,
                         "capabilities": ["chat"],
+                        "task_tags": ["general", "coding", "reasoning", "tool_use"],
                     },
                     "groq": {
                         "enabled": True,
@@ -108,6 +110,7 @@ class ArgusConfig:
                         "streaming": False,
                         "context_window": 8192,
                         "capabilities": ["chat"],
+                        "task_tags": ["general", "coding", "tool_use"],
                     },
                     "cerebras": {
                         "enabled": True,
@@ -117,6 +120,7 @@ class ArgusConfig:
                         "streaming": False,
                         "context_window": 8192,
                         "capabilities": ["chat"],
+                        "task_tags": ["general", "coding"],
                     },
                     "ollama": {
                         "enabled": True,
@@ -126,6 +130,7 @@ class ArgusConfig:
                         "streaming": False,
                         "context_window": 8192,
                         "capabilities": ["chat"],
+                        "task_tags": ["general", "coding", "reasoning"],
                     },
                     "openai": {
                         "enabled": True,
@@ -135,6 +140,7 @@ class ArgusConfig:
                         "streaming": False,
                         "context_window": 128000,
                         "capabilities": ["chat"],
+                        "task_tags": ["general", "coding", "reasoning", "tool_use", "creative"],
                     },
                     "anthropic": {
                         "enabled": True,
@@ -144,6 +150,7 @@ class ArgusConfig:
                         "streaming": False,
                         "context_window": 200000,
                         "capabilities": ["chat"],
+                        "task_tags": ["general", "coding", "reasoning", "tool_use", "creative"],
                     },
                 },
             },

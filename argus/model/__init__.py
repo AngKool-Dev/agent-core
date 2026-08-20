@@ -10,7 +10,9 @@ from .providers.gemini import GeminiProvider
 from .providers.openrouter import OpenRouterProvider
 from .providers.groq import GroqProvider
 from .providers.cerebras import CerebrasProvider
-from .hub import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+from .hub import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy, TaskClassifier
+from .credentials import CredentialManager
+from .usage import UsageEntry, UsageTracker
 
 __all__ = [
     "Message",
@@ -35,4 +37,8 @@ __all__ = [
     "ProviderRegistry",
     "ProviderState",
     "Strategy",
+    "TaskClassifier",
+    "CredentialManager",
+    "UsageEntry",
+    "UsageTracker",
 ]

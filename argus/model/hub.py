@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from .provider import Message, ModelProvider, ModelResponse, ToolCall
+from .usage import UsageEntry
 
 
 class Strategy(str, Enum):
@@ -15,6 +16,41 @@ class Strategy(str, Enum):
     QUALITY_FIRST = "quality_first"
     MANUAL = "manual"
     LOCAL_FIRST = "local_first"
+    CAPABILITY_FIRST = "capability_first"
+
+
+TASK_TAGS = {
+    "general": ["what", "how", "why", "explain", "describe", "summarize", "list"],
+    "coding": ["fix", "bug", "error", "compile", "refactor", "implement", "code", "function", "class", "debug"],
+    "reasoning": ["analyze", "review", "design", "architecture", "complex", "plan", "strategy"],
+    "tool_use": ["run", "execute", "test", "build", "deploy", "bash", "command"],
+    "creative": ["write", "generate", "create", "draft", "compose"],
+}
+
+
+class TaskClassifier:
+    @staticmethod
+    def classify(request: str) -> List[str]:
+        request_lower = request.lower()
+        tags = []
+        for tag, keywords in TASK_TAGS.items():
+            if any(kw in request_lower for kw in keywords):
+                tags.append(tag)
+        if not tags:
+            tags.append("general")
+        return tags
+
+    @staticmethod
+    def requires_tool_calling(request: str) -> bool:
+        request_lower = request.lower()
+        tool_keywords = ["run", "execute", "test", "build", "bash", "command", "fix", "refactor", "deploy"]
+        return any(kw in request_lower for kw in tool_keywords)
+
+    @staticmethod
+    def requires_large_context(request: str) -> bool:
+        request_lower = request.lower()
+        large_keywords = ["entire", "whole", "all files", "module", "refactor", "review", "migrate"]
+        return any(kw in request_lower for kw in large_keywords)
 
 
 @dataclass
@@ -29,6 +65,7 @@ class ProviderCapability:
     available: bool = True
     rate_limit: Optional[str] = None
     reset_info: Optional[str] = None
+    task_tags: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -114,12 +151,14 @@ class ModelRouter(ModelProvider):
         strategy: Strategy = Strategy.FREE_FIRST,
         budget: Optional[Budget] = None,
         preferred_model: Optional[str] = None,
+        usage_tracker: Optional[Any] = None,
     ) -> None:
         self._registry = registry
         self._strategy = strategy
         self._budget = budget or Budget()
         self._preferred_model = preferred_model
         self._last_used: Optional[str] = None
+        self._usage_tracker = usage_tracker
 
     @property
     def strategy(self) -> Strategy:
@@ -144,10 +183,11 @@ class ModelRouter(ModelProvider):
         messages: List[Message],
         model: Optional[str] = None,
         tools: Optional[List[Dict[str, Any]]] = None,
+        request: Optional[str] = None,
         **kwargs,
     ) -> ModelResponse:
         target_model = model or self._preferred_model
-        state = self._select_provider(target_model)
+        state = self._select_provider(target_model, request=request)
         if not state or not state.provider:
             raise RuntimeError("No available model provider")
 
@@ -156,14 +196,16 @@ class ModelRouter(ModelProvider):
             response = state.provider.complete(messages=messages, model=target_model or "", tools=tools, **kwargs)
             self._registry.mark_success(provider_name)
             self._last_used = provider_name
+            self._record_usage(provider_name, target_model or "", response, True)
             return response
         except Exception as e:
             self._registry.mark_failure(provider_name, str(e))
+            self._record_usage(provider_name, target_model or "", None, False, str(e))
             raise
 
-    def stream(self, messages: List[Message], model: Optional[str] = None, **kwargs):
+    def stream(self, messages: List[Message], model: Optional[str] = None, request: Optional[str] = None, **kwargs):
         target_model = model or self._preferred_model
-        state = self._select_provider(target_model)
+        state = self._select_provider(target_model, request=request)
         if not state or not state.provider:
             raise RuntimeError("No available model provider")
         provider_name = state.capability.name
@@ -176,7 +218,23 @@ class ModelRouter(ModelProvider):
             self._registry.mark_failure(provider_name, str(e))
             raise
 
-    def _select_provider(self, target_model: Optional[str]) -> Optional[ProviderState]:
+    def _record_usage(self, provider: str, model: str, response: Optional[ModelResponse], success: bool, error: Optional[str] = None) -> None:
+        if not self._usage_tracker:
+            return
+        tokens = 0
+        if response and response.usage:
+            tokens = response.usage.get("total_tokens", 0)
+        entry = UsageEntry(
+            provider=provider,
+            model=model,
+            timestamp=time.time(),
+            tokens=tokens,
+            success=success,
+            error=error,
+        )
+        self._usage_tracker.record(entry)
+
+    def _select_provider(self, target_model: Optional[str], request: Optional[str] = None) -> Optional[ProviderState]:
         allow_paid = self._budget.allow_paid
         states = self._registry.list_states()
 
@@ -193,6 +251,25 @@ class ModelRouter(ModelProvider):
         candidates = [s for s in states if self._registry.available(s.capability.name, allow_paid)]
         if not candidates:
             return None
+
+        if self._strategy == Strategy.CAPABILITY_FIRST and request:
+            task_tags = TaskClassifier.classify(request)
+            scored = []
+            for state in candidates:
+                score = 0
+                for tag in task_tags:
+                    if tag in state.capability.task_tags:
+                        score += 10
+                if TaskClassifier.requires_tool_calling(request) and not state.capability.tool_calling:
+                    score -= 20
+                if TaskClassifier.requires_large_context(request) and state.capability.context_window < 32000:
+                    score -= 10
+                scored.append((score, state))
+            scored.sort(key=lambda x: x[0], reverse=True)
+            return scored[0][1] if scored else None
+
+        if self._strategy == Strategy.CAPABILITY_FIRST:
+            return self._pick_best(candidates, target_model)
 
         if self._strategy == Strategy.LOCAL_FIRST:
             local = [s for s in candidates if s.capability.name == "ollama"]

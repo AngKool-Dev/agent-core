@@ -64,7 +64,7 @@ def create_model_from_config(config: Dict[str, Any]) -> ModelProvider:
     return create_provider(provider_type, **kwargs)
 
 
-def create_router_from_config(config: Dict[str, Any]) -> ModelRouter:
+def create_router_from_config(config: Dict[str, Any], usage_tracker: Optional[Any] = None) -> ModelRouter:
     registry = ProviderRegistry()
 
     providers_config = config.get("providers", {})
@@ -96,6 +96,7 @@ def create_router_from_config(config: Dict[str, Any]) -> ModelRouter:
             available=pconfig.get("available", True),
             rate_limit=pconfig.get("rate_limit"),
             reset_info=pconfig.get("reset_info"),
+            task_tags=pconfig.get("task_tags", []),
         )
 
         registry.register(ProviderState(capability=capability, provider=provider))
@@ -108,4 +109,4 @@ def create_router_from_config(config: Dict[str, Any]) -> ModelRouter:
     )
 
     preferred_model = config.get("preferred_model")
-    return ModelRouter(registry=registry, strategy=strategy, budget=budget, preferred_model=preferred_model)
+    return ModelRouter(registry=registry, strategy=strategy, budget=budget, preferred_model=preferred_model, usage_tracker=usage_tracker)

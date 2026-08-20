@@ -404,6 +404,7 @@ class ArgusAgent:
             messages=messages,
             model=model_name,
             tools=context.get("available_tools", []),
+            request=request,
         )
 
         text, tool_calls = parse_model_output(response.content)
