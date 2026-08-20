@@ -1895,3 +1895,236 @@ class TestProjectIntelligence:
         profile = discover_project_context(str(tmp_path))
         assert "javascript" in profile.languages
         assert profile.test_command is None
+
+
+class TestModelProviderHub:
+    def test_provider_registry_register_and_list(self):
+        from argus.model import ProviderCapability, ProviderRegistry, ProviderState
+
+        registry = ProviderRegistry()
+        cap = ProviderCapability(name="openrouter", models=["model-a"], free=True)
+        registry.register(ProviderState(capability=cap))
+        assert len(registry.list_capabilities()) == 1
+        assert registry.get("openrouter") is not None
+
+    def test_provider_registry_marks_failure_and_cooldown(self):
+        from argus.model import ProviderCapability, ProviderRegistry, ProviderState
+
+        registry = ProviderRegistry()
+        cap = ProviderCapability(name="groq", models=["model-a"], free=True)
+        registry.register(ProviderState(capability=cap))
+
+        registry.mark_failure("groq", "rate limited", cooldown_seconds=10)
+        state = registry.get("groq")
+        assert state.consecutive_failures == 1
+        assert state.last_error == "rate limited"
+        assert state.cooldown_until > 0
+
+    def test_provider_registry_marks_success_clears_cooldown(self):
+        from argus.model import ProviderCapability, ProviderRegistry, ProviderState
+
+        registry = ProviderRegistry()
+        cap = ProviderCapability(name="openrouter", models=["model-a"], free=True)
+        registry.register(ProviderState(capability=cap))
+
+        registry.mark_failure("openrouter", "error", cooldown_seconds=10)
+        registry.mark_success("openrouter")
+        state = registry.get("openrouter")
+        assert state.consecutive_failures == 0
+        assert state.cooldown_until == 0
+
+    def test_provider_registry_availability_checks_cooldown(self):
+        from argus.model import ProviderCapability, ProviderRegistry, ProviderState
+
+        registry = ProviderRegistry()
+        cap = ProviderCapability(name="ollama", models=["llama3"], free=True)
+        registry.register(ProviderState(capability=cap))
+
+        registry.mark_failure("ollama", cooldown_seconds=9999)
+        assert registry.available("ollama", allow_paid=True) is False
+
+    def test_budget_blocks_paid_when_disallowed(self):
+        from argus.model import Budget
+
+        budget = Budget(allow_paid=False, daily_limit=10.0)
+        assert budget.can_spend(1.0) is False
+        assert budget.can_spend(0.0) is True
+
+    def test_budget_tracks_spending(self):
+        from argus.model import Budget
+
+        budget = Budget(allow_paid=True, daily_limit=1.0)
+        assert budget.can_spend(0.5) is True
+        budget.record_spend(0.5)
+        assert budget.remaining() == 0.5
+        assert budget.can_spend(0.6) is False
+
+    def test_router_free_first_selects_free_provider(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+
+        registry = ProviderRegistry()
+        free_cap = ProviderCapability(name="openrouter", models=["model-a"], free=True)
+        paid_cap = ProviderCapability(name="openai", models=["gpt-4o"], free=False)
+        registry.register(ProviderState(capability=free_cap))
+        registry.register(ProviderState(capability=paid_cap))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.FREE_FIRST, budget=Budget(allow_paid=False))
+        state = router._select_provider(None)
+        assert state is not None
+        assert state.capability.name == "openrouter"
+
+    def test_router_blocks_paid_when_budget_disallows(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+
+        registry = ProviderRegistry()
+        paid_cap = ProviderCapability(name="openai", models=["gpt-4o"], free=False)
+        registry.register(ProviderState(capability=paid_cap))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.FREE_FIRST, budget=Budget(allow_paid=False))
+        state = router._select_provider(None)
+        assert state is None
+
+    def test_router_local_first_prefers_local(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+
+        registry = ProviderRegistry()
+        remote_cap = ProviderCapability(name="openrouter", models=["model-a"], free=True)
+        local_cap = ProviderCapability(name="ollama", models=["llama3"], free=True)
+        registry.register(ProviderState(capability=remote_cap))
+        registry.register(ProviderState(capability=local_cap))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.LOCAL_FIRST)
+        state = router._select_provider(None)
+        assert state.capability.name == "ollama"
+
+    def test_router_manual_uses_last_successful_provider(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+
+        registry = ProviderRegistry()
+        cap = ProviderCapability(name="openrouter", models=["model-a"], free=True)
+        registry.register(ProviderState(capability=cap))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.MANUAL)
+        router._last_used = "openrouter"
+        state = router._select_provider(None)
+        assert state.capability.name == "openrouter"
+
+    def test_router_marks_failure_on_exception(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+        from unittest.mock import MagicMock
+
+        registry = ProviderRegistry()
+        cap = ProviderCapability(name="openrouter", models=["model-a"], free=True)
+        provider = MagicMock()
+        provider.complete.side_effect = RuntimeError("boom")
+        registry.register(ProviderState(capability=cap, provider=provider))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.FREE_FIRST)
+        try:
+            router.complete(messages=[])
+        except RuntimeError:
+            pass
+
+        state = registry.get("openrouter")
+        assert state.consecutive_failures == 1
+        assert state.last_error == "boom"
+
+    def test_router_marks_success_on_complete(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy, Message, ModelResponse
+        from unittest.mock import MagicMock
+
+        registry = ProviderRegistry()
+        cap = ProviderCapability(name="openrouter", models=["model-a"], free=True)
+        provider = MagicMock()
+        provider.complete.return_value = ModelResponse(content="ok", model="model-a")
+        registry.register(ProviderState(capability=cap, provider=provider))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.FREE_FIRST)
+        response = router.complete(messages=[Message(role="user", content="hi")])
+        assert response.content == "ok"
+        state = registry.get("openrouter")
+        assert state.consecutive_failures == 0
+
+    def test_factory_supports_new_providers(self):
+        from argus.model import create_provider
+
+        for name in ("openrouter", "gemini", "groq", "cerebras"):
+            provider = create_provider(name, api_key="test")
+            assert provider is not None
+
+    def test_create_router_from_config(self):
+        from argus.model import create_router_from_config
+
+        config = {
+            "strategy": "free_first",
+            "budget": {"allow_paid": False, "daily_limit": 0.0},
+            "providers": {
+                "openrouter": {
+                    "enabled": True,
+                    "free": True,
+                    "models": ["model-a"],
+                    "api_key": "test",
+                },
+            },
+        }
+        router = create_router_from_config(config)
+        assert router.strategy.value == "free_first"
+        assert router.budget.allow_paid is False
+
+    def test_router_selects_preferred_model(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+
+        registry = ProviderRegistry()
+        cap_a = ProviderCapability(name="openrouter", models=["model-a", "model-b"], free=True)
+        cap_b = ProviderCapability(name="ollama", models=["model-b"], free=True)
+        registry.register(ProviderState(capability=cap_a))
+        registry.register(ProviderState(capability=cap_b))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.FREE_FIRST, preferred_model="model-b")
+        state = router._select_provider("model-b")
+        assert state is not None
+        assert "model-b" in state.capability.models
+
+    def test_router_balanced_selects_any_available(self):
+        from argus.model import Budget, ModelRouter, ProviderCapability, ProviderRegistry, ProviderState, Strategy
+
+        registry = ProviderRegistry()
+        cap = ProviderCapability(name="openrouter", models=["model-a"], free=True)
+        registry.register(ProviderState(capability=cap))
+
+        router = ModelRouter(registry=registry, strategy=Strategy.BALANCED)
+        state = router._select_provider(None)
+        assert state.capability.name == "openrouter"
+
+    def test_cli_providers_command(self):
+        import sys
+        from unittest.mock import MagicMock
+
+        sys.modules["tomli_w"] = MagicMock()
+        from argus.cli import cmd_providers
+        from argus.config import ArgusConfig
+
+        config = ArgusConfig()
+        assert cmd_providers(config) == 0
+
+    def test_cli_models_command(self):
+        import sys
+        from unittest.mock import MagicMock
+
+        sys.modules["tomli_w"] = MagicMock()
+        from argus.cli import cmd_models
+        from argus.config import ArgusConfig
+
+        config = ArgusConfig()
+        assert cmd_models(config) == 0
+
+    def test_cli_model_command(self):
+        import sys
+        from unittest.mock import MagicMock
+
+        sys.modules["tomli_w"] = MagicMock()
+        from argus.cli import cmd_model
+        from argus.config import ArgusConfig
+
+        config = ArgusConfig()
+        assert cmd_model(config) == 0

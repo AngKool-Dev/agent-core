@@ -4,7 +4,7 @@ import os
 import signal
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from argus.agent import ArgusAgent, ArgusAgentConfig
 from argus.commands import build_registry
@@ -107,6 +107,10 @@ class ArgusREPL:
         return paths
 
     def _build_model(self):
+        router = self._build_router()
+        if router:
+            return router
+
         model_config = {
             "provider": self.config.get("model.provider", "ollama"),
             "name": self.config.get("model.name", "llama3"),
@@ -116,6 +120,15 @@ class ArgusREPL:
         if self.config.get("model.base_url"):
             model_config["base_url"] = self.config.get("model.base_url")
         return create_model_from_config(model_config)
+
+    def _build_router(self):
+        hub_config = self.config.get("model_hub", {})
+        if not hub_config:
+            return None
+        try:
+            return create_router_from_config(hub_config)
+        except Exception:
+            return None
 
     def _permission_prompt(self, prompt: str, tool: str) -> bool:
         print(f"\n[PERMISSION] {prompt}")
