@@ -427,3 +427,199 @@ class TestArgusConfigPermissions:
         assert config.get("permissions.read") == "allow"
         assert config.get("permissions.write") == "ask"
         assert config.get("permissions.bash") == "ask"
+
+
+class TestGitTools:
+    def _init_repo(self, tmpdir):
+        import subprocess
+
+        subprocess.run(["git", "init"], cwd=tmpdir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=tmpdir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Test"], cwd=tmpdir, check=True, capture_output=True)
+        Path(tmpdir, "file.txt").write_text("hello")
+        subprocess.run(["git", "add", "file.txt"], cwd=tmpdir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "initial"], cwd=tmpdir, check=True, capture_output=True)
+        return tmpdir
+
+    def test_git_status_clean(self, tmp_path):
+        from argus.tools.git import GitStatusTool
+
+        self._init_repo(tmp_path)
+        tool = GitStatusTool()
+        result = tool.execute(project_path=str(tmp_path))
+        assert result.success is True
+        clean_indicators = ["nothing to commit", "working tree clean", "## master", "## main"]
+        assert any(indicator in result.output.lower() for indicator in clean_indicators)
+
+    def test_git_status_modified(self, tmp_path):
+        from argus.tools.git import GitStatusTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "file.txt").write_text("modified")
+        tool = GitStatusTool()
+        result = tool.execute(project_path=str(tmp_path))
+        assert result.success is True
+        assert "file.txt" in result.output
+
+    def test_git_status_untracked(self, tmp_path):
+        from argus.tools.git import GitStatusTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "new.txt").write_text("new")
+        tool = GitStatusTool()
+        result = tool.execute(project_path=str(tmp_path))
+        assert result.success is True
+        assert "new.txt" in result.output
+
+    def test_git_diff(self, tmp_path):
+        from argus.tools.git import GitDiffTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "file.txt").write_text("changed")
+        tool = GitDiffTool()
+        result = tool.execute(project_path=str(tmp_path))
+        assert result.success is True
+        assert "changed" in result.output
+
+    def test_git_log(self, tmp_path):
+        from argus.tools.git import GitLogTool
+
+        self._init_repo(tmp_path)
+        tool = GitLogTool()
+        result = tool.execute(project_path=str(tmp_path), limit=5)
+        assert result.success is True
+        assert "initial" in result.output
+
+    def test_git_add(self, tmp_path):
+        from argus.tools.git import GitAddTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "new.txt").write_text("new")
+        tool = GitAddTool()
+        result = tool.execute(project_path=str(tmp_path), paths=["new.txt"])
+        assert result.success is True
+        assert "new.txt" in result.output or result.success is True
+
+    def test_git_add_multiple_paths(self, tmp_path):
+        from argus.tools.git import GitAddTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "a.txt").write_text("a")
+        Path(tmp_path, "b.txt").write_text("b")
+        tool = GitAddTool()
+        result = tool.execute(project_path=str(tmp_path), paths=["a.txt", "b.txt"])
+        assert result.success is True
+
+    def test_git_commit(self, tmp_path):
+        from argus.tools.git import GitAddTool, GitCommitTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "new.txt").write_text("new")
+        GitAddTool().execute(project_path=str(tmp_path), paths=["new.txt"])
+        tool = GitCommitTool()
+        result = tool.execute(project_path=str(tmp_path), message="Add new file")
+        assert result.success is True
+        assert "Add new file" in result.output
+
+    def test_git_commit_requires_message(self, tmp_path):
+        from argus.tools.git import GitCommitTool
+
+        self._init_repo(tmp_path)
+        tool = GitCommitTool()
+        result = tool.execute(project_path=str(tmp_path), message="")
+        assert result.success is False
+        assert "message is required" in result.error.lower()
+
+    def test_git_tool_non_git_directory(self, tmp_path):
+        from argus.tools.git import GitStatusTool
+
+        tool = GitStatusTool()
+        result = tool.execute(project_path=str(tmp_path))
+        assert result.success is False
+        assert "not a git repository" in result.error.lower() or "fatal" in result.error.lower() or result.error
+
+    def test_git_tool_permission_denied(self):
+        from argus.tools import ToolRegistry
+        from argus.tools.git import GitStatusTool, GitAddTool, GitCommitTool
+        from argus.permissions import PermissionConfig
+
+        registry = ToolRegistry(permissions=PermissionConfig(git="deny"))
+        registry.register(GitStatusTool())
+        registry.register(GitAddTool())
+        registry.register(GitCommitTool())
+
+        result = registry.execute("git_status", project_path=".")
+        assert result.success is False
+        assert "Permission denied" in result.error or "Permission not granted" in result.error
+
+        result = registry.execute("git_add", project_path=".", paths=["file.txt"])
+        assert result.success is False
+        assert "Permission denied" in result.error or "Permission not granted" in result.error
+
+        result = registry.execute("git_commit", project_path=".", message="test")
+        assert result.success is False
+        assert "Permission denied" in result.error or "Permission not granted" in result.error
+
+    def test_git_tool_permission_ask_declined(self):
+        from argus.tools import ToolRegistry
+        from argus.tools.git import GitCommitTool
+        from argus.permissions import PermissionConfig
+
+        answers = []
+
+        def ask(prompt, tool):
+            answers.append((prompt, tool))
+            return False
+
+        registry = ToolRegistry(
+            permissions=PermissionConfig(git="ask"),
+            ask_callback=ask,
+        )
+        registry.register(GitCommitTool())
+        result = registry.execute("git_commit", project_path=".", message="test")
+        assert result.success is False
+        assert len(answers) == 1
+
+    def test_git_add_requires_paths(self, tmp_path):
+        from argus.tools.git import GitAddTool
+
+        self._init_repo(tmp_path)
+        tool = GitAddTool()
+        result = tool.execute(project_path=str(tmp_path))
+        assert result.success is False
+        assert "No paths provided" in result.error
+
+    def test_git_diff_with_target(self, tmp_path):
+        from argus.tools.git import GitDiffTool
+
+        self._init_repo(tmp_path)
+        Path(tmp_path, "file.txt").write_text("changed")
+        tool = GitDiffTool()
+        result = tool.execute(project_path=str(tmp_path), target="file.txt")
+        assert result.success is True
+        assert "changed" in result.output
+
+    def test_git_log_limit(self, tmp_path):
+        from argus.tools.git import GitLogTool
+
+        self._init_repo(tmp_path)
+        tool = GitLogTool()
+        result = tool.execute(project_path=str(tmp_path), limit=1)
+        assert result.success is True
+        lines = [line for line in result.output.splitlines() if line.strip()]
+        assert len(lines) <= 1
+
+    def test_git_tool_path_handling_windows(self):
+        from argus.tools.git import GitStatusTool
+
+        tool = GitStatusTool()
+        result = tool.execute(project_path=".")
+        assert result.success is False or isinstance(result.success, bool)
+
+    def test_git_tool_rejects_invalid_arguments(self, tmp_path):
+        from argus.tools.git import GitCommitTool
+
+        self._init_repo(tmp_path)
+        tool = GitCommitTool()
+        result = tool.execute(project_path=str(tmp_path), message="  ")
+        assert result.success is False

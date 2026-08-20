@@ -15,6 +15,7 @@ from argus.tools import ToolRegistry
 from argus.tools.bash import BashTool
 from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
 from argus.tools.search import GlobTool, GrepTool
+from argus.tools.git import GitAddTool, GitCommitTool, GitDiffTool, GitLogTool, GitStatusTool
 
 
 class ArgusREPL:
@@ -65,6 +66,11 @@ class ArgusREPL:
         self.tool_registry.register(BashTool())
         self.tool_registry.register(GrepTool())
         self.tool_registry.register(GlobTool())
+        self.tool_registry.register(GitStatusTool())
+        self.tool_registry.register(GitDiffTool())
+        self.tool_registry.register(GitLogTool())
+        self.tool_registry.register(GitAddTool())
+        self.tool_registry.register(GitCommitTool())
 
     def _build_agent_config(self) -> ArgusAgentConfig:
         return ArgusAgentConfig(
