@@ -189,3 +189,84 @@ class TestToolRegistry:
         tools = registry.list_tools()
         assert len(tools) >= 1
         assert any(t["name"] == "read_file" for t in tools)
+
+
+class TestArgusAgent:
+    def test_agent_initialization(self):
+        from argus.agent import ArgusAgent
+
+        agent = ArgusAgent(project_path=".")
+        assert agent.project_path is not None
+        assert agent.config is not None
+
+    def test_agent_execute_returns_result(self):
+        from argus.agent import ArgusAgent
+
+        agent = ArgusAgent(project_path=".")
+        result = agent.execute("hello")
+        assert "request" in result
+        assert result["request"] == "hello"
+        assert "status" in result
+
+    def test_agent_status_after_execute(self):
+        from argus.agent import ArgusAgent
+
+        agent = ArgusAgent(project_path=".")
+        agent.execute("test")
+        status = agent.status()
+        assert "status" in status
+        assert status["tools_used"] >= 0
+
+
+class TestArgusContext:
+    def test_discover_project_context(self):
+        from argus.context import discover_project_context
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            Path(tmpdir, "pyproject.toml").touch()
+            ctx = discover_project_context(tmpdir)
+            assert ctx.path is not None
+            assert ctx.name is not None
+            assert ctx.language == "python"
+
+    def test_conversation_context(self):
+        from argus.context import ConversationContext
+
+        conv = ConversationContext()
+        conv.add_user("hello")
+        conv.add_assistant("world")
+        history = conv.history()
+        assert len(history) == 2
+        assert history[0].role == "user"
+        assert history[1].role == "assistant"
+
+    def test_file_helpers(self):
+        from argus.context import read_file, write_file, list_dir
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            test_file = Path(tmpdir) / "test.txt"
+            write_file(str(test_file), "hello")
+            content = read_file(str(test_file))
+            assert "hello" in content
+            entries = list_dir(tmpdir)
+            assert any("test.txt" in e for e in entries)
+
+
+class TestArgusModel:
+    def test_openai_provider_interface(self):
+        from argus.model.openai import OpenAIProvider
+
+        provider = OpenAIProvider(api_key="test-key")
+        assert provider is not None
+
+    def test_ollama_provider_interface(self):
+        from argus.model.ollama import OllamaProvider
+
+        provider = OllamaProvider()
+        assert provider is not None
+
+    def test_create_provider_factory(self):
+        from argus.model import create_provider
+
+        provider = create_provider("ollama")
+        assert provider is not None

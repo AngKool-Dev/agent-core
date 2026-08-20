@@ -5,14 +5,14 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from .agent import ArgusAgent
-from .commands import CommandContext
-from .config import ArgusConfig
-from .session import SessionManager
-from .tools import ToolRegistry
-from .tools.bash import BashTool
-from .tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
-from .tools.search import GlobTool, GrepTool
+from argus.agent import ArgusAgent, ArgusAgentConfig
+from argus.commands import build_registry
+from argus.config import ArgusConfig
+from argus.session import SessionManager
+from argus.tools import ToolRegistry
+from argus.tools.bash import BashTool
+from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
+from argus.tools.search import GlobTool, GrepTool
 
 
 class ArgusREPL:
@@ -30,14 +30,14 @@ class ArgusREPL:
         self.session_manager = SessionManager(
             self.config.get("memory.session_location", "~/.agentcore/sessions")
         )
-        self.session: Optional = None
+        self.session = None
 
         self.agent = ArgusAgent(
             project_path=self.project_path,
             config=self._build_agent_config(),
         )
 
-        self.commands = CommandContext(self)
+        self.commands = build_registry()
         self._running = False
 
     def _register_tools(self) -> None:
@@ -49,13 +49,11 @@ class ArgusREPL:
         self.tool_registry.register(GrepTool())
         self.tool_registry.register(GlobTool())
 
-    def _build_agent_config(self):
-        from agentcore import AgentConfig
-
-        return AgentConfig(
+    def _build_agent_config(self) -> ArgusAgentConfig:
+        return ArgusAgentConfig(
             max_iterations=self.config.get("agent.max_iterations", 10),
-            max_tools=self.config.get("agent.max_tools", 20),
-            timeout=self.config.get("agent.timeout_seconds", 300),
+            max_tool_calls=self.config.get("agent.max_tools", 20),
+            max_runtime_seconds=self.config.get("agent.timeout_seconds", 300),
         )
 
     def run(self) -> int:
@@ -66,7 +64,7 @@ class ArgusREPL:
             default_name = f"session-{self.project_path.name}"
             self.session = self.session_manager.create(default_name, str(self.project_path))
 
-        print(f"Argus v0.1.0 — Type /help for commands, /agent <request> to run the agent")
+        print("Argus v0.1.0 — Type /help for commands, /agent <request> to run the agent")
         print(f"Project: {self.project_path}")
         print(f"Session: {self.session.name}")
         print()
@@ -104,10 +102,9 @@ class ArgusREPL:
         parts = line[1:].split()
         if not parts:
             return ""
-
         command = parts[0]
         args = parts[1:]
-        return self.commands.handle(command, args)
+        return self.commands.handle(command, self, args)
 
     def _handle_message(self, message: str) -> None:
         self.session.add_message("user", message)
@@ -124,14 +121,10 @@ class ArgusREPL:
 
     def _format_result(self, result: Dict[str, Any]) -> str:
         lines = []
-        task = result.get("task", {})
-        status = result.get("status", {})
-
-        lines.append(f"Task: {task.get('task_id', 'N/A')}")
-        lines.append(f"State: {task.get('current_state', 'N/A')}")
-        lines.append(f"Skills: {', '.join(task.get('selected_skills', [])) or 'None'}")
-        lines.append(f"Tools used: {task.get('tools_used', 0)}")
-        lines.append(f"Iterations: {task.get('iterations', 0)}")
+        lines.append(f"Task: {result.get('task_id', 'N/A')}")
+        lines.append(f"State: {result.get('status', 'N/A')}")
+        lines.append(f"Iterations: {result.get('iterations', 0)}")
+        lines.append(f"Tools used: {result.get('tools_used', 0)}")
 
         verification = result.get("verification", {})
         if verification.get("format_check"):
