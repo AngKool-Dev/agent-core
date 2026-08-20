@@ -928,3 +928,55 @@ class TestArgusMemory:
         agent.memory = ArgusMemory()
         context = agent._build_context("hello", {"observations": [], "tool_results": [], "plan": [{"action": "investigate"}]})
         assert context["memory_context"] == ""
+
+
+class TestArgusEndToEnd:
+    def test_skill_routing_integration(self):
+        from argus.agent import ArgusAgent
+        from argus.skills import SkillRegistry, Skill
+        from unittest.mock import MagicMock
+
+        skill_registry = SkillRegistry(skill_paths=[])
+        skill_registry.register(Skill(name="debugging", description="Debug", triggers=["bug", "crash", "error"]))
+        skill_registry.register(Skill(name="testing", description="Test", triggers=["test", "pytest"]))
+
+        mock_memory = MagicMock()
+        mock_memory.search.return_value = []
+        mock_memory.retrieve_relevant_memory.return_value = ""
+
+        agent = ArgusAgent(project_path=".", memory=mock_memory, skill_paths=[])
+        agent._skill_registry = skill_registry
+        agent._skill_router = type("S", (), {"route": lambda self, req, ctx: skill_registry._route_deterministic(req, ctx)})()
+        agent._skill_router.route = lambda req, ctx: skill_registry._route_deterministic(req, ctx)
+
+        active = agent.route_skills("Fix the failing tests and debug the error")
+        assert any(s.name == "testing" for s in active)
+        assert any(s.name == "debugging" for s in active)
+
+    def test_task_execution_uses_tools(self):
+        from argus.agent import ArgusAgent
+        from unittest.mock import MagicMock
+
+        mock_memory = MagicMock()
+        mock_memory.search.return_value = []
+        mock_memory.retrieve_relevant_memory.return_value = ""
+        mock_memory.list.return_value = []
+
+        agent = ArgusAgent(project_path="D:/agent-core", memory=mock_memory)
+        result = agent.execute("List the files in the project root")
+        assert result["status"] == "COMPLETED"
+        assert result["tools_used"] > 0
+
+    def test_memory_retrieval_in_context(self):
+        from argus.agent import ArgusAgent
+        from unittest.mock import MagicMock
+
+        mock_memory = MagicMock()
+        mock_memory.retrieve_relevant_memory.return_value = "Past: Fixed authentication bug"
+        agent = ArgusAgent(project_path=".", memory=mock_memory)
+        context = agent._build_context("What did we learn about auth?", {
+            "observations": [],
+            "tool_results": [],
+            "plan": [{"action": "investigate"}]
+        })
+        assert "Fixed authentication bug" in context["memory_context"]

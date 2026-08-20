@@ -299,7 +299,10 @@ class ArgusAgent:
             "project_context": self._project_context.to_dict(),
             "conversation": self._conversation.to_list(),
             "available_tools": self._tool_registry.list_tools(),
-            "recent_tool_results": [tr.to_dict() for tr in results.get("tool_results", [])[-5:]],
+            "recent_tool_results": [
+                tr.to_dict() if hasattr(tr, "to_dict") else tr
+                for tr in results.get("tool_results", [])[-5:]
+            ],
             "recent_observations": recent_observations,
             "current_step": results.get("plan", [{}])[0].get("action", "investigate"),
             "active_skills": [s.to_dict() for s in active_skills],
@@ -415,7 +418,7 @@ class ArgusAgent:
                     "complete": False,
                     "response": "Exploring project structure...",
                     "tool_calls": [
-                        ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, call_id="1").to_dict()
+                        ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, thought="").to_dict()
                     ],
                 }
             if "read_file" not in recent_tools:
@@ -425,7 +428,7 @@ class ArgusAgent:
                         "complete": False,
                         "response": "Reading README...",
                         "tool_calls": [
-                            ToolCall(tool="read_file", arguments={"path": str(self.project_path / "README.md")}, call_id="1").to_dict()
+                            ToolCall(tool="read_file", arguments={"path": str(self.project_path / "README.md")}, thought="").to_dict()
                         ],
                     }
             return {"complete": False, "response": "Investigation complete", "tool_calls": []}
@@ -436,7 +439,7 @@ class ArgusAgent:
                     "complete": False,
                     "response": "Searching for error patterns...",
                     "tool_calls": [
-                        ToolCall(tool="grep", arguments={"pattern": "panic|crash|error|traceback", "path": str(self.project_path)}, call_id="1").to_dict()
+                        ToolCall(tool="grep", arguments={"pattern": "panic|crash|error|traceback", "path": str(self.project_path)}, thought="").to_dict()
                     ],
                 }
             if "read_file" not in recent_tools:
@@ -444,7 +447,7 @@ class ArgusAgent:
                     "complete": False,
                     "response": "Reading target file...",
                     "tool_calls": [
-                        ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, call_id="1").to_dict()
+                        ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, thought="").to_dict()
                     ],
                 }
             return {
@@ -459,7 +462,7 @@ class ArgusAgent:
                     "complete": False,
                     "response": "Running tests...",
                     "tool_calls": [
-                        ToolCall(tool="bash", arguments={"command": "pytest || cargo test || npm test", "cwd": str(self.project_path)}, call_id="1").to_dict()
+                        ToolCall(tool="bash", arguments={"command": "pytest || cargo test || npm test", "cwd": str(self.project_path)}, thought="").to_dict()
                     ],
                 }
             return {"complete": True, "response": "Verification complete", "tool_calls": []}
@@ -469,18 +472,25 @@ class ArgusAgent:
                 "complete": False,
                 "response": "Investigating bug...",
                 "tool_calls": [
-                    ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, call_id="1").to_dict()
+                            ToolCall(tool="list_dir", arguments={"path": str(self.project_path)}, thought="").to_dict()
                 ],
             }
 
         return {"complete": True, "response": f"Processed request: {request}", "tool_calls": []}
 
-    def _execute_tool_call(self, tool_call: ToolCall) -> ToolResult:
+    def _execute_tool_call(self, tool_call) -> ToolResult:
+        if isinstance(tool_call, dict):
+            tool_name = tool_call.get("tool") or tool_call.get("tool_name") or ""
+            arguments = tool_call.get("arguments", {})
+        else:
+            tool_name = tool_call.tool
+            arguments = tool_call.arguments
+
         self._tools_used += 1
-        self._status(f"Running {tool_call.tool}...")
-        result = self._tool_registry.execute(tool_call.tool, **tool_call.arguments)
+        self._status(f"Running {tool_name}...")
+        result = self._tool_registry.execute(tool_name, **arguments)
         status = "success" if result.success else "failed"
-        self._status(f"Tool {tool_call.tool} {status}")
+        self._status(f"Tool {tool_name} {status}")
         return result
 
     def _next_step(self, plan: List["PlanStep"], completed: set) -> Optional["PlanStep"]:
