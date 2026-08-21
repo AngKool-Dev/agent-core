@@ -1,25 +1,98 @@
-"""Argus interactive REPL."""
+"""Argus interactive REPL with polished terminal UX."""
+
+from __future__ import annotations
 
 import os
 import signal
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
+
+from prompt_toolkit import print_formatted_text
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.shortcuts import PromptSession
+from prompt_toolkit.styles import Style
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.document import Document
 
 from argus.agent import ArgusAgent, ArgusAgentConfig
 from argus.commands import build_registry
 from argus.config import ArgusConfig
-from argus.model import GatewayModelProvider, create_model_from_config
+from argus.model import create_model_from_config
 from argus.model.credentials import CredentialManager
 from argus.model.usage import UsageTracker
+from argus.model.providers.gateway import GatewayModelProvider
 from argus.permissions import PermissionConfig
 from argus.session import SessionManager
 from argus.tools import ToolRegistry
-from argus.tools.bash import BashTool
-from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
-from argus.tools.search import GlobTool, GrepTool
-from argus.tools.git import GitAddTool, GitCommitTool, GitDiffTool, GitLogTool, GitStatusTool, GitWorkflowTool
-from argus.tools.memory import MemoryAddTool, MemorySearchTool
+
+try:
+    from argus.tools.bash import BashTool
+    from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileTool
+    from argus.tools.search import GlobTool, GrepTool
+    from argus.tools.git import GitAddTool, GitCommitTool, GitDiffTool, GitLogTool, GitStatusTool, GitWorkflowTool
+    from argus.tools.memory import MemoryAddTool, MemorySearchTool
+    _TOOLS_AVAILABLE = True
+except Exception:
+    _TOOLS_AVAILABLE = False
+
+
+_ARGUS_COLOR = "#5fb3f7"
+_MUTED_COLOR = "#888888"
+_SUCCESS_COLOR = "#50fa7b"
+_WARN_COLOR = "#ffb86c"
+_ERROR_COLOR = "#ff5555"
+_STATUS_COLOR = "#5fb3f7"
+
+
+def _get_model_display(config: ArgusConfig, credentials: CredentialManager) -> str:
+    gateway_config = config.get("gateway", {})
+    has_gateway = bool(gateway_config and gateway_config.get("base_url"))
+    has_byok = _has_byok_credentials(config, credentials)
+    has_ollama = config.get("model.provider", "ollama") == "ollama"
+
+    if has_byok:
+        provider = config.get("model.provider", "ollama")
+        return f"BYOK | {provider}"
+    if has_gateway:
+        return "Argus Free"
+    if has_ollama:
+        return "Local | Ollama"
+    return "Default"
+
+
+def _has_byok_credentials(config: ArgusConfig, credentials: CredentialManager) -> bool:
+    try:
+        providers = config.get("providers", {})
+        for name, pcfg in providers.items():
+            key = pcfg.get("api_key", "")
+            if key and credentials.get(name) is not None:
+                return True
+    except Exception:
+        pass
+    return False
+
+
+class ArgusCompleter(Completer):
+    """Completer for slash commands and natural language."""
+
+    def __init__(self, commands: List[str]):
+        self._commands = sorted(commands)
+
+    def get_completions(self, document: Document, complete_event):
+        text = document.text_before_cursor
+        if text.startswith("/"):
+            after_slash = text[1:]
+            if " " in after_slash:
+                return
+            partial = after_slash
+            for cmd in self._commands:
+                if cmd.startswith(partial):
+                    yield Completion(
+                        "/" + cmd,
+                        start_position=-len(text),
+                    )
 
 
 class ArgusREPL:
@@ -27,19 +100,21 @@ class ArgusREPL:
         self,
         project_path: Optional[Path] = None,
         config: Optional[ArgusConfig] = None,
+        verbose: bool = False,
     ):
         self.project_path = project_path or Path.cwd()
         self.config = config or ArgusConfig()
+        self.verbose = verbose
         self._credentials = CredentialManager()
         self._usage = UsageTracker()
 
         permissions = PermissionConfig(
             read=self.config.get("permissions.read", "allow"),
             search=self.config.get("permissions.search", "allow"),
-            write=self.config.get("permissions.write", "ask"),
-            bash=self.config.get("permissions.bash", "ask"),
-            git=self.config.get("permissions.git", "ask"),
-            browser=self.config.get("permissions.browser", "ask"),
+write=self.config.get("permissions.write", "allow"),
+            bash=self.config.get("permissions.bash", "allow"),
+            git=self.config.get("permissions.git", "allow"),
+            browser=self.config.get("permissions.browser", "allow"),
         )
 
         self.tool_registry = ToolRegistry(
@@ -53,22 +128,27 @@ class ArgusREPL:
         )
         self.session = None
 
+        self.commands = build_registry()
+        self._running = False
+
         self.agent = ArgusAgent(
             project_path=self.project_path,
             config=self._build_agent_config(),
-            status_callback=self._status_update,
+            status_callback=self._status_callback,
             model=self._build_model(),
             skill_paths=self._build_skill_paths(),
             commit_approval_callback=self._commit_approval_prompt,
+            tool_registry=self.tool_registry,
         )
         self.agent.discover_skills()
 
-        self.commands = build_registry()
-        self._running = False
-        self._last_status = ""
-        self._original_sigint = signal.getsignal(signal.SIGINT)
+        self._history = InMemoryHistory()
+        self._command_completer = ArgusCompleter(list(self.commands._commands.keys()))
+        self._session: Optional[PromptSession] = None
 
     def _register_tools(self) -> None:
+        if not _TOOLS_AVAILABLE:
+            return
         self.tool_registry.register(ReadFileTool())
         self.tool_registry.register(WriteFileTool())
         self.tool_registry.register(EditFileTool())
@@ -100,8 +180,7 @@ class ArgusREPL:
             max_plan_revisions=self.config.get("agent.max_plan_revisions", 2),
         )
 
-    def _build_skill_paths(self):
-        from pathlib import Path
+    def _build_skill_paths(self) -> List[Path]:
         paths = []
         builtin = Path(__file__).parent / "skills" / "builtin"
         if builtin.exists():
@@ -114,10 +193,6 @@ class ArgusREPL:
         return paths
 
     def _build_model(self):
-        router = self._build_router()
-        if router:
-            return router
-
         gateway_config = self.config.get("gateway", {})
         if gateway_config.get("base_url"):
             return GatewayModelProvider(
@@ -132,15 +207,9 @@ class ArgusREPL:
         if self.config.get("model.api_key"):
             model_config["api_key"] = self.config.get("model.api_key")
         if self.config.get("model.base_url"):
-            model_config["base_url"] = self.config.get("model.base_url")
-        return create_model_from_config(model_config)
-
-    def _build_router(self):
-        hub_config = self.config.get("model_hub", {})
-        if not hub_config:
-            return None
+            model_config["base_url"] = config.get("model.base_url")
         try:
-            return create_router_from_config(hub_config, usage_tracker=self._usage)
+            return create_model_from_config(model_config)
         except Exception:
             return None
 
@@ -155,60 +224,108 @@ class ArgusREPL:
         answer = input("Commit these changes? [y/N]: ").strip().lower()
         return answer == "y"
 
-    def _status_update(self, message: str) -> None:
-        self._last_status = message
-        sys.stdout.write(f"\r\033[K> {message}")
-        sys.stdout.flush()
+    def _status_callback(self, message: str) -> None:
+        pass
 
-    def _clear_status(self) -> None:
-        if self._last_status:
-            sys.stdout.write(f"\r\033[K")
-            sys.stdout.flush()
-            self._last_status = ""
+    def _print_header_simple(self) -> None:
+        lines = [
+            "  A   R  U  S   --   AI Coding Agent",
+            "",
+        ]
+        for line in lines:
+            print(line)
+
+    def _print_startup_info(self) -> None:
+        mode_str = _get_model_display(self.config, self._credentials)
+        model_name = self.config.get("model.name", "auto")
+        print()
+        print(f"  Project   {self.project_path}")
+        print(f"  Mode      {mode_str}")
+        print(f"  Model     {model_name}")
+        print()
+        print("  Type /help for commands, or just ask anything.")
+        print()
+
+    def _format_result(self, result: Dict[str, Any]) -> str:
+        from argus.formatter import format_agent_result
+        return format_agent_result(result, self.verbose)
 
     def run(self) -> int:
         self._running = True
-        prompt = self.config.get("repl.prompt", "argus> ")
 
         if not self.session:
             default_name = f"session-{self.project_path.name}"
             self.session = self.session_manager.create(default_name, str(self.project_path))
 
-        print("Argus v0.1.0 — Type /help for commands, /agent <request> to run the agent")
-        print(f"Project: {self.project_path}")
-        print(f"Session: {self.session.name}")
-        print()
+        self._print_header_simple()
+        self._print_startup_info()
+
+        self._use_prompt_toolkit = sys.stdin.isatty() and sys.stdout.isatty()
+
+        if self._use_prompt_toolkit:
+            try:
+                self._session = PromptSession(
+                    completer=self._command_completer,
+                    history=self._history,
+                    complete_while_typing=True,
+                    enable_history_search=True,
+                    complete_event_wait_time=0,
+                )
+            except Exception:
+                self._use_prompt_toolkit = False
 
         while self._running:
             try:
-                try:
-                    self._clear_status()
-                    line = input(prompt)
-                except EOFError:
+                line = self._read_input()
+                if line is None:
                     break
-
-                line = line.strip()
                 if not line:
                     continue
 
                 if line.startswith("/"):
                     response = self._handle_command(line)
                     if response:
-                        print(response)
+                        if self._use_prompt_toolkit:
+                            print_formatted_text(HTML('<style color="' + _SUCCESS_COLOR + '">' + response + '</>'))
+                        else:
+                            print(response)
                 else:
                     self._handle_message(line)
 
             except KeyboardInterrupt:
-                print()
+                if self._use_prompt_toolkit:
+                    print()
+                print(_color_text("[CANCELLED]", _WARN_COLOR))
                 self.agent.cancel()
                 continue
             except SystemExit:
                 break
+            except EOFError:
+                print()
+                break
             except Exception as e:
-                print(f"Error: {e}")
+                if self.verbose:
+                    import traceback
+                    traceback.print_exc()
+                else:
+                    print(_color_text("Error: " + str(e), _ERROR_COLOR))
 
         self.session_manager.save_current()
         return 0
+
+    def _read_input(self) -> Optional[str]:
+        if self._use_prompt_toolkit and self._session:
+            line = self._session.prompt(
+                "│ ",
+                style=Style.from_dict({
+                    "prompt": "ansifg:#5fb3f7",
+                    "continuation": "ansifg:#5fb3f7",
+                }),
+                prompt_default="Ask Argus anything...",
+            )
+        else:
+            line = input("argus> ")
+        return line.strip() if line else ""
 
     def _handle_command(self, line: str) -> str:
         parts = line[1:].split()
@@ -221,61 +338,29 @@ class ArgusREPL:
     def _handle_message(self, message: str) -> None:
         self.session.add_message("user", message)
 
+        if self._use_prompt_toolkit:
+            print_formatted_text(HTML('<style color="' + _STATUS_COLOR + '">Argus:</>'))
+        else:
+            print("Argus:")
         try:
             result = self.agent.execute(message)
-            self._clear_status()
             response = self._format_result(result)
-            print(response)
+            if response:
+                print("  " + response)
             self.session.add_message("assistant", response, result=result)
         except KeyboardInterrupt:
-            self._clear_status()
+            if self._use_prompt_toolkit:
+                print_formatted_text(HTML('<style color="' + _WARN_COLOR + '">  [CANCELLED] Task was interrupted</>'))
+            else:
+                print("  [CANCELLED] Task was interrupted")
             self.agent.cancel()
-            print("\n[CANCELLED] Task was interrupted")
             self.session.add_message("assistant", "Task was cancelled", error="user_cancellation")
         except Exception as e:
-            self._clear_status()
-            error_msg = f"Error: {e}"
-            print(error_msg)
-            self.session.add_message("assistant", error_msg, error=str(e))
-
-    def _format_result(self, result: Dict[str, Any]) -> str:
-        lines = []
-        lines.append(f"Task: {result.get('task_id', 'N/A')}")
-        lines.append(f"State: {result.get('status', 'N/A')}")
-        lines.append(f"Iterations: {result.get('iterations', 0)}")
-        lines.append(f"Tools used: {result.get('tools_used', 0)}")
-
-        plan = result.get("plan", [])
-        if plan:
-            lines.append("Plan:")
-            for step in plan:
-                status = "done" if step.get("completed") else "pending"
-                lines.append(f"  [{status}] {step.get('action')}: {step.get('description')}")
-
-        tool_results = result.get("tool_results", [])
-        if tool_results:
-            lines.append("Recent tool results:")
-            for tr in tool_results[-3:]:
-                status = "ok" if tr.get("success") else "FAIL"
-                lines.append(f"  [{status}] {tr.get('tool')}: {(tr.get('output') or tr.get('error', ''))[:100]}")
-
-        verification = result.get("verification", {})
-        if verification.get("format_check"):
-            status_str = "PASSED" if verification["format_check"].get("passed") else "FAILED"
-            lines.append(f"Format check: {status_str}")
-        if verification.get("build_check"):
-            status_str = "PASSED" if verification["build_check"].get("passed") else "FAILED"
-            lines.append(f"Build check: {status_str}")
-        if verification.get("test_results"):
-            status_str = "PASSED" if verification["test_results"].get("passed") else "FAILED"
-            lines.append(f"Tests: {status_str}")
-
-        if result.get("success"):
-            lines.append("Verification PASSED")
-        else:
-            lines.append("Verification FAILED")
-
-        return "\n".join(lines)
+            if self._use_prompt_toolkit:
+                print_formatted_text(HTML('<style color="' + _ERROR_COLOR + '">  ' + str(e) + '</>'))
+            else:
+                print("  " + str(e))
+            self.session.add_message("assistant", str(e), error=str(e))
 
     def stop(self) -> None:
         self._running = False

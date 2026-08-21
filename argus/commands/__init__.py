@@ -11,7 +11,6 @@ from argus.commands.project import handle as project_handle
 from argus.commands.session import handle as session_handle
 from argus.commands.skills import handle as skills_handle
 from argus.commands.tools import handle as tools_handle
-from argus.commands.skills import handle as skills_handle
 
 
 class CommandRegistry:

@@ -94,6 +94,7 @@ class ArgusAgent:
         model: Optional[ModelProvider] = None,
         skill_paths: Optional[List[Path]] = None,
         commit_approval_callback: Optional[Callable[[str], bool]] = None,
+        tool_registry: Optional[ToolRegistry] = None,
     ):
         self.project_path = Path(project_path) if project_path else Path.cwd()
         self.config = config or ArgusAgentConfig()
@@ -104,8 +105,9 @@ class ArgusAgent:
         self._status_callback = status_callback
         self._model = model
 
-        self._tool_registry = ToolRegistry()
-        self._register_default_tools()
+        self._tool_registry = tool_registry or ToolRegistry()
+        if not tool_registry:
+            self._register_default_tools()
 
         self.memory = ArgusMemory(memory_manager=memory, project_path=self.project_path)
         set_memory_agent(self)
@@ -123,6 +125,7 @@ class ArgusAgent:
         self._no_progress_count: int = 0
         self._last_tool_calls: List[str] = []
         self._cancelled: bool = False
+        self._current_step_action: str = "investigate"
         self._engineering_state: Optional[EngineeringTaskState] = None
 
         self._project_context = discover_project_context(str(self.project_path))
@@ -270,6 +273,8 @@ class ArgusAgent:
         plan_steps = list(plan)
         completed_steps = set()
         current_step = self._next_step(plan_steps, completed_steps)
+        if current_step:
+            self._current_step_action = current_step.action
 
         while self._iterations < self.config.max_iterations:
             elapsed = time.time() - self._start_time
@@ -363,6 +368,8 @@ class ArgusAgent:
                 break
 
             current_step = self._next_step(plan_steps, completed_steps)
+            if current_step:
+                self._current_step_action = current_step.action
             if not current_step and all(s.completed for s in plan_steps):
                 results["status"] = "COMPLETED"
                 results["final_response"] = results.get("final_response") or "Task completed"
@@ -388,7 +395,7 @@ class ArgusAgent:
                 for tr in results.get("tool_results", [])[-5:]
             ],
             "recent_observations": recent_observations,
-            "current_step": results.get("plan", [{}])[0].get("action", "investigate"),
+            "current_step": self._current_step_action or "investigate",
             "active_skills": [s.to_dict() for s in active_skills],
             "skill_instructions": skill_instructions,
             "memory_context": memory_context,
@@ -503,6 +510,13 @@ class ArgusAgent:
         recent_observations = context.get("recent_observations", [])
         user_text = request.lower()
 
+        if "summarize" in context.get("current_step", ""):
+            return {
+                "complete": True,
+                "response": "Task completed.",
+                "tool_calls": [],
+            }
+
         if "investigate" in context.get("current_step", ""):
             if "list_dir" not in recent_tools:
                 return {
@@ -525,6 +539,14 @@ class ArgusAgent:
             return {"complete": False, "response": "Investigation complete", "tool_calls": []}
 
         if "implement" in context.get("current_step", ""):
+            if "write_file" not in recent_tools and "create a file" in user_text:
+                lines = self._extract_file_creation_request(user_text, request)
+                if lines:
+                    return {
+                        "complete": False,
+                        "response": "Creating file...",
+                        "tool_calls": lines,
+                    }
             if "grep" not in recent_tools and any(word in user_text for word in ["fix", "bug", "error"]):
                 return {
                     "complete": False,
@@ -568,6 +590,51 @@ class ArgusAgent:
             }
 
         return {"complete": True, "response": f"Processed request: {request}", "tool_calls": []}
+
+    def _extract_file_creation_request(self, user_text: str, request: str) -> List[Dict[str, Any]]:
+        """Extract file creation instructions from a natural language request."""
+        import re
+        lines = []
+
+        pattern = r'create\s+(?:a\s+)?file\s+(?:called|named|named)\s+([^\s]+)'
+        match = re.search(pattern, user_text)
+        if not match:
+            pattern = r'create\s+([^\s]+\.[^\s]+)'
+            match = re.search(pattern, user_text)
+
+        if match:
+            filename = match.group(1)
+            if not filename.endswith('.py'):
+                filename = filename
+
+            file_path = str(self.project_path / filename)
+
+            content_match = re.search(r'containing\s+(?:a\s+)?(?:program|script|Python\s+program)\s+(?:that\s+)?(.+?)(?:\.|$)', request, re.IGNORECASE | re.DOTALL)
+            if content_match:
+                content_desc = content_match.group(1).strip()
+                if "prints" in content_desc:
+                    print_match = re.search(r'prints\s+(.+)', content_desc, re.IGNORECASE)
+                    if print_match:
+                        print_text = print_match.group(1).strip().rstrip('.').strip()
+                        content = f'print("{print_text}")\n'
+                    else:
+                        content = f'"""{filename}"""\n{content_desc}\n'
+                else:
+                    content = f'"""{filename}"""\n{content_desc}\n'
+            else:
+                lines_match = re.findall(r'-\s*(.+)', request)
+                if lines_match:
+                    content = '\n'.join(lines_match) + '\n'
+                else:
+                    content = f'"""{filename}"""\n'
+
+            lines.append(ToolCall(
+                tool="write_file",
+                arguments={"path": file_path, "content": content},
+                thought="",
+            ).to_dict())
+
+        return lines
 
     def _execute_tool_call(self, tool_call) -> ToolResult:
         if isinstance(tool_call, dict):

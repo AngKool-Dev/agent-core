@@ -1,51 +1,49 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { useState, useEffect } from "react";
+import type { Page, Config, LaunchState } from "../types";
+import Sidebar from "./components/Sidebar";
+import HomePage from "./pages/HomePage";
+import InstancesPage from "./pages/InstancesPage";
+import ModsPage from "./pages/ModsPage";
+import SettingsPage from "./pages/SettingsPage";
+import AccountsPage from "./pages/AccountsPage";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+export default function App() {
+  const [page, setPage] = useState<Page>("home");
+  const [config, setConfig] = useState<Config | null>(null);
+  const [launchState, setLaunchState] = useState<LaunchState>({ status: "idle" });
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+      useEffect(() => {
+    import("./api").then(({ getConfig }) =>
+      getConfig().then(setConfig).catch(console.error)
+    );
+  }, []);
+
+  const refreshConfig = () => {
+    import("./api").then(({ getConfig }) =>
+      getConfig().then(setConfig).catch(console.error)
+    );
+  };
+
+  const renderPage = () => {
+    if (!config) return <div className="loading">Loading...</div>;
+    switch (page) {
+      case "home":
+        return <HomePage config={config} refreshConfig={refreshConfig} launchState={launchState} setLaunchState={setLaunchState} />;
+      case "instances":
+        return <InstancesPage config={config} refreshConfig={refreshConfig} launchState={launchState} setLaunchState={setLaunchState} />;
+      case "mods":
+        return <ModsPage config={config} />;
+      case "settings":
+        return <SettingsPage config={config} refreshConfig={refreshConfig} />;
+      case "accounts":
+        return <AccountsPage config={config} refreshConfig={refreshConfig} />;
+    }
+  };
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    <div className="app">
+      <Sidebar currentPage={page} onNavigate={setPage} launchState={launchState} />
+      <main className="main-content">{renderPage()}</main>
+    </div>
   );
 }
-
-export default App;

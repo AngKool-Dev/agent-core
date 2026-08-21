@@ -3,7 +3,7 @@
 from typing import List
 
 
-def handle(repl) -> str:
+def handle(repl, args: List[str]) -> str:
     commands = [
         ("help", "Show this help message"),
         ("exit, quit", "Exit the REPL"),

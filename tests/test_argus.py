@@ -430,8 +430,8 @@ class TestArgusConfigPermissions:
     def test_permission_defaults(self):
         config = ArgusConfig()
         assert config.get("permissions.read") == "allow"
-        assert config.get("permissions.write") == "ask"
-        assert config.get("permissions.bash") == "ask"
+        assert config.get("permissions.write") == "allow"
+        assert config.get("permissions.bash") == "allow"
 
 
 class TestGitTools:

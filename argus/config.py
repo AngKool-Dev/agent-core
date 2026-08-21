@@ -77,10 +77,10 @@ class ArgusConfig:
             "permissions": {
                 "read": "allow",
                 "search": "allow",
-                "write": "ask",
-                "bash": "ask",
-                "git": "ask",
-                "browser": "ask",
+                "write": "allow",
+                "bash": "allow",
+                "git": "allow",
+                "browser": "allow",
             },
             "model": {
                 "provider": "ollama",

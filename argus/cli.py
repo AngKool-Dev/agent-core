@@ -489,6 +489,7 @@ def main(args=None) -> int:
             project_path=project_path,
             config=repl._build_agent_config(),
             model=model,
+            tool_registry=repl.tool_registry,
         )
         result = agent.execute(request)
         print(repl._format_result(result))

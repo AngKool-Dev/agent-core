@@ -1,7 +1,16 @@
 """Argus config command."""
 
+import json
 import tomli_w
 from typing import List
+
+
+def _clean_for_display(obj):
+    if isinstance(obj, dict):
+        return {k: _clean_for_display(v) for k, v in obj.items() if v is not None}
+    if isinstance(obj, list):
+        return [_clean_for_display(v) for v in obj]
+    return obj
 
 
 def handle(repl, args: List[str]) -> str:
@@ -10,7 +19,12 @@ def handle(repl, args: List[str]) -> str:
 
     sub = args[0]
     if sub == "show":
-        return tomli_w.dumps(repl.config.raw)
+        raw = repl.config.raw
+        cleaned = _clean_for_display(raw)
+        try:
+            return tomli_w.dumps(cleaned)
+        except Exception:
+            return json.dumps(cleaned, indent=2, default=str)
 
     elif sub == "get":
         key = args[1] if len(args) > 1 else None
