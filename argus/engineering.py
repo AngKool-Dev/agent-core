@@ -35,12 +35,26 @@ class EngineeringPhase(str, Enum):
     FINALIZE = "FINALIZE"
 
 
+class EvidenceCategory(str, Enum):
+    FILE_DISCOVERY = "file_discovery"
+    SYMBOL_LOCATION = "symbol_location"
+    TEST_RESULT = "test_result"
+    COMMAND_RESULT = "command_result"
+    BUILD_RESULT = "build_result"
+    GIT_STATE = "git_state"
+    UNEXPECTED_STRUCTURE = "unexpected_structure"
+    MISSING_EXPECTED = "missing_expected"
+    IMPLEMENTATION_DIFFERS = "implementation_differs"
+    TOOL_OUTPUT = "tool_output"
+
+
 @dataclass
 class EngineeringEvidence:
     phase: str
     command: str = ""
     success: bool = True
     output_summary: str = ""
+    category: str = ""
     timestamp: float = field(default_factory=time.time)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -49,6 +63,7 @@ class EngineeringEvidence:
             "command": self.command,
             "success": self.success,
             "output_summary": self.output_summary,
+            "category": self.category,
             "timestamp": self.timestamp,
         }
 
@@ -90,12 +105,13 @@ class EngineeringTaskState:
     final_status: Optional[str] = None
     modified_files: List[str] = field(default_factory=list)
 
-    def add_evidence(self, phase: str, command: str = "", success: bool = True, output_summary: str = "") -> None:
+    def add_evidence(self, phase: str, command: str = "", success: bool = True, output_summary: str = "", category: str = "") -> None:
         self.evidence.append(EngineeringEvidence(
             phase=phase,
             command=command,
             success=success,
             output_summary=output_summary,
+            category=category,
         ))
 
     def add_investigation(self, source: str, action: str, result_summary: str, relevant_files: Optional[List[str]] = None, confidence: Optional[float] = None) -> None:
@@ -110,6 +126,12 @@ class EngineeringTaskState:
     def record_revised_plan(self, plan: List[Dict[str, Any]]) -> None:
         self.revised_plans.append(plan)
         self.plan_revision_count = len(self.revised_plans)
+        completed_set = set(self.completed_steps)
+        for step in plan:
+            if step.get("action") in completed_set:
+                step["status"] = "completed"
+            else:
+                step["status"] = step.get("status", "pending")
         self.plan_steps = plan
 
     def to_dict(self) -> Dict[str, Any]:

@@ -29,6 +29,7 @@ from argus.engineering import (
     EngineeringPhase,
     EngineeringTaskState,
     EngineeringLoopConfig,
+    EvidenceCategory,
     should_enter_engineering_loop,
     select_verification_commands,
     extract_modified_files,
@@ -369,7 +370,7 @@ class ArgusAgent:
 
             self._iterations += 1
 
-        return results
+        return {**results, "completed_steps": list(completed_steps)}
 
     def _build_context(self, request: str, results: Dict[str, Any]) -> Dict[str, Any]:
         recent_observations = results.get("observations", [])[-3:]
@@ -663,9 +664,67 @@ class ArgusAgent:
         self._status(f"Phase: PLAN")
         state.plan_steps = base_result.get("plan", [])
         state.modified_files = extract_modified_files(tool_results)
+        state.completed_steps = list(base_result.get("completed_steps", []))
 
         state.phase = EngineeringPhase.EXECUTE
         self._status(f"Phase: EXECUTE")
+
+        existing_tool_results = base_result.get("tool_results", [])
+        self._extract_execution_evidence(state, existing_tool_results)
+
+        contradiction_during_execution = self._check_execution_contradictions(state)
+        if not contradiction_during_execution and existing_tool_results and self._model:
+            contradiction_during_execution = self._model_evaluate_contradiction(state)
+        if contradiction_during_execution and contradiction_during_execution.get("replan", False):
+            state.add_evidence(
+                EngineeringPhase.EXECUTE.value,
+                command="",
+                success=False,
+                output_summary=f"Contradictory evidence detected during execution: {contradiction_during_execution.get('reason', '')}",
+                category=EvidenceCategory.IMPLEMENTATION_DIFFERS.value,
+            )
+            self._status("Contradictory evidence detected during execution")
+
+            if state.plan_revision_count < eng_config.max_plan_revisions:
+                state.phase = EngineeringPhase.REPLAN
+                self._status(f"Phase: REPLAN (revision {state.plan_revision_count + 1}/{eng_config.max_plan_revisions})")
+                replan_summary = self._run_model_replan(state)
+                state.add_evidence(EngineeringPhase.REPLAN.value, command="", success=True, output_summary=replan_summary)
+
+                state.phase = EngineeringPhase.EXECUTE
+                self._status(f"Phase: EXECUTE (revised plan)")
+                execution_summary = self._execute_revised_plan(state)
+                state.add_evidence(EngineeringPhase.EXECUTE.value, command="", success=True, output_summary=execution_summary)
+
+                if "Contradiction detected" in execution_summary or "failed" in execution_summary.lower():
+                    if state.plan_revision_count < eng_config.max_plan_revisions:
+                        state.phase = EngineeringPhase.REPLAN
+                        self._status(f"Phase: REPLAN (revision {state.plan_revision_count + 1}/{eng_config.max_plan_revisions})")
+                        replan_summary = self._run_model_replan(state)
+                        state.add_evidence(EngineeringPhase.REPLAN.value, command="", success=True, output_summary=replan_summary)
+
+                        state.phase = EngineeringPhase.EXECUTE
+                        self._status(f"Phase: EXECUTE (revised plan)")
+                        execution_summary = self._execute_revised_plan(state)
+                        state.add_evidence(EngineeringPhase.EXECUTE.value, command="", success=True, output_summary=execution_summary)
+                    else:
+                        state.final_status = "FAILED"
+                        state.add_evidence(
+                            EngineeringPhase.EXECUTE.value,
+                            success=False,
+                            output_summary="Max plan revisions reached during execution",
+                        )
+                        return self._engineering_result(base_result)
+            else:
+                state.final_status = "FAILED"
+                state.add_evidence(
+                    EngineeringPhase.EXECUTE.value,
+                    success=False,
+                    output_summary="Max plan revisions reached, contradiction unresolved",
+                )
+                return self._engineering_result(base_result)
+        elif existing_tool_results:
+            state.add_evidence(EngineeringPhase.EXECUTE.value, success=True, output_summary="Execution completed, no contradictions detected")
 
         state.phase = EngineeringPhase.VERIFY
         self._status(f"Phase: VERIFY")
@@ -879,28 +938,433 @@ class ArgusAgent:
         except Exception as e:
             return f"Model repair failed: {str(e)}"
 
-    def _should_replan(self, state: EngineeringTaskState) -> bool:
+    def _should_replan(self, state: EngineeringTaskState, trigger_phase: str = "VERIFY") -> bool:
         if not state:
             return False
         if not self._model:
             return False
         if state.plan_revision_count >= getattr(self.config, "max_plan_revisions", 2):
             return False
-        if not state.verification_results:
-            return False
-        last_verification = state.verification_results[-1]
-        if last_verification.get("success", True):
-            return False
         if not state.plan_steps:
             return False
-        return True
+
+        if trigger_phase == "VERIFY" and state.verification_results:
+            last_verification = state.verification_results[-1]
+            if not last_verification.get("success", True):
+                return True
+
+        contradiction = self._check_execution_contradictions(state)
+        if contradiction and contradiction.get("replan", False):
+            return True
+
+        if trigger_phase == "EXECUTE":
+            execution_evidence = [e for e in state.evidence if e.phase == EngineeringPhase.EXECUTE.value]
+            if execution_evidence:
+                model_result = self._model_evaluate_contradiction(state)
+                if model_result.get("replan", False):
+                    return True
+
+        return False
 
     def _build_replan_context(self, state: EngineeringTaskState) -> Dict[str, Any]:
         last_verification = state.verification_results[-1] if state.verification_results else {}
-        recent_observations = [
-            f"Verification failed for command: {last_verification.get('command', '')}",
-            f"Failure output: {last_verification.get('summary', '')[:500]}",
+        execution_evidence = [e.to_dict() for e in state.evidence if e.phase == EngineeringPhase.EXECUTE.value][-5:]
+        recent_observations = []
+
+        if last_verification:
+            recent_observations.append(
+                f"Verification failed for command: {last_verification.get('command', '')}"
+            )
+            recent_observations.append(
+                f"Failure output: {last_verification.get('summary', '')[:500]}"
+            )
+        elif execution_evidence:
+            recent_observations.append("Execution evidence indicating contradiction:")
+            for ev in execution_evidence:
+                recent_observations.append(f"  - {ev.get('category', '')}: {ev.get('output_summary', '')[:200]}")
+
+        if state.investigation_findings:
+            for finding in state.investigation_findings[-3:]:
+                recent_observations.append(
+                    f"Investigation: {finding.source} {finding.action}: {finding.result_summary[:200]}"
+                )
+        if state.modified_files:
+            recent_observations.append(f"Modified files: {', '.join(state.modified_files)}")
+
+        plan_with_assumptions = []
+        for i, step in enumerate(state.plan_steps):
+            plan_with_assumptions.append({
+                "step_index": i,
+                "action": step.get("action", ""),
+                "description": step.get("description", ""),
+                "status": step.get("status", "pending"),
+                "assumptions": step.get("assumptions", []),
+            })
+
+        return {
+            "user_request": state.goal,
+            "project_context": self._project_context.to_dict(),
+            "project_profile": self._project_context,
+            "conversation": self._conversation.to_list(),
+            "available_tools": self._tool_registry.list_tools(),
+            "recent_tool_results": [],
+            "recent_observations": recent_observations,
+            "current_step": "replan",
+            "active_skills": [s.to_dict() for s in getattr(self, "_active_skills", [])],
+            "skill_instructions": "",
+            "memory_context": self.memory.retrieve_relevant(state.goal),
+            "instructions": [
+                "You are Argus, an autonomous coding agent in REPLAN mode.",
+                "The current plan is invalid due to a verification failure or execution contradiction. You must revise the plan.",
+                f"Original request: {state.goal}",
+                f"Current plan: {plan_with_assumptions}",
+                f"Completed steps: {state.completed_steps}",
+                f"New evidence: {last_verification.get('summary', '')[:500] if last_verification else 'Execution contradiction'}",
+                "Return a revised plan as JSON in this format:",
+                '{"plan": [{"action": "step_name", "description": "what to do", "assumptions": ["optional assumption"]}]}',
+                "The revised plan should address the contradiction while preserving completed work.",
+            ],
+        }
+
+    def _run_model_replan(self, state: EngineeringTaskState) -> str:
+        if not self._model:
+            return "No model available for replanning"
+
+        context = self._build_replan_context(state)
+        try:
+            response = self._model_reason(context, state.goal)
+            text = response.get("response", "")
+            revised_plan = self._parse_revised_plan(text)
+            if revised_plan:
+                state.record_revised_plan(revised_plan)
+                return f"Plan revised (revision {state.plan_revision_count})"
+            return f"Model returned no revised plan: {text[:200]}"
+        except Exception as e:
+            return f"Replanning failed: {str(e)}"
+
+    def _is_significant_tool_result(self, tool_result: Any) -> bool:
+        if isinstance(tool_result, dict):
+            success = tool_result.get("success", False)
+            tool_name = tool_result.get("tool", "")
+            output = tool_result.get("output", "") or tool_result.get("error", "") or ""
+        else:
+            success = getattr(tool_result, "success", False)
+            tool_name = getattr(tool_result, "tool", "")
+            output = getattr(tool_result, "output", "") or getattr(tool_result, "error", "") or ""
+
+        if not success:
+            return True
+
+        output_lower = output.lower()
+        significant_patterns = [
+            "not found", "missing", "unexpected", "error:", "failed",
+            "no such file", "does not exist", "undefined", "none",
+            "conflict", "contradicts", "differs from",
         ]
+        for pattern in significant_patterns:
+            if pattern in output_lower:
+                return True
+
+        if tool_name in ("git_status", "git_diff", "git_log"):
+            return True
+
+        return False
+
+    def _categorize_tool_result(self, tool_result: Any) -> str:
+        if isinstance(tool_result, dict):
+            tool_name = tool_result.get("tool", "")
+            output = tool_result.get("output", "") or tool_result.get("error", "") or ""
+        else:
+            tool_name = getattr(tool_result, "tool", "")
+            output = getattr(tool_result, "output", "") or getattr(tool_result, "error", "") or ""
+
+        output_lower = output.lower()
+        if tool_name in ("read_file", "write_file", "edit_file"):
+            if "not found" in output_lower or "no such file" in output_lower or "does not exist" in output_lower:
+                return EvidenceCategory.MISSING_EXPECTED.value
+            return EvidenceCategory.FILE_DISCOVERY.value
+        if tool_name == "grep":
+            if "not found" in output_lower or "no matches" in output_lower:
+                return EvidenceCategory.MISSING_EXPECTED.value
+            return EvidenceCategory.SYMBOL_LOCATION.value
+        if tool_name in ("git_status", "git_diff", "git_log"):
+            return EvidenceCategory.GIT_STATE.value
+        if "test" in tool_name or "pytest" in output_lower or "test" in output_lower:
+            return EvidenceCategory.TEST_RESULT.value
+        if "build" in tool_name or "compile" in output_lower or "build" in output_lower:
+            return EvidenceCategory.BUILD_RESULT.value
+        if "bash" in tool_name or "command" in tool_name:
+            return EvidenceCategory.COMMAND_RESULT.value
+        return EvidenceCategory.TOOL_OUTPUT.value
+
+    def _extract_execution_evidence(self, state: EngineeringTaskState, tool_results: List[Any]) -> None:
+        for tr in tool_results:
+            if not self._is_significant_tool_result(tr):
+                continue
+
+            if isinstance(tr, dict):
+                tool_name = tr.get("tool", "")
+                success = tr.get("success", False)
+                output = tr.get("output", "") or tr.get("error", "") or ""
+            else:
+                tool_name = getattr(tr, "tool", "")
+                success = getattr(tr, "success", False)
+                output = getattr(tr, "output", "") or getattr(tr, "error", "") or ""
+
+            category = self._categorize_tool_result(tr)
+            summary = output[:300] if output else ("succeeded" if success else "failed")
+            state.add_evidence(
+                EngineeringPhase.EXECUTE.value,
+                command=tool_name,
+                success=success,
+                output_summary=summary,
+                category=category,
+            )
+
+    def _check_execution_contradictions(self, state: EngineeringTaskState) -> Optional[Dict[str, Any]]:
+        if not state.plan_steps:
+            return None
+
+        for evidence in state.evidence:
+            if evidence.phase != EngineeringPhase.EXECUTE.value:
+                continue
+
+            contradiction = self._deterministic_contradiction_check(state, evidence)
+            if contradiction:
+                return contradiction
+
+        return None
+
+    def _deterministic_contradiction_check(self, state: EngineeringTaskState, evidence: Any) -> Optional[Dict[str, Any]]:
+        output_lower = (evidence.output_summary or "").lower()
+        category = evidence.category or ""
+
+        if category == EvidenceCategory.MISSING_EXPECTED.value:
+            return {
+                "replan": True,
+                "reason": f"Expected resource missing: {evidence.output_summary[:200]}",
+                "affected_steps": [i for i, step in enumerate(state.plan_steps) if step.get("status") != "completed"],
+                "evidence_category": category,
+            }
+
+        if "not found" in output_lower or "does not exist" in output_lower or "no such file" in output_lower:
+            return {
+                "replan": True,
+                "reason": f"Resource not found during execution: {evidence.output_summary[:200]}",
+                "affected_steps": [i for i, step in enumerate(state.plan_steps) if step.get("status") != "completed"],
+                "evidence_category": category,
+            }
+
+        if "conflict" in output_lower or "contradicts" in output_lower:
+            return {
+                "replan": True,
+                "reason": f"Tool output indicates conflict: {evidence.output_summary[:200]}",
+                "affected_steps": [i for i, step in enumerate(state.plan_steps) if step.get("status") != "completed"],
+                "evidence_category": category,
+            }
+
+        for step in state.plan_steps:
+            if step.get("status") == "completed":
+                continue
+            assumptions = step.get("assumptions", [])
+            if not assumptions:
+                continue
+            for assumption in assumptions:
+                assumption_lower = assumption.lower()
+                if any(word in output_lower for word in assumption_lower.split()):
+                    if "not " in output_lower or "missing" in output_lower or "unexpected" in output_lower:
+                        return {
+                            "replan": True,
+                            "reason": f"Plan assumption invalidated: '{assumption}' contradicted by tool output",
+                            "affected_steps": [i for i, s in enumerate(state.plan_steps) if s.get("status") != "completed"],
+                            "evidence_category": EvidenceCategory.IMPLEMENTATION_DIFFERS.value,
+                            "invalidated_assumption": assumption,
+                        }
+
+        return None
+
+    def _model_evaluate_contradiction(self, state: EngineeringTaskState) -> Dict[str, Any]:
+        recent_evidence = [e.to_dict() for e in state.evidence[-5:]]
+        plan_with_assumptions = []
+        for i, step in enumerate(state.plan_steps):
+            plan_with_assumptions.append({
+                "step_index": i,
+                "action": step.get("action", ""),
+                "description": step.get("description", ""),
+                "status": step.get("status", "pending"),
+                "assumptions": step.get("assumptions", []),
+            })
+
+        context = {
+            "user_request": state.goal,
+            "project_context": self._project_context.to_dict(),
+            "current_plan": plan_with_assumptions,
+            "completed_steps": state.completed_steps,
+            "recent_evidence": recent_evidence,
+            "current_step": "evaluate_contradiction",
+        }
+
+        instructions = [
+            "You are Argus evaluating whether new execution evidence invalidates the current plan.",
+            "Return a JSON object with this exact format:",
+            '{"replan": true or false, "reason": "concise explanation", "affected_steps": [0, 1, ...]}',
+            "Do not expose chain-of-thought. Only return the JSON decision.",
+            f"Goal: {state.goal}",
+            f"Plan: {plan_with_assumptions}",
+            f"Recent evidence: {recent_evidence}",
+        ]
+
+        context["instructions"] = instructions
+        context["recent_observations"] = [str(e) for e in recent_evidence]
+
+        try:
+            response = self._model_reason(context, state.goal)
+            text = response.get("response", "")
+            import json
+            import re
+            json_match = re.search(r'\{.*\}', text, re.DOTALL)
+            if json_match:
+                try:
+                    data = json.loads(json_match.group())
+                    if isinstance(data, dict) and "replan" in data:
+                        return {
+                            "replan": bool(data.get("replan", False)),
+                            "reason": data.get("reason", ""),
+                            "affected_steps": data.get("affected_steps", []),
+                        }
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        return {"replan": False, "reason": "Model evaluation inconclusive", "affected_steps": []}
+
+    def _execute_revised_plan(self, state: EngineeringTaskState) -> str:
+        if not self._model:
+            return "No model available for revised plan execution"
+
+        revised_plan = state.plan_steps
+        if not revised_plan:
+            return "No revised plan to execute"
+
+        results_summary = []
+        for step_index, step in enumerate(revised_plan):
+            if self._cancelled:
+                return "Revised plan execution cancelled"
+
+            if step.get("status") == "completed":
+                continue
+
+            step_action = step.get("action", "")
+            step_description = step.get("description", "")
+            self._status(f"Executing revised step {step_index + 1}/{len(revised_plan)}: {step_action}")
+
+            context = {
+                "user_request": state.goal,
+                "project_context": self._project_context.to_dict(),
+                "project_profile": self._project_context,
+                "conversation": self._conversation.to_list(),
+                "available_tools": self._tool_registry.list_tools(),
+                "recent_tool_results": [],
+                "recent_observations": [
+                    f"Revised plan step: {step_action}",
+                    f"Description: {step_description}",
+                    f"Completed steps: {state.completed_steps}",
+                ],
+                "current_step": "execute_revised_plan",
+                "active_skills": [s.to_dict() for s in getattr(self, "_active_skills", [])],
+                "skill_instructions": "",
+                "memory_context": self.memory.retrieve_relevant(state.goal),
+                "instructions": [
+                    "You are Argus executing a revised plan step.",
+                    f"Goal: {state.goal}",
+                    f"Current step: {step_action} - {step_description}",
+                    f"Completed steps: {state.completed_steps}",
+                    "Use the available tools to complete this step.",
+                    "After completing the step, verify if the work is done.",
+                ],
+            }
+
+            try:
+                response = self._model_reason(context, state.goal)
+                tool_calls = response.get("tool_calls", [])
+                if tool_calls:
+                    for tc in tool_calls:
+                        if self._cancelled:
+                            break
+                        tool_result = self._execute_tool_call(tc)
+                        results_summary.append(tool_result)
+                        state.modified_files.extend(extract_modified_files([tool_result]))
+
+                step["status"] = "completed"
+
+            except Exception as e:
+                return f"Revised plan execution failed: {str(e)}"
+
+        summary_parts = [f"Executed {len(results_summary)} tool call(s)"]
+        successes = [r for r in results_summary if (r.success if isinstance(r, dict) else getattr(r, "success", False))]
+        summary_parts.append(f"{len(successes)} succeeded")
+        return ", ".join(summary_parts)
+
+    def _parse_revised_plan(self, text: str) -> List[Dict[str, Any]]:
+        import json
+        import re
+        json_match = re.search(r'\{.*\}', text, re.DOTALL)
+        if json_match:
+            try:
+                data = json.loads(json_match.group())
+                plan = data.get("plan", [])
+                if isinstance(plan, list):
+                    return [step for step in plan if isinstance(step, dict) and "action" in step]
+            except Exception:
+                pass
+        return []
+
+    def _build_investigation_context(self, request: str) -> Dict[str, Any]:
+        recent_observations = []
+        if self._engineering_state and self._engineering_state.investigation_findings:
+            for finding in self._engineering_state.investigation_findings[-3:]:
+                recent_observations.append(
+                    f"Investigation: {finding.source} {finding.action}: {finding.result_summary[:200]}"
+                )
+
+        return {
+            "user_request": request,
+            "project_context": self._project_context.to_dict(),
+            "project_profile": self._project_context,
+            "conversation": self._conversation.to_list(),
+            "available_tools": self._tool_registry.list_tools(),
+            "recent_tool_results": [],
+            "recent_observations": recent_observations,
+            "current_step": "investigate",
+            "active_skills": [s.to_dict() for s in getattr(self, "_active_skills", [])],
+            "skill_instructions": "",
+            "memory_context": self.memory.retrieve_relevant(request),
+            "instructions": [
+                "You are Argus, an autonomous coding agent in INVESTIGATE mode.",
+                "Your goal is to gather evidence about the codebase before planning.",
+                "Use the available tools to inspect relevant files, search for symbols, check git status, and retrieve project memory.",
+                "Focus on finding the most relevant information for the task.",
+                "Return your findings as a concise summary.",
+            ],
+        }
+        last_verification = state.verification_results[-1] if state.verification_results else {}
+        execution_evidence = [e.to_dict() for e in state.evidence if e.phase == EngineeringPhase.EXECUTE.value][-5:]
+        recent_observations = []
+
+        if last_verification:
+            recent_observations.append(
+                f"Verification failed for command: {last_verification.get('command', '')}"
+            )
+            recent_observations.append(
+                f"Failure output: {last_verification.get('summary', '')[:500]}"
+            )
+
+        if execution_evidence:
+            recent_observations.append("Execution evidence:")
+            for ev in execution_evidence:
+                recent_observations.append(f"  - {ev.get('category', '')}: {ev.get('output_summary', '')[:200]}")
+
         if state.investigation_findings:
             for finding in state.investigation_findings[-3:]:
                 recent_observations.append(
@@ -923,48 +1387,16 @@ class ArgusAgent:
             "memory_context": self.memory.retrieve_relevant(state.goal),
             "instructions": [
                 "You are Argus, an autonomous coding agent in REPLAN mode.",
-                "The current plan led to a verification failure. You must revise the plan.",
+                "The current plan is invalid due to a verification failure or execution contradiction. You must revise the plan.",
                 f"Original request: {state.goal}",
                 f"Current plan: {state.plan_steps}",
                 f"Completed steps: {state.completed_steps}",
-                f"New evidence: {last_verification.get('summary', '')[:500]}",
+                f"New evidence: {last_verification.get('summary', '')[:500] if last_verification else 'Execution contradiction'}",
                 "Return a revised plan as JSON in this format:",
-                '{"plan": [{"action": "step_name", "description": "what to do"}]}',
-                "The revised plan should address the verification failure.",
+                '{"plan": [{"action": "step_name", "description": "what to do", "assumptions": ["optional assumption"]}]}',
+                "The revised plan should address the contradiction while preserving completed work.",
             ],
         }
-
-    def _run_model_replan(self, state: EngineeringTaskState) -> str:
-        if not self._model:
-            return "No model available for replanning"
-
-        context = self._build_replan_context(state)
-        try:
-            response = self._model_reason(context, state.goal)
-            text = response.get("response", "")
-            revised_plan = self._parse_revised_plan(text)
-            if revised_plan:
-                state.record_revised_plan(revised_plan)
-                return f"Plan revised (revision {state.plan_revision_count})"
-            return f"Model returned no revised plan: {text[:200]}"
-        except Exception as e:
-            return f"Replanning failed: {str(e)}"
-
-    def _parse_revised_plan(self, text: str) -> List[Dict[str, Any]]:
-        import json
-        import re
-        json_match = re.search(r'\{.*\}', text, re.DOTALL)
-        if json_match:
-            try:
-                data = json.loads(json_match.group())
-                plan = data.get("plan", [])
-                if isinstance(plan, list):
-                    return [step for step in plan if isinstance(step, dict) and "action" in step]
-            except Exception:
-                pass
-        return []
-
-    def _build_investigation_context(self, request: str) -> Dict[str, Any]:
         recent_observations = []
         if self._engineering_state and self._engineering_state.investigation_findings:
             for finding in self._engineering_state.investigation_findings[-3:]:
