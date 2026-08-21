@@ -405,26 +405,31 @@ class ArgusAgent:
         if not self._model:
             return self._default_reason(context, request, {})
 
-        messages = build_messages(
-            user_request=request,
-            conversation=context.get("conversation", []),
-            project_context=context.get("project_context", {}),
-            project_profile=context.get("project_profile"),
-            available_tools=context.get("available_tools", []),
-            recent_observations=context.get("recent_observations", []),
-            current_step=context.get("current_step", "investigate"),
-            active_skills=context.get("active_skills"),
-            skill_instructions=context.get("skill_instructions", ""),
-            memory_context=context.get("memory_context", ""),
-        )
+        try:
+            messages = build_messages(
+                user_request=request,
+                conversation=context.get("conversation", []),
+                project_context=context.get("project_context", {}),
+                project_profile=context.get("project_profile"),
+                available_tools=context.get("available_tools", []),
+                recent_observations=context.get("recent_observations", []),
+                current_step=context.get("current_step", "investigate"),
+                active_skills=context.get("active_skills"),
+                skill_instructions=context.get("skill_instructions", ""),
+                memory_context=context.get("memory_context", ""),
+            )
 
-        model_name = self.config.model or "gpt-4o"
-        response = self._model.complete(
-            messages=messages,
-            model=model_name,
-            tools=context.get("available_tools", []),
-            request=request,
-        )
+            model_name = self.config.model or "gpt-4o"
+            response = self._model.complete(
+                messages=messages,
+                model=model_name,
+                tools=context.get("available_tools", []),
+                request=request,
+            )
+        except Exception:
+            import logging
+            logging.getLogger("argus").warning("Model unavailable, using built-in default reasoner")
+            return self._default_reason(context, request, {})
 
         text, tool_calls = parse_model_output(response.content)
 

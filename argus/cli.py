@@ -10,6 +10,8 @@ from argus import __version__
 from argus.agent import ArgusAgent
 from argus.config import ArgusConfig
 from argus.model import GatewayModelProvider, create_model_from_config, create_router_from_config
+from argus.model.provider import ModelProvider
+from argus.model.providers.gateway import GatewayClient
 from argus.model.credentials import CredentialManager
 from argus.model.usage import UsageTracker
 from argus.repl import ArgusREPL
@@ -116,6 +118,21 @@ def _build_gateway_model(config: ArgusConfig) -> Optional[GatewayModelProvider]:
     )
 
 
+def _build_fallback_model(config: ArgusConfig) -> Optional[ModelProvider]:
+    model_config = {
+        "provider": config.get("model.provider", "ollama"),
+        "name": config.get("model.name", "llama3"),
+    }
+    if config.get("model.api_key"):
+        model_config["api_key"] = config.get("model.api_key")
+    if config.get("model.base_url"):
+        model_config["base_url"] = config.get("model.base_url")
+    try:
+        return create_model_from_config(model_config)
+    except Exception:
+        return None
+
+
 def _has_byok_credentials(config: ArgusConfig, credentials: CredentialManager) -> bool:
     if credentials.list_providers():
         return True
@@ -203,9 +220,10 @@ def cmd_model(config: ArgusConfig, name: Optional[str] = None, router=None) -> i
 
 def cmd_gateway(config: ArgusConfig) -> int:
     gateway_config = config.get("gateway", {})
-    if not gateway_config:
+    if not gateway_config or not gateway_config.get("base_url"):
         print("Gateway is not configured.")
         print("Set [gateway] base_url in argus.toml to enable Argus Free Gateway.")
+        print(f"Default gateway: {GatewayClient.DEFAULT_BASE_URL}")
         return 0
 
     provider = GatewayModelProvider(
@@ -406,10 +424,13 @@ def main(args=None) -> int:
 
     mode = parsed.mode
     if not mode:
+        gateway_config = config.get("gateway", {})
         if _has_byok_credentials(config, credentials):
             mode = "byok"
-        else:
+        elif gateway_config and gateway_config.get("base_url"):
             mode = "free"
+        else:
+            mode = "local"
 
     if request in ("providers", "models", "model"):
         router = _build_router(config, credentials)
@@ -432,7 +453,15 @@ def main(args=None) -> int:
 
     if request:
         if mode == "free":
-            model = _build_gateway_model(config) or GatewayModelProvider()
+            model = _build_gateway_model(config)
+            if model:
+                model = GatewayModelProvider(
+                    base_url=config.get("gateway.base_url", ""),
+                    api_key=config.get("gateway.api_key", ""),
+                    fallback_provider=_build_fallback_model(config),
+                )
+            else:
+                model = _build_fallback_model(config)
         elif mode == "local":
             model_config = {
                 "provider": "ollama",
