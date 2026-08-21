@@ -238,11 +238,16 @@ def cmd_gateway(config: ArgusConfig) -> int:
 def cmd_gateway_serve(config: ArgusConfig) -> int:
     from argus.gateway import GatewayServer, GatewayServerConfig
 
+    free_pool = config.get("free_pool", {})
+    free_pool_providers = free_pool.get("providers", {})
+
     server_config = GatewayServerConfig(
         host=config.get("gateway_server.host", "127.0.0.1"),
         port=int(config.get("gateway_server.port", 8787)),
         free_requests=int(config.get("gateway_server.free_requests", 20)),
         free_window_seconds=float(config.get("gateway_server.free_window_seconds", 3600)),
+        providers=free_pool_providers,
+        strategy=free_pool.get("strategy", "free_first"),
     )
     server = GatewayServer(config=server_config)
     print(f"Argus Gateway Server starting on http://{server_config.host}:{server_config.port}")

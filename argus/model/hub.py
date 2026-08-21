@@ -66,6 +66,7 @@ class ProviderCapability:
     rate_limit: Optional[str] = None
     reset_info: Optional[str] = None
     task_tags: List[str] = field(default_factory=list)
+    priority: int = 0
 
 
 @dataclass
@@ -293,6 +294,7 @@ class ModelRouter(ModelProvider):
         return self._pick_best(candidates, target_model)
 
     def _pick_best(self, candidates: List[ProviderState], target_model: Optional[str]) -> Optional[ProviderState]:
+        candidates.sort(key=lambda s: s.capability.priority, reverse=True)
         if target_model:
             for state in candidates:
                 if target_model in state.capability.models:

@@ -105,6 +105,7 @@ def create_router_from_config(config: Dict[str, Any], usage_tracker: Optional[An
             rate_limit=pconfig.get("rate_limit"),
             reset_info=pconfig.get("reset_info"),
             task_tags=pconfig.get("task_tags", []),
+            priority=pconfig.get("priority", 0),
         )
 
         registry.register(ProviderState(capability=capability, provider=provider))

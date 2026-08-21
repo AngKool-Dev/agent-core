@@ -2980,7 +2980,7 @@ class TestGatewayServer:
         mock_self.headers = {"Content-Length": str(len(payload))}
 
         handler._handle_chat_completions(mock_self)
-        assert any(r[0] == "status" and r[1] == 503 for r in responses)
+        assert any(r[0] == "status" and r[1] == 403 for r in responses)
 
     def test_server_provider_failure_returns_502(self):
         from argus.gateway import GatewayServer, GatewayServerConfig
@@ -3081,3 +3081,342 @@ class TestGatewayServer:
         assert "gateway_server" in config.raw
         assert config.get("gateway_server.host") == "127.0.0.1"
         assert config.get("gateway_server.port") == 8787
+
+    def test_free_pool_config_defaults(self):
+        from argus.config import ArgusConfig
+
+        config = ArgusConfig()
+        assert "free_pool" in config.raw
+        assert config.get("free_pool.strategy") == "free_first"
+        providers = config.get("free_pool.providers", {})
+        assert isinstance(providers, dict)
+        assert "openrouter" in providers
+        assert providers["openrouter"]["free"] is True
+        assert providers["openrouter"]["priority"] == 10
+
+    def test_free_pool_providers_loaded_into_server(self):
+        from argus.gateway import GatewayServer, GatewayServerConfig
+
+        providers = {
+            "ollama": {
+                "enabled": True,
+                "free": True,
+                "priority": 20,
+                "models": ["mock-model"],
+            },
+        }
+        config = GatewayServerConfig(providers=providers)
+        server = GatewayServer(config=config)
+        assert server._router is not None
+        state = server._router._registry.get("ollama")
+        assert state is not None
+        assert state.capability.priority == 20
+
+    def test_server_rejects_paid_model_request(self):
+        from argus.gateway import GatewayServer, GatewayServerConfig
+
+        providers = {
+            "free-provider": {
+                "enabled": True,
+                "free": True,
+                "models": ["free-model"],
+            },
+            "paid-provider": {
+                "enabled": True,
+                "free": False,
+                "models": ["paid-model"],
+            },
+        }
+        config = GatewayServerConfig(providers=providers)
+        server = GatewayServer(config=config)
+        handler = server.create_handler()
+
+        responses = []
+
+        class MockSelf:
+            def _client_id(self):
+                return "127.0.0.1"
+            def _send_json(self, status, data):
+                responses.append(("status", status))
+                responses.append(("body", data))
+            def send_response(self, code): responses.append(("status", code))
+            def send_header(self, name, value): responses.append(("header", name, value))
+            def end_headers(self): responses.append(("end",))
+            @property
+            def wfile(self):
+                return type("W", (), {"write": lambda self, data: responses.append(("write", data))})()
+
+        mock_self = MockSelf()
+        mock_self._handle_completion = types.MethodType(handler._handle_completion, mock_self)
+        mock_self._handle_stream = types.MethodType(handler._handle_stream, mock_self)
+        payload = json.dumps({"model": "paid-model", "messages": [{"role": "user", "content": "hi"}]}).encode("utf-8")
+        mock_self.rfile = type("R", (), {"read": lambda self, n: payload})()
+        mock_self.headers = {"Content-Length": str(len(payload))}
+
+        handler._handle_chat_completions(mock_self)
+        assert any(r[0] == "status" and r[1] == 403 for r in responses)
+
+    def test_server_auto_selects_free_model(self):
+        from argus.gateway import GatewayServer, GatewayServerConfig
+        from argus.model.provider import ModelResponse
+
+        providers = {
+            "free-a": {
+                "enabled": True,
+                "free": True,
+                "priority": 10,
+                "models": ["model-a", "model-b"],
+            },
+        }
+        config = GatewayServerConfig(providers=providers)
+        server = GatewayServer(config=config)
+        handler = server.create_handler()
+
+        mock_response = ModelResponse(content="auto-selected", model="model-a", finish_reason="stop", tool_calls=[], usage={"total_tokens": 10})
+        server._router.complete = lambda **kwargs: mock_response
+
+        responses = []
+
+        class MockSelf:
+            def _client_id(self):
+                return "127.0.0.1"
+            def _send_json(self, status, data):
+                responses.append(("status", status))
+                responses.append(("body", data))
+            def send_response(self, code): responses.append(("status", code))
+            def send_header(self, name, value): responses.append(("header", name, value))
+            def end_headers(self): responses.append(("end",))
+            @property
+            def wfile(self):
+                return type("W", (), {"write": lambda self, data: responses.append(("write", data))})()
+
+        mock_self = MockSelf()
+        mock_self._handle_completion = types.MethodType(handler._handle_completion, mock_self)
+        mock_self._handle_stream = types.MethodType(handler._handle_stream, mock_self)
+        payload = json.dumps({"model": "auto", "messages": [{"role": "user", "content": "hi"}]}).encode("utf-8")
+        mock_self.rfile = type("R", (), {"read": lambda self, n: payload})()
+        mock_self.headers = {"Content-Length": str(len(payload))}
+
+        handler._handle_chat_completions(mock_self)
+        assert any(r[0] == "status" and r[1] == 200 for r in responses)
+        body = [r[1] for r in responses if r[0] == "body"][0]
+        assert body["choices"][0]["message"]["content"] == "auto-selected"
+
+    def test_server_fallback_after_provider_failure(self):
+        from argus.gateway import GatewayServer, GatewayServerConfig
+        from argus.model.provider import ModelResponse
+
+        providers = {
+            "free-a": {
+                "enabled": True,
+                "free": True,
+                "priority": 10,
+                "models": ["model-a"],
+            },
+            "free-b": {
+                "enabled": True,
+                "free": True,
+                "priority": 5,
+                "models": ["model-b"],
+            },
+        }
+        config = GatewayServerConfig(providers=providers)
+        server = GatewayServer(config=config)
+        handler = server.create_handler()
+
+        call_count = 0
+
+        def mock_complete(**kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise Exception("Temporary failure")
+            return ModelResponse(content="recovered", model="model-b", finish_reason="stop", tool_calls=[], usage={"total_tokens": 10})
+
+        server._router.complete = mock_complete
+
+        responses = []
+
+        class MockSelf:
+            def _client_id(self):
+                return "127.0.0.1"
+            def _send_json(self, status, data):
+                responses.append(("status", status))
+                responses.append(("body", data))
+            def send_response(self, code): responses.append(("status", code))
+            def send_header(self, name, value): responses.append(("header", name, value))
+            def end_headers(self): responses.append(("end",))
+            @property
+            def wfile(self):
+                return type("W", (), {"write": lambda self, data: responses.append(("write", data))})()
+
+        mock_self = MockSelf()
+        mock_self._handle_completion = types.MethodType(handler._handle_completion, mock_self)
+        mock_self._handle_stream = types.MethodType(handler._handle_stream, mock_self)
+        payload = json.dumps({"model": "auto", "messages": [{"role": "user", "content": "hi"}]}).encode("utf-8")
+        mock_self.rfile = type("R", (), {"read": lambda self, n: payload})()
+        mock_self.headers = {"Content-Length": str(len(payload))}
+
+        handler._handle_chat_completions(mock_self)
+        assert call_count == 2
+        assert any(r[0] == "status" and r[1] == 200 for r in responses)
+        body = [r[1] for r in responses if r[0] == "body"][0]
+        assert body["choices"][0]["message"]["content"] == "recovered"
+
+    def test_server_all_providers_exhausted(self):
+        from argus.gateway import GatewayServer, GatewayServerConfig, GatewayNoProviderError
+
+        providers = {
+            "ollama": {
+                "enabled": True,
+                "free": True,
+                "models": ["llama3"],
+            },
+        }
+        config = GatewayServerConfig(providers=providers)
+        server = GatewayServer(config=config)
+        handler = server.create_handler()
+
+        server._router.complete = lambda **kwargs: (_ for _ in ()).throw(RuntimeError("No available model provider"))
+
+        responses = []
+
+        class MockSelf:
+            def _client_id(self):
+                return "127.0.0.1"
+            def _send_json(self, status, data):
+                responses.append(("status", status))
+                responses.append(("body", data))
+            def send_response(self, code): responses.append(("status", code))
+            def send_header(self, name, value): responses.append(("header", name, value))
+            def end_headers(self): responses.append(("end",))
+            @property
+            def wfile(self):
+                return type("W", (), {"write": lambda self, data: responses.append(("write", data))})()
+
+        mock_self = MockSelf()
+        mock_self._handle_completion = types.MethodType(handler._handle_completion, mock_self)
+        mock_self._handle_stream = types.MethodType(handler._handle_stream, mock_self)
+        payload = json.dumps({"model": "llama3", "messages": [{"role": "user", "content": "hi"}]}).encode("utf-8")
+        mock_self.rfile = type("R", (), {"read": lambda self, n: payload})()
+        mock_self.headers = {"Content-Length": str(len(payload))}
+
+        handler._handle_chat_completions(mock_self)
+        assert any(r[0] == "status" and r[1] == 503 for r in responses)
+
+    def test_server_cooldown_behavior(self):
+        from argus.gateway import GatewayServer, GatewayServerConfig
+        from argus.model.provider import ModelResponse
+        import time
+
+        providers = {
+            "ollama": {
+                "enabled": True,
+                "free": True,
+                "models": ["llama3"],
+            },
+        }
+        config = GatewayServerConfig(providers=providers)
+        server = GatewayServer(config=config)
+
+        state = server._router._registry.get("ollama")
+        assert state is not None
+        state.cooldown_until = time.time() + 60
+        assert server._router._registry.available("ollama", allow_paid=False) is False
+
+    def test_server_provider_recovery(self):
+        from argus.gateway import GatewayServer, GatewayServerConfig
+        from argus.model.provider import ModelResponse
+        import time
+
+        providers = {
+            "ollama": {
+                "enabled": True,
+                "free": True,
+                "models": ["llama3"],
+            },
+        }
+        config = GatewayServerConfig(providers=providers)
+        server = GatewayServer(config=config)
+
+        state = server._router._registry.get("ollama")
+        assert state is not None
+        state.cooldown_until = time.time() + 60
+        assert server._router._registry.available("ollama", allow_paid=False) is False
+
+        state.cooldown_until = time.time() - 1
+        assert server._router._registry.available("ollama", allow_paid=False) is True
+
+    def test_server_usage_tracking_gateway_mode(self):
+        from argus.gateway import GatewayServer, GatewayServerConfig
+        from argus.model.provider import ModelResponse
+        from unittest.mock import MagicMock
+
+        providers = {
+            "ollama": {
+                "enabled": True,
+                "free": True,
+                "models": ["llama3"],
+            },
+        }
+        config = GatewayServerConfig(providers=providers)
+        server = GatewayServer(config=config)
+        handler = server.create_handler()
+
+        mock_provider = MagicMock()
+        mock_provider.complete.return_value = ModelResponse(content="ok", model="llama3", finish_reason="stop", tool_calls=[], usage={"total_tokens": 10})
+        state = server._router._registry.get("ollama")
+        assert state is not None
+        state.provider = mock_provider
+        server._usage._entries.clear()
+
+        responses = []
+
+        class MockSelf:
+            def _client_id(self):
+                return "127.0.0.1"
+            def _send_json(self, status, data):
+                responses.append(("status", status))
+                responses.append(("body", data))
+            def send_response(self, code): responses.append(("status", code))
+            def send_header(self, name, value): responses.append(("header", name, value))
+            def end_headers(self): responses.append(("end",))
+            @property
+            def wfile(self):
+                return type("W", (), {"write": lambda self, data: responses.append(("write", data))})()
+
+        mock_self = MockSelf()
+        mock_self._handle_completion = types.MethodType(handler._handle_completion, mock_self)
+        mock_self._handle_stream = types.MethodType(handler._handle_stream, mock_self)
+        payload = json.dumps({"model": "llama3", "messages": [{"role": "user", "content": "hi"}]}).encode("utf-8")
+        mock_self.rfile = type("R", (), {"read": lambda self, n: payload})()
+        mock_self.headers = {"Content-Length": str(len(payload))}
+
+        handler._handle_chat_completions(mock_self)
+        assert any(r[0] == "status" and r[1] == 200 for r in responses)
+        assert len(server._usage._entries) == 1
+        assert server._usage._entries[0].provider == "ollama"
+        assert server._usage._entries[0].model == "llama3"
+        assert server._usage._entries[0].success is True
+        assert server._usage._entries[0].tokens == 10
+
+    def test_server_priority_ordering(self):
+        from argus.gateway import GatewayServer, GatewayServerConfig
+        from argus.model.hub import ProviderCapability, ProviderRegistry, ProviderState, ModelRouter
+        from argus.model.usage import UsageTracker
+
+        cap_low = ProviderCapability(name="low", models=["model-x"], free=True, priority=1)
+        cap_high = ProviderCapability(name="high", models=["model-x"], free=True, priority=100)
+        registry = ProviderRegistry()
+        registry.register(ProviderState(capability=cap_low, provider=None))
+        registry.register(ProviderState(capability=cap_high, provider=None))
+        router = ModelRouter(registry=registry, strategy="free_first", budget=None)
+
+        providers = {}
+        config = GatewayServerConfig(providers=providers)
+        server = GatewayServer(config=config)
+        server._router = router
+
+        selected = server._router._select_provider("model-x")
+        assert selected is not None
+        assert selected.capability.name == "high"

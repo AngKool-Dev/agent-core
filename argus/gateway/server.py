@@ -56,9 +56,21 @@ class GatewayServerConfig:
     free_requests: int = 20
     free_window_seconds: float = 3600.0
     providers: Dict[str, Any] = field(default_factory=dict)
+    strategy: str = "free_first"
+    max_retries: int = 3
+
+
+def _normalize_providers(providers: Any) -> Dict[str, Any]:
+    if isinstance(providers, dict):
+        return providers
+    if isinstance(providers, list):
+        return {p["name"]: p for p in providers if isinstance(p, dict) and "name" in p}
+    return {}
 
 
 class GatewayServer:
+    MAX_RETRIES = 3
+
     def __init__(self, config: Optional[GatewayServerConfig] = None):
         self.config = config or GatewayServerConfig()
         self._rate_limiter = RateLimiter(
@@ -69,15 +81,30 @@ class GatewayServer:
         self._router = self._build_router()
 
     def _build_router(self):
+        providers = _normalize_providers(self.config.providers)
         hub_config = {
-            "strategy": "free_first",
+            "strategy": self.config.strategy or "free_first",
             "budget": {"allow_paid": False, "daily_limit": 0.0},
-            "providers": self.config.providers,
+            "providers": providers,
         }
         try:
             return create_router_from_config(hub_config, usage_tracker=self._usage)
         except Exception:
             return None
+
+    def _is_retryable_error(self, error: Exception) -> bool:
+        error_str = str(error).lower()
+        if "auth" in error_str or "unauthorized" in error_str or "401" in error_str:
+            return False
+        if "invalid" in error_str and "request" in error_str:
+            return False
+        return True
+
+    def _extract_request_text(self, messages: List[Dict[str, Any]]) -> Optional[str]:
+        for message in reversed(messages):
+            if message.get("role") == "user" and message.get("content"):
+                return message["content"]
+        return None
 
     def create_handler(self) -> type:
         server = self
@@ -136,6 +163,8 @@ class GatewayServer:
                         cap = state.capability
                         if not cap.free:
                             continue
+                        if not cap.available:
+                            continue
                         for model_id in cap.models:
                             if model_id in seen:
                                 continue
@@ -149,6 +178,7 @@ class GatewayServer:
                                 "context_window": cap.context_window,
                                 "capabilities": cap.capabilities,
                                 "available": cap.available,
+                                "priority": cap.priority,
                             })
 
                 self._send_json(200, {"data": models})
@@ -186,6 +216,16 @@ class GatewayServer:
                     self._send_json(503, {"error": "No free provider available"})
                     return
 
+                if model != "auto":
+                    is_free = False
+                    for state in server._router._registry.list_states():
+                        if model in state.capability.models and state.capability.free:
+                            is_free = True
+                            break
+                    if not is_free:
+                        self._send_json(403, {"error": "Paid models are not available for anonymous requests"})
+                        return
+
                 try:
                     if stream:
                         self._handle_stream(model, messages, tools, payload)
@@ -197,81 +237,107 @@ class GatewayServer:
                     self._send_json(502, {"error": "Provider error"})
 
             def _handle_completion(self, model: str, messages: List[Dict[str, Any]], tools: Optional[List[Dict[str, Any]]], payload: Dict[str, Any]) -> None:
-                try:
-                    response = server._router.complete(
-                        messages=[Message(role=m.get("role", "user"), content=m.get("content", "")) for m in messages],
-                        model=model,
-                        tools=tools,
-                        temperature=payload.get("temperature"),
-                        max_tokens=payload.get("max_tokens") or payload.get("max_completion_tokens"),
-                    )
-                except RuntimeError:
-                    raise GatewayNoProviderError()
+                request_text = server._extract_request_text(messages)
+                last_exception = None
 
-                choice = {
-                    "message": {
-                        "role": "assistant",
-                        "content": response.content,
-                    },
-                    "finish_reason": response.finish_reason,
-                }
-
-                if response.tool_calls:
-                    choice["message"]["tool_calls"] = [
-                        {
-                            "id": tc.call_id,
-                            "type": "function",
-                            "function": {
-                                "name": tc.tool_name,
-                                "arguments": tc.arguments,
+                for attempt in range(server.config.max_retries):
+                    try:
+                        response = server._router.complete(
+                            messages=[Message(role=m.get("role", "user"), content=m.get("content", "")) for m in messages],
+                            model=model,
+                            tools=tools,
+                            request=request_text,
+                            temperature=payload.get("temperature"),
+                            max_tokens=payload.get("max_tokens") or payload.get("max_completion_tokens"),
+                        )
+                        choice = {
+                            "message": {
+                                "role": "assistant",
+                                "content": response.content,
                             },
+                            "finish_reason": response.finish_reason,
                         }
-                        for tc in response.tool_calls
-                    ]
 
-                data = {
-                    "model": response.model,
-                    "choices": [choice],
-                    "usage": response.usage or {},
-                }
-                self._send_json(200, data)
+                        if response.tool_calls:
+                            choice["message"]["tool_calls"] = [
+                                {
+                                    "id": tc.call_id,
+                                    "type": "function",
+                                    "function": {
+                                        "name": tc.tool_name,
+                                        "arguments": tc.arguments,
+                                    },
+                                }
+                                for tc in response.tool_calls
+                            ]
+
+                        data = {
+                            "model": response.model,
+                            "choices": [choice],
+                            "usage": response.usage or {},
+                        }
+                        self._send_json(200, data)
+                        return
+                    except RuntimeError:
+                        raise GatewayNoProviderError()
+                    except Exception as e:
+                        last_exception = e
+                        if not server._is_retryable_error(e):
+                            break
+
+                if isinstance(last_exception, RuntimeError):
+                    raise GatewayNoProviderError()
+                raise last_exception or RuntimeError("No available model provider")
 
             def _handle_stream(self, model: str, messages: List[Dict[str, Any]], tools: Optional[List[Dict[str, Any]]], payload: Dict[str, Any]) -> None:
-                try:
-                    stream = server._router.stream(
-                        messages=[Message(role=m.get("role", "user"), content=m.get("content", "")) for m in messages],
-                        model=model,
-                        tools=tools,
-                        temperature=payload.get("temperature"),
-                        max_tokens=payload.get("max_tokens") or payload.get("max_completion_tokens"),
-                    )
-                except RuntimeError:
+                request_text = server._extract_request_text(messages)
+                last_exception = None
+
+                for attempt in range(server.config.max_retries):
+                    try:
+                        stream = server._router.stream(
+                            messages=[Message(role=m.get("role", "user"), content=m.get("content", "")) for m in messages],
+                            model=model,
+                            tools=tools,
+                            request=request_text,
+                            temperature=payload.get("temperature"),
+                            max_tokens=payload.get("max_tokens") or payload.get("max_completion_tokens"),
+                        )
+                        self.send_response(200)
+                        self.send_header("Content-Type", "text/event-stream")
+                        self.send_header("Cache-Control", "no-cache")
+                        self.send_header("Connection", "keep-alive")
+                        self.end_headers()
+
+                        try:
+                            for chunk in stream:
+                                if hasattr(chunk, "content"):
+                                    data = json.dumps({"choices": [{"delta": {"content": chunk.content}}]})
+                                    self.wfile.write(f"data: {data}\n\n".encode("utf-8"))
+                                    self.wfile.flush()
+                                elif isinstance(chunk, dict):
+                                    data = json.dumps(chunk)
+                                    self.wfile.write(f"data: {data}\n\n".encode("utf-8"))
+                                    self.wfile.flush()
+                        except (BrokenPipeError, ConnectionResetError):
+                            pass
+
+                        try:
+                            self.wfile.write(b"data: [DONE]\n\n")
+                            self.wfile.flush()
+                        except (BrokenPipeError, ConnectionResetError):
+                            pass
+                        return
+                    except RuntimeError:
+                        raise GatewayNoProviderError()
+                    except Exception as e:
+                        last_exception = e
+                        if not server._is_retryable_error(e):
+                            break
+
+                if isinstance(last_exception, RuntimeError):
                     raise GatewayNoProviderError()
-
-                self.send_response(200)
-                self.send_header("Content-Type", "text/event-stream")
-                self.send_header("Cache-Control", "no-cache")
-                self.send_header("Connection", "keep-alive")
-                self.end_headers()
-
-                try:
-                    for chunk in stream:
-                        if hasattr(chunk, "content"):
-                            data = json.dumps({"choices": [{"delta": {"content": chunk.content}}]})
-                            self.wfile.write(f"data: {data}\n\n".encode("utf-8"))
-                            self.wfile.flush()
-                        elif isinstance(chunk, dict):
-                            data = json.dumps(chunk)
-                            self.wfile.write(f"data: {data}\n\n".encode("utf-8"))
-                            self.wfile.flush()
-                except (BrokenPipeError, ConnectionResetError):
-                    pass
-
-                try:
-                    self.wfile.write(b"data: [DONE]\n\n")
-                    self.wfile.flush()
-                except (BrokenPipeError, ConnectionResetError):
-                    pass
+                raise last_exception or RuntimeError("No available model provider")
 
             def do_GET(self) -> None:
                 parsed = urlparse(self.path)
