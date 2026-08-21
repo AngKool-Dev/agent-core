@@ -1,7 +1,7 @@
+use crate::prelude::*;
 use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
-use crate::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct DownloadProgress {
@@ -27,22 +27,37 @@ impl DownloadManager {
         }
     }
 
-    pub fn with_progress_callback(mut self, cb: Arc<dyn Fn(DownloadProgress) + Send + Sync>) -> Self {
+    pub fn with_progress_callback(
+        mut self,
+        cb: Arc<dyn Fn(DownloadProgress) + Send + Sync>,
+    ) -> Self {
         self.on_progress = Some(cb);
         self
     }
 
     pub async fn download(&self, url: &str, dest: &Path) -> Result<()> {
         let temp_dest = dest.with_extension("part");
-        let response = self.client.get(url).header("User-Agent", "EraLauncher/0.1.0").send().await?;
+        let response = self
+            .client
+            .get(url)
+            .header("User-Agent", "EraLauncher/0.1.0")
+            .send()
+            .await?;
         if !response.status().is_success() {
-            return Err(LauncherError::Download(format!("HTTP {}", response.status())));
+            return Err(LauncherError::Download(format!(
+                "HTTP {}",
+                response.status()
+            )));
         }
         std::fs::create_dir_all(dest.parent().unwrap_or(Path::new(".")))?;
         let mut file = std::fs::File::create(&temp_dest)?;
         let mut downloaded: usize = 0;
         let total = response.content_length().map(|t| t as usize);
-        let name = dest.file_name().and_then(|n| n.to_str()).unwrap_or("unknown").to_string();
+        let name = dest
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown")
+            .to_string();
         let mut stream = response.bytes_stream();
         use futures::StreamExt;
         while let Some(chunk) = stream.next().await {
@@ -77,7 +92,9 @@ impl DownloadManager {
         let mut buffer = [0u8; 8192];
         loop {
             let n = std::io::Read::read(&mut file, &mut buffer)?;
-            if n == 0 { break; }
+            if n == 0 {
+                break;
+            }
             hasher.update(&buffer[..n]);
         }
         let hash = hex::encode(hasher.finalize());

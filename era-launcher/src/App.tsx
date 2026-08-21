@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Page, Config, LaunchState } from "../types";
+import type { Page, Config, LaunchState } from "./types";
 import Sidebar from "./components/Sidebar";
 import HomePage from "./pages/HomePage";
 import InstancesPage from "./pages/InstancesPage";

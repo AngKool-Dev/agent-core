@@ -2,14 +2,10 @@ import { invoke } from "@tauri-apps/api/core";
 import type {
   Config,
   InstanceConfig,
-  Account,
-  LaunchState,
-  DownloadProgress,
   ModrinthProject,
   ModrinthVersion,
   JavaInstallation,
-  Page,
-} from "../types";
+} from "./types";
 
 export async function getConfig(): Promise<Config> {
   return invoke("get_config");

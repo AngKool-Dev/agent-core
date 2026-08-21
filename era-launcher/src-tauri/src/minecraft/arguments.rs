@@ -4,7 +4,10 @@ use crate::prelude::*;
 pub struct ArgumentBuilder;
 
 impl ArgumentBuilder {
-    pub fn collect_args(args: &[serde_json::Value], features: &std::collections::HashMap<String, bool>) -> Vec<String> {
+    pub fn collect_args(
+        args: &[serde_json::Value],
+        features: &std::collections::HashMap<String, bool>,
+    ) -> Vec<String> {
         let mut result = Vec::new();
         for arg in args {
             match arg {
@@ -41,16 +44,21 @@ impl ArgumentBuilder {
     }
 
     pub fn substitute_tokens(args: &[String], tokens: &[(String, String)]) -> Vec<String> {
-        args.iter().map(|arg| {
-            let mut result = arg.clone();
-            for (key, value) in tokens {
-                result = result.replace(&format!("${{{}}}", key), value);
-            }
-            result
-        }).collect()
+        args.iter()
+            .map(|arg| {
+                let mut result = arg.clone();
+                for (key, value) in tokens {
+                    result = result.replace(&format!("${{{}}}", key), value);
+                }
+                result
+            })
+            .collect()
     }
 
-    fn rules_apply(rules: &serde_json::Value, features: &std::collections::HashMap<String, bool>) -> bool {
+    fn rules_apply(
+        rules: &serde_json::Value,
+        features: &std::collections::HashMap<String, bool>,
+    ) -> bool {
         let rules_arr = match rules.as_array() {
             Some(a) => a,
             None => return true,
@@ -62,7 +70,10 @@ impl ArgumentBuilder {
                 Some(o) => o,
                 None => continue,
             };
-            let action = obj.get("action").and_then(|a| a.as_str()).unwrap_or("allow");
+            let action = obj
+                .get("action")
+                .and_then(|a| a.as_str())
+                .unwrap_or("allow");
             let os = obj.get("os").and_then(|o| o.as_object());
             let mut rule_ok = true;
             if let Some(os) = os {
@@ -72,7 +83,9 @@ impl ArgumentBuilder {
                         "macos" => "osx",
                         _ => "linux",
                     };
-                    if current != name { rule_ok = false; }
+                    if current != name {
+                        rule_ok = false;
+                    }
                 }
             }
 

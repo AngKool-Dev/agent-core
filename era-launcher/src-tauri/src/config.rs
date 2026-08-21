@@ -1,5 +1,5 @@
-use crate::prelude::*;
 use crate::auth::Account;
+use crate::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
@@ -118,7 +118,9 @@ impl Config {
 
     pub fn add_instance(&mut self, instance: InstanceConfig) -> Result<()> {
         if self.instances.iter().any(|i| i.id == instance.id) {
-            return Err(LauncherError::Instance("Instance already exists".to_string()));
+            return Err(LauncherError::Instance(
+                "Instance already exists".to_string(),
+            ));
         }
         self.instances.push(instance);
         self.save()

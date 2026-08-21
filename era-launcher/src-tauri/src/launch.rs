@@ -1,13 +1,10 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::Arc;
 use crate::prelude::*;
-use crate::downloads::DownloadProgress;
+use crate::downloads::DownloadManager;
 use crate::minecraft::manifest::{ManifestClient, ManifestVersionInfo};
 use crate::minecraft::java::JavaManager;
 use crate::minecraft::arguments::ArgumentBuilder;
-use crate::platform::Paths;
-use crate::config::InstanceConfig;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct LaunchRequest {
@@ -40,7 +37,7 @@ impl LaunchEngine {
 
     pub async fn launch(&self, req: &LaunchRequest, instances_dir: &Path) -> Result<LaunchResult> {
         let instance_dir = instances_dir.join(&req.instance_id);
-        let mc_dir = req.minecraft_dir.as_deref().map(PathBuf::from).unwrap_or_else(|| Paths::new().default_minecraft_dir());
+        std::fs::create_dir_all(&instance_dir)?;
 
         let java_path = if let Some(ref j) = req.java_path {
             PathBuf::from(j)
@@ -52,18 +49,20 @@ impl LaunchEngine {
         };
 
         let version_info = self.manifest.get_version_info_by_id(&req.game_version).await?;
-        let _client_jar = self.download_client(&version_info, &instance_dir, req.fresh).await?;
-        let _libs = self.download_libraries(&version_info, &instance_dir, req.fresh).await?;
-        let natives_dir = self.extract_natives(&version_info, &instance_dir)?;
-        let game_dir = if mc_dir.join("versions").join(&req.game_version).exists() {
-            mc_dir.join("versions").join(&req.game_version)
-        } else {
-            instance_dir.clone()
-        };
-        let assets_dir = mc_dir.join("assets");
+
+        let client_jar = self.download_client(&version_info, &instance_dir, req.fresh).await?;
+        let libs = self.download_libraries(&version_info, &instance_dir, req.fresh).await?;
+        let natives_dir = self.extract_natives(&version_info, &instance_dir).await?;
+
+        let game_dir = instance_dir.join("game");
+        std::fs::create_dir_all(&game_dir)?;
+        let assets_dir = instance_dir.join("assets");
+        std::fs::create_dir_all(&assets_dir)?;
+
+        self.download_assets(&version_info, &assets_dir).await?;
 
         let (jvm_args, game_args, main_class) = self.build_args(&version_info, req, &game_dir, &assets_dir, &natives_dir, req.memory);
-        let classpath = self.build_classpath(&instance_dir, &version_info, &natives_dir);
+        let classpath = self.build_classpath(&instance_dir, &client_jar, &libs, &natives_dir);
 
         let mut cmd = Command::new(&java_path);
         for arg in &jvm_args { cmd.arg(arg); }
@@ -74,14 +73,11 @@ impl LaunchEngine {
         let child = cmd.spawn().map_err(|e| LauncherError::Process(format!("Failed to spawn: {}", e)))?;
         let pid = child.id();
 
-        let output = child.wait_with_output().map_err(|e| LauncherError::Process(format!("Failed to wait: {}", e)))?;
-        let exit_code = output.status.code();
-
         Ok(LaunchResult {
-            success: output.status.success(),
+            success: true,
             pid: Some(pid),
-            exit_code,
-            message: if output.status.success() { "Minecraft exited successfully".to_string() } else { "Minecraft exited with error".to_string() },
+            exit_code: None,
+            message: format!("Minecraft {} launched (PID {})", req.game_version, pid),
         })
     }
 
@@ -93,33 +89,66 @@ impl LaunchEngine {
             return Ok(client_path);
         }
         if let Some(ref dl) = info.downloads.as_ref().and_then(|d| d.client.as_ref()) {
-            let dm = crate::downloads::DownloadManager::new();
+            let dm = DownloadManager::new();
             dm.download(&dl.url, &client_path).await?;
         }
         Ok(client_path)
     }
 
-    async fn download_libraries(&self, info: &ManifestVersionInfo, root: &Path, _fresh: bool) -> Result<Vec<PathBuf>> {
+    async fn download_libraries(&self, info: &ManifestVersionInfo, root: &Path, fresh: bool) -> Result<Vec<PathBuf>> {
         let libs_dir = root.join("libraries");
+        std::fs::create_dir_all(&libs_dir)?;
         let mut paths = Vec::new();
         for lib in &info.libraries {
             if !self.library_applies(&lib.rules) { continue; }
-            let path = self.resolve_library_path(&lib.name, &libs_dir);
-            if let Some(ref artifact) = lib.artifact {
-                if !artifact.url.is_empty() && !path.exists() {
-                    let dm = crate::downloads::DownloadManager::new();
-                    let _ = dm.download(&artifact.url, &path).await;
+            let mut added = false;
+            if let Some(ref downloads) = lib.downloads {
+                if let Some(ref artifact) = downloads.artifact {
+                    if !artifact.url.is_empty() {
+                        let path = self.resolve_library_path(&lib.name, &libs_dir);
+                        if fresh || !path.exists() {
+                            let dm = DownloadManager::new();
+                            let _ = dm.download(&artifact.url, &path).await;
+                        }
+                        paths.push(path);
+                        added = true;
+                    }
+                } else if let Some(ref classifiers) = downloads.classifiers {
+                    let os = match std::env::consts::OS { "windows" => "windows", "macos" => "osx", _ => "linux" };
+                    let arch = if std::env::consts::ARCH == "aarch64" { "arm64" } else { "x86_64" };
+                    let key = format!("{}-{}", os, arch);
+                    if let Some(artifact) = classifiers.get(&key) {
+                        let class_path = self.resolve_classifier_path(&lib.name, &libs_dir, &key);
+                        if fresh || !class_path.exists() {
+                            let dm = DownloadManager::new();
+                            let _ = dm.download(&artifact.url, &class_path).await;
+                        }
+                        paths.push(class_path);
+                        added = true;
+                    }
                 }
             }
-            paths.push(path);
+            if !added {
+                paths.push(self.resolve_library_path(&lib.name, &libs_dir));
+            }
         }
         Ok(paths)
     }
 
-    fn extract_natives(&self, _info: &ManifestVersionInfo, root: &Path) -> Result<PathBuf> {
+    async fn extract_natives(&self, _info: &ManifestVersionInfo, root: &Path) -> Result<PathBuf> {
         let natives_dir = root.join("natives");
         std::fs::create_dir_all(&natives_dir)?;
         Ok(natives_dir)
+    }
+
+    async fn download_assets(&self, info: &ManifestVersionInfo, assets_dir: &Path) -> Result<()> {
+        let index_path = assets_dir.join("indexes").join(format!("{}.json", info.asset_index.id));
+        std::fs::create_dir_all(index_path.parent().unwrap())?;
+        if !index_path.exists() {
+            let dm = DownloadManager::new();
+            let _ = dm.download(&info.asset_index.url, &index_path).await;
+        }
+        Ok(())
     }
 
     fn build_args(&self, info: &ManifestVersionInfo, req: &LaunchRequest, game_dir: &Path, assets_dir: &Path, natives_dir: &Path, memory: u32) -> (Vec<String>, Vec<String>, String) {
@@ -139,8 +168,25 @@ impl LaunchEngine {
             ("resolution_height".to_string(), "480".to_string()),
         ];
 
-        let jvm_args = ArgumentBuilder::build_jvm_args(&["-Xmx${MAX_MEMORY}M".to_string(), "-Duser.language=en".to_string()], memory);
-        let game_args = vec!["--username".to_string(), "${auth_player_name}".to_string(), "--version".to_string(), "${version_name}".to_string(), "--gameDir".to_string(), "${game_directory}".to_string(), "--assetsDir".to_string(), "${assets_root}".to_string()];
+        let mut jvm_args = vec![format!("-Xmx{}M", memory), "-Duser.language=en".to_string()];
+        let mut game_args = vec![
+            "--username".to_string(), "${auth_player_name}".to_string(),
+            "--version".to_string(), "${version_name}".to_string(),
+            "--gameDir".to_string(), "${game_directory}".to_string(),
+            "--assetsDir".to_string(), "${assets_root}".to_string(),
+        ];
+
+        if let Some(ref args) = info.arguments {
+            let features = std::collections::HashMap::new();
+            if args.jvm.iter().any(|v| v.is_string()) || args.jvm.iter().any(|v| v.is_object()) {
+                let parsed = ArgumentBuilder::collect_args(&args.jvm, &features);
+                jvm_args.extend(parsed);
+            }
+            if args.game.iter().any(|v| v.is_string()) || args.game.iter().any(|v| v.is_object()) {
+                let parsed = ArgumentBuilder::collect_args(&args.game, &features);
+                game_args.extend(parsed);
+            }
+        }
 
         let jvm_args = ArgumentBuilder::substitute_tokens(&jvm_args, &tokens);
         let game_args = ArgumentBuilder::substitute_tokens(&game_args, &tokens);
@@ -149,13 +195,9 @@ impl LaunchEngine {
         (jvm_args, game_args, main_class)
     }
 
-    fn build_classpath(&self, root: &Path, info: &ManifestVersionInfo, natives_dir: &Path) -> String {
-        let mut parts = vec![root.join("versions").join(&info.id).join(format!("{}.jar", info.id))];
-        let libs_dir = root.join("libraries");
-        for lib in &info.libraries {
-            if !self.library_applies(&lib.rules) { continue; }
-            parts.push(self.resolve_library_path(&lib.name, &libs_dir));
-        }
+    fn build_classpath(&self, _root: &Path, client_jar: &Path, libs: &[PathBuf], natives_dir: &Path) -> String {
+        let mut parts = vec![client_jar.to_path_buf()];
+        parts.extend(libs.iter().cloned());
         if natives_dir.exists() {
             parts.push(natives_dir.to_path_buf());
         }
@@ -169,8 +211,19 @@ impl LaunchEngine {
             let group = parts[0].replace('.', "/");
             let artifact = parts[1];
             let version = parts[2];
-            let classifier = parts.get(3).map(|s| format!("-{}", s)).unwrap_or_default();
-            base.join(group).join(artifact).join(version).join(format!("{}-{}{}.jar", artifact, version, classifier))
+            base.join(group).join(artifact).join(version).join(format!("{}-{}.jar", artifact, version))
+        } else {
+            base.join(name.replace(':', "/")).with_extension("jar")
+        }
+    }
+
+    fn resolve_classifier_path(&self, name: &str, base: &Path, classifier: &str) -> PathBuf {
+        let parts: Vec<&str> = name.split(':').collect();
+        if parts.len() >= 3 {
+            let group = parts[0].replace('.', "/");
+            let artifact = parts[1];
+            let version = parts[2];
+            base.join(group).join(artifact).join(version).join(format!("{}-{}-{}.jar", artifact, version, classifier))
         } else {
             base.join(name.replace(':', "/")).with_extension("jar")
         }

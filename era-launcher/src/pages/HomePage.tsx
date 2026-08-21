@@ -9,7 +9,7 @@ interface HomePageProps {
   setLaunchState: (s: LaunchState) => void;
 }
 
-export default function HomePage({ config, refreshConfig, launchState, setLaunchState }: HomePageProps) {
+export default function HomePage({ config, launchState, setLaunchState }: HomePageProps) {
   const [selectedAccount, setSelectedAccount] = useState<string>(config.default_account || config.accounts[0]?.uuid || "");
   const [consoleLog, setConsoleLog] = useState<string[]>([]);
   const [javaLabel, setJavaLabel] = useState("Detecting...");

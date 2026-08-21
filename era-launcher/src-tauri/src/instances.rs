@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstanceConfig {
@@ -42,7 +43,9 @@ pub struct InstanceManager {
 
 impl InstanceManager {
     pub fn new() -> Self {
-        Self { instances: Vec::new() }
+        Self {
+            instances: Vec::new(),
+        }
     }
 
     pub fn list(&self) -> &[InstanceConfig] {
@@ -74,5 +77,25 @@ impl InstanceManager {
         } else {
             false
         }
+    }
+}
+
+impl InstanceConfig {
+    pub fn instance_dir(&self, base: &Path) -> PathBuf {
+        base.join(&self.id)
+    }
+
+    pub fn prepare_dirs(&self, base: &Path) -> crate::prelude::Result<()> {
+        let dir = self.instance_dir(base);
+        std::fs::create_dir_all(dir.join("game"))?;
+        std::fs::create_dir_all(dir.join("libraries"))?;
+        std::fs::create_dir_all(dir.join("natives"))?;
+        std::fs::create_dir_all(dir.join("assets"))?;
+        std::fs::create_dir_all(dir.join("mods"))?;
+        std::fs::create_dir_all(dir.join("config"))?;
+        std::fs::create_dir_all(dir.join("saves"))?;
+        std::fs::create_dir_all(dir.join("resourcepacks"))?;
+        std::fs::create_dir_all(dir.join("shaderpacks"))?;
+        Ok(())
     }
 }

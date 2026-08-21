@@ -1,7 +1,7 @@
+use crate::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use crate::prelude::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JavaVersion {
@@ -20,7 +20,11 @@ impl JavaVersion {
         let parts: Vec<&str> = num_str.split('.').collect();
         let major = parts.first()?.parse().ok()?;
         let minor = parts.get(1).and_then(|v| v.parse().ok()).unwrap_or(0);
-        Some(Self { major, minor, path: path.to_path_buf() })
+        Some(Self {
+            major,
+            minor,
+            path: path.to_path_buf(),
+        })
     }
 }
 
@@ -39,9 +43,15 @@ impl JavaManager {
         for path in candidates {
             if let Ok(output) = Self::run_java_version(&path) {
                 if let Some(version) = JavaVersion::parse_output(&path, &output) {
-                    installs.push(JavaInstallation { path, version: Some(version) });
+                    installs.push(JavaInstallation {
+                        path,
+                        version: Some(version),
+                    });
                 } else {
-                    installs.push(JavaInstallation { path, version: None });
+                    installs.push(JavaInstallation {
+                        path,
+                        version: None,
+                    });
                 }
             }
         }
@@ -50,11 +60,18 @@ impl JavaManager {
 
     pub fn find_compatible(required_major: u32) -> Option<JavaInstallation> {
         let installs = Self::detect_all();
-        installs.into_iter().filter(|i| i.version.as_ref().map(|v| v.major) == Some(required_major)).next()
+        installs
+            .into_iter()
+            .filter(|i| i.version.as_ref().map(|v| v.major) == Some(required_major))
+            .next()
     }
 
     pub fn required_for_minecraft(version: &str) -> u32 {
-        let major = version.split('.').next().and_then(|v| v.parse::<u32>().ok()).unwrap_or(1);
+        let major = version
+            .split('.')
+            .next()
+            .and_then(|v| v.parse::<u32>().ok())
+            .unwrap_or(1);
         match major {
             1..=16 => 8,
             17 => 17,
@@ -83,7 +100,9 @@ impl JavaManager {
             let local_app_data = std::env::var("LOCALAPPDATA").unwrap_or_default();
 
             for base in [program_files, program_files_x86, local_app_data] {
-                if base.is_empty() { continue; }
+                if base.is_empty() {
+                    continue;
+                }
                 if let Ok(entries) = std::fs::read_dir(base) {
                     for entry in entries.flatten() {
                         let p = entry.path().join("bin").join(bin_name);

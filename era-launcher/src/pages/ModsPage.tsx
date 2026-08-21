@@ -30,7 +30,7 @@ export default function ModsPage({ config }: ModsPageProps) {
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const hits = await searchModrinth(query, contentType, gameVersion, loader);
+      const hits = await searchModrinth({ query, content_type: contentType, game_version: gameVersion, loader: loader });
       setResults(hits);
     } catch (e) {
       console.error(e);

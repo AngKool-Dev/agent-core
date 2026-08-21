@@ -1,6 +1,6 @@
+use crate::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use crate::prelude::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VersionInfo {
@@ -83,7 +83,11 @@ impl SystemScanner {
                 for entry in entries.flatten() {
                     let path = entry.path();
                     if path.is_dir() {
-                        let id = path.file_name().and_then(|n| n.to_str()).unwrap_or("").to_string();
+                        let id = path
+                            .file_name()
+                            .and_then(|n| n.to_str())
+                            .unwrap_or("")
+                            .to_string();
                         let json_path = path.join(format!("{}.json", id));
                         if json_path.exists() {
                             if let Ok(content) = std::fs::read_to_string(&json_path) {
@@ -99,14 +103,20 @@ impl SystemScanner {
 
         let libraries_dir = dir.join("libraries");
         if libraries_dir.exists() {
-            result.library_count = walkdir::WalkDir::new(&libraries_dir).into_iter().filter(|e| e.as_ref().map(|e| e.path().is_file()).unwrap_or(false)).count();
+            result.library_count = walkdir::WalkDir::new(&libraries_dir)
+                .into_iter()
+                .filter(|e| e.as_ref().map(|e| e.path().is_file()).unwrap_or(false))
+                .count();
         }
 
         let assets_dir = dir.join("assets");
         if assets_dir.exists() {
             let objects = assets_dir.join("objects");
             if objects.exists() {
-                result.asset_object_count = walkdir::WalkDir::new(&objects).into_iter().filter(|e| e.as_ref().map(|e| e.path().is_file()).unwrap_or(false)).count();
+                result.asset_object_count = walkdir::WalkDir::new(&objects)
+                    .into_iter()
+                    .filter(|e| e.as_ref().map(|e| e.path().is_file()).unwrap_or(false))
+                    .count();
             }
             let indexes = assets_dir.join("indexes");
             if indexes.exists() {
@@ -138,9 +148,20 @@ impl SystemScanner {
 
     fn parse_version_json(content: &str) -> Result<VersionInfo> {
         let v: serde_json::Value = serde_json::from_str(content)?;
-        let id = v.get("id").and_then(|v| v.as_str()).unwrap_or("unknown").to_string();
-        let main_class = v.get("mainClass").and_then(|v| v.as_str()).map(|s| s.to_string());
-        let java_version = v.get("javaVersion").and_then(|j| j.get("major")).and_then(|m| m.as_u64()).map(|m| m as u32);
+        let id = v
+            .get("id")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown")
+            .to_string();
+        let main_class = v
+            .get("mainClass")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        let java_version = v
+            .get("javaVersion")
+            .and_then(|j| j.get("major"))
+            .and_then(|m| m.as_u64())
+            .map(|m| m as u32);
         let has_client_jar = v.get("downloads").and_then(|d| d.get("client")).is_some();
         Ok(VersionInfo {
             id,

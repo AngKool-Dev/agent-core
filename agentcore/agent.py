@@ -249,7 +249,7 @@ class Agent:
 
         while self._iterations < self.config.max_iterations:
             elapsed = time.time() - self._start_time
-            if elapsed > self.config.max_runtime_seconds:
+            if elapsed >= self.config.max_runtime_seconds:
                 results["status"] = "TIMEOUT"
                 results["stopped_reason"] = "timeout"
                 self._current_task.update_state(TaskState.BLOCKED)

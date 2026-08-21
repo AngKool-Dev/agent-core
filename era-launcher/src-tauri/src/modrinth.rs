@@ -49,23 +49,44 @@ pub struct ModrinthClient {
 impl ModrinthClient {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            client: Client::builder().timeout(std::time::Duration::from_secs(30)).build()?,
+            client: Client::builder()
+                .timeout(std::time::Duration::from_secs(30))
+                .build()?,
         })
     }
 
-    pub async fn search(&self, query: &str, limit: usize, offset: usize, facets: &[String], index: Option<&str>) -> Result<SearchResult> {
-        let mut request = self.client.get(&format!("{}/search", MODRINTH_API)).header("User-Agent", "EraLauncher/0.1.0");
+    pub async fn search(
+        &self,
+        query: &str,
+        limit: usize,
+        offset: usize,
+        facets: &[String],
+        index: Option<&str>,
+    ) -> Result<SearchResult> {
+        let mut request = self
+            .client
+            .get(&format!("{}/search", MODRINTH_API))
+            .header("User-Agent", "EraLauncher/0.1.0");
         if !query.is_empty() {
             request = request.query(&[("query", query)]);
         }
         if !facets.is_empty() {
-            let facets_json = serde_json::to_string(&facets.iter().map(|f| vec![f.as_str()]).collect::<Vec<Vec<&str>>>()).unwrap_or_default();
+            let facets_json = serde_json::to_string(
+                &facets
+                    .iter()
+                    .map(|f| vec![f.as_str()])
+                    .collect::<Vec<Vec<&str>>>(),
+            )
+            .unwrap_or_default();
             request = request.query(&[("facets", &facets_json)]);
         }
         if let Some(idx) = index {
             request = request.query(&[("index", idx)]);
         }
-        request = request.query(&[("limit", &limit.to_string()), ("offset", &offset.to_string())]);
+        request = request.query(&[
+            ("limit", &limit.to_string()),
+            ("offset", &offset.to_string()),
+        ]);
         let resp = request.send().await?;
         if !resp.status().is_success() {
             return Err(LauncherError::Modrinth(format!("HTTP {}", resp.status())));
@@ -75,7 +96,12 @@ impl ModrinthClient {
     }
 
     pub async fn get_project_versions(&self, project_id: &str) -> Result<Vec<Version>> {
-        let resp = self.client.get(&format!("{}/project/{}/version", MODRINTH_API, project_id)).header("User-Agent", "EraLauncher/0.1.0").send().await?;
+        let resp = self
+            .client
+            .get(&format!("{}/project/{}/version", MODRINTH_API, project_id))
+            .header("User-Agent", "EraLauncher/0.1.0")
+            .send()
+            .await?;
         if !resp.status().is_success() {
             return Err(LauncherError::Modrinth(format!("HTTP {}", resp.status())));
         }
