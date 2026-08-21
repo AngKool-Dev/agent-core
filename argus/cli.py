@@ -68,6 +68,11 @@ def parse_args(args=None):
         help="Force AI mode: free (Argus Gateway), byok (your keys), local (Ollama)",
     )
     parser.add_argument(
+        "--serve-gateway",
+        action="store_true",
+        help="Start the Argus Free Gateway server locally",
+    )
+    parser.add_argument(
         "request",
         nargs="?",
         default=None,
@@ -230,6 +235,25 @@ def cmd_gateway(config: ArgusConfig) -> int:
     return 0
 
 
+def cmd_gateway_serve(config: ArgusConfig) -> int:
+    from argus.gateway import GatewayServer, GatewayServerConfig
+
+    server_config = GatewayServerConfig(
+        host=config.get("gateway_server.host", "127.0.0.1"),
+        port=int(config.get("gateway_server.port", 8787)),
+        free_requests=int(config.get("gateway_server.free_requests", 20)),
+        free_window_seconds=float(config.get("gateway_server.free_window_seconds", 3600)),
+    )
+    server = GatewayServer(config=server_config)
+    print(f"Argus Gateway Server starting on http://{server_config.host}:{server_config.port}")
+    print("Press Ctrl+C to stop.")
+    try:
+        server.serve()
+    except KeyboardInterrupt:
+        print("\nServer stopped.")
+    return 0
+
+
 def cmd_onboard(config: ArgusConfig, credentials: CredentialManager) -> int:
     print()
     print("Welcome to Argus")
@@ -356,6 +380,9 @@ def main(args=None) -> int:
     usage = UsageTracker()
 
     request = parsed.request
+
+    if parsed.serve_gateway:
+        return cmd_gateway_serve(config)
 
     if request == "onboard":
         return cmd_onboard(config, credentials)

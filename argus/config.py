@@ -159,6 +159,12 @@ class ArgusConfig:
                 "api_key": "",
                 "timeout": 120,
             },
+            "gateway_server": {
+                "host": "127.0.0.1",
+                "port": 8787,
+                "free_requests": 20,
+                "free_window_seconds": 3600,
+            },
         }
 
         for section, values in defaults.items():
