@@ -64,7 +64,9 @@ The runtime adapter owns:
 
 ## Skill System
 
-Skills are discovered from `D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills` and automatically composed based on user prompts.
+Skills are discovered from the paths configured in `argus.toml` (default:
+`~/.config/argus/config.toml` or `./argus.toml`) and automatically composed
+based on user prompts.
 
 Available skills include:
 - `debugging-and-error-recovery` - Systematic bug fixing

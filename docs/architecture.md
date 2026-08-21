@@ -46,7 +46,7 @@ AgentCore is a universal AI coding-agent framework with pluggable runtime adapte
 - Verification state
 
 ### Skill System
-- Discovers skills from `D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills`
+- Discovers skills from paths in `argus.toml` (default: `argus/skills/builtin`)
 - Automatic routing based on prompt analysis
 - Supports multiple skills per task
 

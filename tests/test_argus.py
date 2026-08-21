@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 from argus.config import ArgusConfig
 from argus.memory import ArgusMemory
 from argus.session import Session, SessionManager
@@ -964,7 +966,7 @@ class TestArgusEndToEnd:
         mock_memory.retrieve_relevant_memory.return_value = ""
         mock_memory.list.return_value = []
 
-        agent = ArgusAgent(project_path="D:/agent-core", memory=mock_memory)
+        agent = ArgusAgent(project_path=str(PROJECT_ROOT), memory=mock_memory)
         result = agent.execute("List the files in the project root")
         assert result["status"] == "COMPLETED"
         assert result["tools_used"] > 0
@@ -1075,7 +1077,7 @@ class TestAgentReliability:
         from argus.tools.file import ReadFileTool
 
         tool = ReadFileTool()
-        result = tool.execute(path="C:/Windows/System32/config", workspace="D:/agent-core")
+        result = tool.execute(path="C:/Windows/System32/config", workspace=str(PROJECT_ROOT))
         assert result.success is False
         assert "outside workspace" in result.error.lower()
 
@@ -1083,7 +1085,7 @@ class TestAgentReliability:
         from argus.tools.file import WriteFileTool
 
         tool = WriteFileTool()
-        result = tool.execute(path="C:/Windows/System32/test.txt", content="test", workspace="D:/agent-core")
+        result = tool.execute(path="C:/Windows/System32/test.txt", content="test", workspace=str(PROJECT_ROOT))
         assert result.success is False
         assert "outside workspace" in result.error.lower()
 
@@ -1091,7 +1093,7 @@ class TestAgentReliability:
         from argus.tools.file import EditFileTool
 
         tool = EditFileTool()
-        result = tool.execute(path="C:/Windows/System32/config", old_string="a", new_string="b", workspace="D:/agent-core")
+        result = tool.execute(path="C:/Windows/System32/config", old_string="a", new_string="b", workspace=str(PROJECT_ROOT))
         assert result.success is False
         assert "outside workspace" in result.error.lower()
 
@@ -1099,7 +1101,7 @@ class TestAgentReliability:
         from argus.tools.file import ListDirTool
 
         tool = ListDirTool()
-        result = tool.execute(path="C:/Windows/System32", workspace="D:/agent-core")
+        result = tool.execute(path="C:/Windows/System32", workspace=str(PROJECT_ROOT))
         assert result.success is False
         assert "outside workspace" in result.error.lower()
 
@@ -1107,7 +1109,7 @@ class TestAgentReliability:
         from argus.tools.search import GrepTool
 
         tool = GrepTool()
-        result = tool.execute(pattern="test", path="C:/Windows/System32", workspace="D:/agent-core")
+        result = tool.execute(pattern="test", path="C:/Windows/System32", workspace=str(PROJECT_ROOT))
         assert result.success is False
         assert "outside workspace" in result.error.lower()
 
@@ -1115,7 +1117,7 @@ class TestAgentReliability:
         from argus.tools.search import GlobTool
 
         tool = GlobTool()
-        result = tool.execute(pattern="*.txt", path="C:/Windows/System32", workspace="D:/agent-core")
+        result = tool.execute(pattern="*.txt", path="C:/Windows/System32", workspace=str(PROJECT_ROOT))
         assert result.success is False
         assert "outside workspace" in result.error.lower()
 
@@ -1123,7 +1125,7 @@ class TestAgentReliability:
         from argus.tools.file import ReadFileTool
 
         tool = ReadFileTool()
-        result = tool.execute(path="README.md", workspace="D:/agent-core")
+        result = tool.execute(path="README.md", workspace=str(PROJECT_ROOT))
         assert result.success is True
 
     def test_bash_blocks_dangerous_rm(self):
@@ -1419,22 +1421,22 @@ class TestGitWorkflow:
         from argus.tools.git import GitStatusTool, GitDiffTool, GitAddTool, GitCommitTool
 
         status_tool = GitStatusTool()
-        result = status_tool.execute(project_path=str(tmp_path), workspace="D:/agent-core")
+        result = status_tool.execute(project_path=str(tmp_path), workspace=str(PROJECT_ROOT))
         assert result.success is False
         assert "outside workspace" in result.error.lower()
 
         diff_tool = GitDiffTool()
-        result = diff_tool.execute(project_path=str(tmp_path), workspace="D:/agent-core")
+        result = diff_tool.execute(project_path=str(tmp_path), workspace=str(PROJECT_ROOT))
         assert result.success is False
         assert "outside workspace" in result.error.lower()
 
         add_tool = GitAddTool()
-        result = add_tool.execute(project_path=str(tmp_path), paths=["file.txt"], workspace="D:/agent-core")
+        result = add_tool.execute(project_path=str(tmp_path), paths=["file.txt"], workspace=str(PROJECT_ROOT))
         assert result.success is False
         assert "outside workspace" in result.error.lower()
 
         commit_tool = GitCommitTool()
-        result = commit_tool.execute(project_path=str(tmp_path), message="test", workspace="D:/agent-core")
+        result = commit_tool.execute(project_path=str(tmp_path), message="test", workspace=str(PROJECT_ROOT))
         assert result.success is False
         assert "outside workspace" in result.error.lower()
 

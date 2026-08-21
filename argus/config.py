@@ -57,8 +57,7 @@ class ArgusConfig:
             },
             "skills": {
                 "paths": [
-                    "D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills",
-                    "D:/agent-core/argus/skills/builtin",
+                    os.path.join(os.path.dirname(__file__), "skills", "builtin"),
                 ],
             },
             "memory": {

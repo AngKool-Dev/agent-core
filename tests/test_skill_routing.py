@@ -1,13 +1,17 @@
 import pytest
+import os
 from pathlib import Path
 from agentcore.skills import Skill, SkillRegistry
 from agentcore.router import SkillRouter, RoutingResult
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SKILLS_PATH = str(PROJECT_ROOT / "unified_folder" / "ObsidianVault" / "agent-skills" / "skills")
 
 
 class TestSkillRegistryDiscovery:
     def test_discover_existing_skills(self):
         registry = SkillRegistry()
-        skills = registry.discover(["D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills"])
+        skills = registry.discover([SKILLS_PATH])
         
         assert len(skills) > 0
         skill_names = [s.name for s in skills]
@@ -16,7 +20,7 @@ class TestSkillRegistryDiscovery:
 
     def test_skill_has_required_fields(self):
         registry = SkillRegistry()
-        skills = registry.discover(["D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills"])
+        skills = registry.discover([SKILLS_PATH])
         
         for skill in skills:
             assert skill.name
@@ -25,7 +29,7 @@ class TestSkillRegistryDiscovery:
 
     def test_find_skill_by_name(self):
         registry = SkillRegistry()
-        registry.discover(["D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills"])
+        registry.discover([SKILLS_PATH])
         
         skill = registry.find("debugging-and-error-recovery")
         assert skill is not None
@@ -33,14 +37,14 @@ class TestSkillRegistryDiscovery:
 
     def test_list_all_skills(self):
         registry = SkillRegistry()
-        registry.discover(["D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills"])
+        registry.discover([SKILLS_PATH])
         
         skills = registry.list()
         assert len(skills) >= 20
 
     def test_nonexistent_skill_not_found(self):
         registry = SkillRegistry()
-        registry.discover(["D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills"])
+        registry.discover([SKILLS_PATH])
         
         skill = registry.find("nonexistent-skill")
         assert skill is None

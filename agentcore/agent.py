@@ -155,7 +155,7 @@ class Agent:
             return []
 
     def _route_skills(self, prompt: str, context: Dict[str, Any]) -> RoutingResult:
-        skill_paths = ["D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills"]
+        skill_paths = []
         registry = SkillRegistry(skill_paths)
         skills = registry.discover(skill_paths)
         

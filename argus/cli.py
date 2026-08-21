@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from argus import __version__
 from argus.agent import ArgusAgent
 from argus.config import ArgusConfig
 from argus.model import GatewayModelProvider, create_model_from_config, create_router_from_config
@@ -53,6 +54,11 @@ def parse_args(args=None):
         "--verbose",
         action="store_true",
         help="Enable verbose logging",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"argus {__version__}",
     )
     parser.add_argument(
         "--session",

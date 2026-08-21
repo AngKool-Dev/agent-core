@@ -1,7 +1,7 @@
 default_runtime = "hermes"
 
 [skill_paths]
-primary = "D:/agent-core/unified_folder/ObsidianVault/agent-skills/skills"
+primary = ""
 
 [memory]
 backend = "db_obsidian"
