@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 from argus.agent import ArgusAgent, ArgusAgentConfig
 from argus.commands import build_registry
 from argus.config import ArgusConfig
-from argus.model import create_model_from_config
+from argus.model import GatewayModelProvider, create_model_from_config
 from argus.model.credentials import CredentialManager
 from argus.model.usage import UsageTracker
 from argus.permissions import PermissionConfig
@@ -114,6 +114,13 @@ class ArgusREPL:
         router = self._build_router()
         if router:
             return router
+
+        gateway_config = self.config.get("gateway", {})
+        if gateway_config.get("base_url"):
+            return GatewayModelProvider(
+                base_url=gateway_config.get("base_url", ""),
+                api_key=gateway_config.get("api_key", ""),
+            )
 
         model_config = {
             "provider": self.config.get("model.provider", "ollama"),

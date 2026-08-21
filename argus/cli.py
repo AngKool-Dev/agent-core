@@ -8,7 +8,7 @@ from typing import Optional
 
 from argus.agent import ArgusAgent
 from argus.config import ArgusConfig
-from argus.model import create_model_from_config, create_router_from_config
+from argus.model import GatewayModelProvider, create_model_from_config, create_router_from_config
 from argus.model.credentials import CredentialManager
 from argus.model.usage import UsageTracker
 from argus.repl import ArgusREPL
@@ -61,6 +61,13 @@ def parse_args(args=None):
         help="Session name to load",
     )
     parser.add_argument(
+        "--mode",
+        type=str,
+        default=None,
+        choices=["free", "byok", "local"],
+        help="Force AI mode: free (Argus Gateway), byok (your keys), local (Ollama)",
+    )
+    parser.add_argument(
         "request",
         nargs="?",
         default=None,
@@ -86,6 +93,30 @@ def _build_router(config: ArgusConfig, credentials: Optional[CredentialManager] 
         return create_router_from_config(hub_config, usage_tracker=usage)
     except Exception:
         return None
+
+
+def _build_gateway_model(config: ArgusConfig) -> Optional[GatewayModelProvider]:
+    gateway_config = config.get("gateway", {})
+    if not gateway_config or not gateway_config.get("base_url"):
+        return None
+    return GatewayModelProvider(
+        base_url=gateway_config.get("base_url", ""),
+        api_key=gateway_config.get("api_key", ""),
+    )
+
+
+def _has_byok_credentials(config: ArgusConfig, credentials: CredentialManager) -> bool:
+    if credentials.list_providers():
+        return True
+    hub_config = config.get("model_hub", {})
+    providers = hub_config.get("providers", {})
+    for name, pconfig in providers.items():
+        if pconfig.get("api_key"):
+            return True
+    model_config = config.get("model", {})
+    if model_config.get("api_key"):
+        return True
+    return False
 
 
 def cmd_providers(config: ArgusConfig, router=None, credentials: Optional[CredentialManager] = None) -> int:
@@ -159,13 +190,53 @@ def cmd_model(config: ArgusConfig, name: Optional[str] = None, router=None) -> i
     return 0
 
 
+def cmd_gateway(config: ArgusConfig) -> int:
+    gateway_config = config.get("gateway", {})
+    if not gateway_config:
+        print("Gateway is not configured.")
+        print("Set [gateway] base_url in argus.toml to enable Argus Free Gateway.")
+        return 0
+
+    provider = GatewayModelProvider(
+        base_url=gateway_config.get("base_url", ""),
+        api_key=gateway_config.get("api_key", ""),
+    )
+
+    print("ARGUS GATEWAY")
+    print()
+
+    try:
+        health = provider.health()
+        print(f"Status: {health.status}")
+        print(f"Anonymous available: {health.anonymous_available}")
+        print(f"Providers: {', '.join(health.providers)}")
+        print()
+    except Exception as e:
+        print(f"Health check failed: {e}")
+        print()
+
+    try:
+        models = provider.list_models()
+        if models:
+            print("Available models:")
+            for m in models:
+                tag = "FREE" if m.free else "PAID"
+                print(f"  [{tag}] {m.id} ({m.provider})")
+        else:
+            print("No models available.")
+    except Exception as e:
+        print(f"Failed to list models: {e}")
+
+    return 0
+
+
 def cmd_onboard(config: ArgusConfig, credentials: CredentialManager) -> int:
     print()
     print("Welcome to Argus")
     print()
     print("Choose how Argus gets its AI:")
     print()
-    print("1. Free models (Gemini, Groq, Cerebras, OpenRouter)")
+    print("1. Free models (Argus Gateway - no API key needed)")
     print("2. Connect a paid provider (OpenAI, Anthropic)")
     print("3. Local Ollama")
     print("4. Configure later")
@@ -173,7 +244,17 @@ def cmd_onboard(config: ArgusConfig, credentials: CredentialManager) -> int:
 
     choice = input("Enter choice [1-4]: ").strip()
     if choice == "1":
-        _onboard_free(credentials)
+        print()
+        print("Free models selected.")
+        print("Argus will use the Argus Free Gateway.")
+        print("No API key needed.")
+        config.set("model.provider", "gateway")
+        config.set("model.name", "auto")
+        try:
+            config.save()
+        except Exception:
+            pass
+        return 0
     elif choice == "2":
         _onboard_paid(credentials)
     elif choice == "3":
@@ -275,11 +356,22 @@ def main(args=None) -> int:
     usage = UsageTracker()
 
     request = parsed.request
+
     if request == "onboard":
         return cmd_onboard(config, credentials)
 
     if request == "usage":
         return cmd_usage(config, usage)
+
+    if request == "gateway":
+        return cmd_gateway(config)
+
+    mode = parsed.mode
+    if not mode:
+        if _has_byok_credentials(config, credentials):
+            mode = "byok"
+        else:
+            mode = "free"
 
     if request in ("providers", "models", "model"):
         router = _build_router(config, credentials)
@@ -301,19 +393,30 @@ def main(args=None) -> int:
             return 1
 
     if request:
-        router = _build_router(config, credentials)
-        if router:
-            model = router
-        else:
+        if mode == "free":
+            model = _build_gateway_model(config) or GatewayModelProvider()
+        elif mode == "local":
             model_config = {
-                "provider": config.get("model.provider", "ollama"),
+                "provider": "ollama",
                 "name": config.get("model.name", "llama3"),
             }
-            if config.get("model.api_key"):
-                model_config["api_key"] = config.get("model.api_key")
             if config.get("model.base_url"):
-                model_config["base_url"] = config.get("model.base_url")
+                model_config["base_url"] = config["model.base_url"]
             model = create_model_from_config(model_config)
+        else:
+            router = _build_router(config, credentials)
+            if router:
+                model = router
+            else:
+                model_config = {
+                    "provider": config.get("model.provider", "ollama"),
+                    "name": config.get("model.name", "llama3"),
+                }
+                if config.get("model.api_key"):
+                    model_config["api_key"] = config.get("model.api_key")
+                if config.get("model.base_url"):
+                    model_config["base_url"] = config.get("model.base_url")
+                model = create_model_from_config(model_config)
 
         agent = ArgusAgent(
             project_path=project_path,

@@ -2345,3 +2345,196 @@ class TestCLIOnboardAndUsage:
 
         config = ArgusConfig()
         assert cmd_usage(config, tracker) == 0
+
+
+class TestArgusFreeGateway:
+    def test_gateway_provider_creation(self):
+        from argus.model.providers.gateway import GatewayModelProvider
+
+        provider = GatewayModelProvider(base_url="https://gateway.example.com", api_key="test-key")
+        assert provider is not None
+
+    def test_gateway_client_health(self):
+        from argus.model.providers.gateway import GatewayClient
+        from unittest.mock import MagicMock
+
+        client = GatewayClient(base_url="https://gateway.example.com")
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"status": "ok", "anonymous_available": True, "providers": ["openrouter"]}
+        mock_response.ok = True
+
+        with MagicMock() as mock_requests:
+            mock_requests.request.return_value = mock_response
+            client._request = lambda method, path, **kwargs: mock_response
+            health = client.health()
+            assert health.status == "ok"
+            assert health.anonymous_available is True
+
+    def test_gateway_client_list_models(self):
+        from argus.model.providers.gateway import GatewayClient
+        from unittest.mock import MagicMock
+
+        client = GatewayClient(base_url="https://gateway.example.com")
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "data": [
+                {"id": "gemini-2.0-flash", "provider": "gemini", "free": True, "context_window": 1000000}
+            ]
+        }
+        mock_response.ok = True
+
+        client._request = lambda method, path, **kwargs: mock_response
+        models = client.list_models()
+        assert len(models) == 1
+        assert models[0].id == "gemini-2.0-flash"
+        assert models[0].provider == "gemini"
+
+    def test_gateway_client_rate_limit_error(self):
+        from argus.model.providers.gateway import GatewayClient, GatewayRateLimitError
+
+        client = GatewayClient(base_url="https://gateway.example.com")
+        mock_response = type("Response", (), {
+            "status_code": 429,
+            "headers": {"Retry-After": "60"},
+            "text": "rate limited",
+            "ok": False,
+        })()
+
+        def mock_request(method, path, **kwargs):
+            raise GatewayRateLimitError("rate limited", status_code=429, retry_after=60.0)
+
+        client._request = mock_request
+        try:
+            client.chat_completions(model="test", messages=[])
+        except GatewayRateLimitError as e:
+            assert e.retry_after == 60.0
+        else:
+            assert False, "Expected GatewayRateLimitError"
+
+    def test_gateway_client_auth_error(self):
+        from argus.model.providers.gateway import GatewayClient, GatewayAuthError
+
+        client = GatewayClient(base_url="https://gateway.example.com")
+
+        def mock_request(method, path, **kwargs):
+            raise GatewayAuthError("unauthorized", status_code=401)
+
+        client._request = mock_request
+        try:
+            client.chat_completions(model="test", messages=[])
+        except GatewayAuthError:
+            pass
+        else:
+            assert False, "Expected GatewayAuthError"
+
+    def test_gateway_client_unavailable_error(self):
+        from argus.model.providers.gateway import GatewayClient, GatewayUnavailableError
+
+        client = GatewayClient(base_url="https://gateway.example.com")
+
+        def mock_request(method, path, **kwargs):
+            raise GatewayUnavailableError("unavailable", status_code=503)
+
+        client._request = mock_request
+        try:
+            client.chat_completions(model="test", messages=[])
+        except GatewayUnavailableError:
+            pass
+        else:
+            assert False, "Expected GatewayUnavailableError"
+
+    def test_gateway_provider_complete_success(self):
+        from argus.model.providers.gateway import GatewayModelProvider
+        from unittest.mock import MagicMock
+
+        provider = GatewayModelProvider(base_url="https://gateway.example.com")
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "model": "gemini-2.0-flash",
+            "choices": [{"message": {"content": "hello"}, "finish_reason": "stop"}],
+            "usage": {"total_tokens": 10},
+        }
+        mock_response.ok = True
+
+        provider._client._request = lambda method, path, **kwargs: mock_response
+        response = provider.complete(messages=[], model="auto")
+        assert response.content == "hello"
+        assert response.model == "gemini-2.0-flash"
+
+    def test_gateway_provider_falls_back_on_unavailable(self):
+        from argus.model.providers.gateway import GatewayModelProvider, GatewayUnavailableError
+        from argus.model.provider import ModelResponse
+        from unittest.mock import MagicMock
+
+        fallback = MagicMock()
+        fallback.complete.return_value = ModelResponse(content="fallback", model="local")
+
+        provider = GatewayModelProvider(base_url="https://gateway.example.com", fallback_provider=fallback)
+        provider._client._request = lambda method, path, **kwargs: (_ for _ in ()).throw(GatewayUnavailableError("down"))
+
+        response = provider.complete(messages=[], model="auto")
+        assert response.content == "fallback"
+        fallback.complete.assert_called_once()
+
+    def test_gateway_provider_falls_back_on_rate_limit(self):
+        from argus.model.providers.gateway import GatewayModelProvider, GatewayRateLimitError
+        from argus.model.provider import ModelResponse
+        from unittest.mock import MagicMock
+
+        fallback = MagicMock()
+        fallback.complete.return_value = ModelResponse(content="fallback", model="local")
+
+        provider = GatewayModelProvider(base_url="https://gateway.example.com", fallback_provider=fallback)
+        provider._client._request = lambda method, path, **kwargs: (_ for _ in ()).throw(GatewayRateLimitError("limited"))
+
+        response = provider.complete(messages=[], model="auto")
+        assert response.content == "fallback"
+        fallback.complete.assert_called_once()
+
+    def test_cli_gateway_command(self):
+        import sys
+        from unittest.mock import MagicMock
+
+        sys.modules["tomli_w"] = MagicMock()
+        from argus.cli import cmd_gateway
+        from argus.config import ArgusConfig
+
+        config = ArgusConfig()
+        assert cmd_gateway(config) == 0
+
+    def test_cli_mode_flag_free(self):
+        from argus.cli import _build_gateway_model
+        from argus.config import ArgusConfig
+
+        config = ArgusConfig()
+        model = _build_gateway_model(config)
+        assert model is None
+
+    def test_cli_mode_flag_byok_with_credentials(self, tmp_path, monkeypatch):
+        from argus.cli import main
+        from argus.config import ArgusConfig
+        from argus.model.credentials import CredentialManager
+        import sys
+
+        cred_path = tmp_path / "credentials.json"
+        monkeypatch.setattr("argus.model.credentials.DEFAULT_CREDENTIALS_PATH", cred_path)
+        credentials = CredentialManager()
+        credentials.set("gemini", "test-key")
+
+        config = ArgusConfig()
+        assert main(["--mode", "byok", "providers"]) == 0
+
+    def test_gateway_in_factory(self):
+        from argus.model import create_provider
+
+        provider = create_provider("gateway", base_url="https://gateway.example.com", api_key="test")
+        assert provider is not None
+        from argus.model.providers.gateway import GatewayModelProvider
+        assert isinstance(provider, GatewayModelProvider)
+
+    def test_config_has_gateway_defaults(self):
+        from argus.config import ArgusConfig
+
+        config = ArgusConfig()
+        assert "gateway" in config.raw
+        assert "base_url" in config.get("gateway", {})

@@ -8,6 +8,7 @@ from .openai import OpenAIProvider
 from .ollama import OllamaProvider
 from .provider import ModelProvider
 from .providers.cerebras import CerebrasProvider
+from .providers.gateway import GatewayClient, GatewayModelProvider
 from .providers.gemini import GeminiProvider
 from .providers.groq import GroqProvider
 from .providers.openrouter import OpenRouterProvider
@@ -29,6 +30,8 @@ def create_provider(provider_type: str, **kwargs) -> ModelProvider:
         return GroqProvider(**kwargs)
     elif provider_type == "cerebras":
         return CerebrasProvider(**kwargs)
+    elif provider_type == "gateway":
+        return GatewayModelProvider(**kwargs)
     else:
         raise ValueError(f"Unknown provider: {provider_type}")
 
@@ -60,6 +63,11 @@ def create_model_from_config(config: Dict[str, Any]) -> ModelProvider:
         kwargs["api_key"] = config.get("api_key", "")
         if config.get("base_url"):
             kwargs["base_url"] = config["base_url"]
+    elif provider_type == "gateway":
+        if config.get("base_url"):
+            kwargs["base_url"] = config["base_url"]
+        kwargs["api_key"] = config.get("api_key", "")
+        kwargs["timeout"] = config.get("timeout", GatewayClient.DEFAULT_TIMEOUT)
 
     return create_provider(provider_type, **kwargs)
 

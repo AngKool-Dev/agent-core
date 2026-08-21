@@ -154,6 +154,11 @@ class ArgusConfig:
                     },
                 },
             },
+            "gateway": {
+                "base_url": "",
+                "api_key": "",
+                "timeout": 120,
+            },
         }
 
         for section, values in defaults.items():

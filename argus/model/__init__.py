@@ -6,6 +6,7 @@ from .provider import Message, ModelProvider, ModelResponse, ToolCall
 from .anthropic import AnthropicProvider
 from .openai import OpenAIProvider
 from .ollama import OllamaProvider
+from .providers.gateway import GatewayClient, GatewayError, GatewayModelProvider, GatewayUnavailableError
 from .providers.gemini import GeminiProvider
 from .providers.openrouter import OpenRouterProvider
 from .providers.groq import GroqProvider
@@ -22,6 +23,10 @@ __all__ = [
     "OpenAIProvider",
     "AnthropicProvider",
     "OllamaProvider",
+    "GatewayClient",
+    "GatewayError",
+    "GatewayModelProvider",
+    "GatewayUnavailableError",
     "GeminiProvider",
     "OpenRouterProvider",
     "GroqProvider",
