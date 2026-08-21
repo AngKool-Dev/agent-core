@@ -428,7 +428,7 @@ class ArgusAgent:
             )
         except Exception:
             import logging
-            logging.getLogger("argus").warning("Model unavailable, using built-in default reasoner")
+            logging.getLogger("argus").debug("Model unavailable, using built-in default reasoner")
             return self._default_reason(context, request, {})
 
         text, tool_calls = parse_model_output(response.content)
