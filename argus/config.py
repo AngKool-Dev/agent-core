@@ -1,6 +1,7 @@
 """Argus configuration loader."""
 
 import os
+import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -23,7 +24,11 @@ class ArgusConfig:
         self._config_path = config_path
 
         if config_path:
-            self._load(Path(config_path))
+            path = Path(config_path)
+            if path.exists():
+                self._load(path)
+            else:
+                print(f"Warning: config file not found: {config_path}, using defaults", file=sys.stderr)
         else:
             for path in DEFAULT_CONFIG_PATHS:
                 if path.exists():
