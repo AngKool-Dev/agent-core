@@ -66,7 +66,7 @@ class GatewayClient:
         )
 
     def list_models(self) -> List[GatewayModel]:
-        response = self._request("GET", "/models")
+        response = self._request("GET", "/v1/models")
         data = response.json()
         models = []
         for m in data.get("data", []):
@@ -111,10 +111,26 @@ class GatewayClient:
                 for t in tools
             ]
 
-        response = self._request("POST", "/chat/completions", json=payload)
+        response = self._request("POST", "/v1/chat/completions", json=payload, stream=stream)
+        if stream:
+            return self._stream_response(response)
         return response.json()
 
-    def _request(self, method: str, path: str, **kwargs):
+    def _stream_response(self, response):
+        for line in response.iter_lines(decode_unicode=True):
+            if not line:
+                continue
+            if line.startswith("data: "):
+                data = line[6:]
+                if data.strip() == "[DONE]":
+                    break
+                try:
+                    import json
+                    yield json.loads(data)
+                except json.JSONDecodeError:
+                    continue
+
+    def _request(self, method: str, path: str, stream: bool = False, **kwargs):
         try:
             import requests
         except ImportError:
@@ -129,7 +145,7 @@ class GatewayClient:
         kwargs.setdefault("timeout", self._timeout)
 
         try:
-            response = requests.request(method, url, headers=headers, **kwargs)
+            response = requests.request(method, url, headers=headers, stream=stream, **kwargs)
         except requests.RequestException as e:
             raise GatewayUnavailableError(f"Gateway unreachable: {e}") from e
 

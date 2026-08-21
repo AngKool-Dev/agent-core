@@ -2540,6 +2540,50 @@ class TestArgusFreeGateway:
         assert "gateway" in config.raw
         assert "base_url" in config.get("gateway", {})
 
+    def test_gateway_client_uses_v1_paths(self):
+        from argus.model.providers.gateway import GatewayClient
+        from unittest.mock import MagicMock
+
+        client = GatewayClient(base_url="http://localhost:8787")
+        paths_called = []
+
+        def mock_request(method, path, **kwargs):
+            paths_called.append((method, path))
+            mock_response = MagicMock()
+            if path == "/v1/models":
+                mock_response.json.return_value = {"data": []}
+            elif path == "/v1/chat/completions":
+                mock_response.json.return_value = {"choices": []}
+            return mock_response
+
+        client._request = mock_request
+
+        client.list_models()
+        assert ("GET", "/v1/models") in paths_called
+
+        client.chat_completions(model="test", messages=[])
+        assert ("POST", "/v1/chat/completions") in paths_called
+
+    def test_gateway_client_streaming_returns_iterator(self):
+        from argus.model.providers.gateway import GatewayClient
+        from unittest.mock import MagicMock
+
+        client = GatewayClient(base_url="http://localhost:8787")
+        mock_response = MagicMock()
+        mock_response.iter_lines.return_value = [
+            "data: {\"choices\": [{\"delta\": {\"content\": \"Hello\"}}]}",
+            "data: {\"choices\": [{\"delta\": {\"content\": \" world\"}}]}",
+            "data: [DONE]",
+        ]
+        client._request = lambda method, path, **kwargs: mock_response
+
+        result = client.chat_completions(model="test", messages=[], stream=True)
+        assert hasattr(result, "__iter__")
+        chunks = list(result)
+        assert len(chunks) == 2
+        assert chunks[0]["choices"][0]["delta"]["content"] == "Hello"
+        assert chunks[1]["choices"][0]["delta"]["content"] == " world"
+
 
 class TestGatewayServer:
     def test_rate_limiter_allows_within_limit(self):
