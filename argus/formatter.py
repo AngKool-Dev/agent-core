@@ -1,6 +1,6 @@
 """Argus result formatter for user-facing output."""
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 
 def format_agent_result(result: Dict[str, Any], verbose: bool = False) -> str:
@@ -11,7 +11,7 @@ def format_agent_result(result: Dict[str, Any], verbose: bool = False) -> str:
 
 
 def _format_normal(result: Dict[str, Any]) -> str:
-    lines = []
+    lines: List[str] = []
 
     tool_results = result.get("tool_results", [])
     if tool_results:
@@ -28,14 +28,16 @@ def _format_normal(result: Dict[str, Any]) -> str:
     if verification:
         checks = []
         if verification.get("format_check"):
-            checks.append("format" if verification["format_check"].get("passed") else "format FAIL")
+            passed = verification["format_check"].get("passed")
+            checks.append("format" if passed else "format FAIL")
         if verification.get("build_check"):
-            checks.append("build" if verification["build_check"].get("passed") else "build FAIL")
+            passed = verification["build_check"].get("passed")
+            checks.append("build" if passed else "build FAIL")
         if verification.get("test_results"):
             tr = verification["test_results"]
             if tr.get("passed"):
                 total = tr.get("total", "?")
-                checks.append(f"Tests: {total} passed")
+                checks.append(f"tests passed ({total})")
             else:
                 checks.append("tests FAIL")
         if checks:

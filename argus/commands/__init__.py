@@ -13,6 +13,58 @@ from argus.commands.skills import handle as skills_handle
 from argus.commands.tools import handle as tools_handle
 
 
+_COMMAND_GROUPS = [
+    {
+        "name": "Agent",
+        "commands": [
+            ("agent", "agent", "Send a request to the agent (or just type naturally)"),
+        ]
+    },
+    {
+        "name": "Project",
+        "commands": [
+            ("project", "project", "Show project information"),
+            ("clear", "clear", "Clear the screen"),
+        ]
+    },
+    {
+        "name": "Models",
+        "commands": [
+            ("model", "model", "Show or set model"),
+            ("providers", "providers", "List model providers"),
+            ("models", "models", "List available models"),
+        ]
+    },
+    {
+        "name": "Memory",
+        "commands": [
+            ("memory", "memory", "Memory operations (summary, search)"),
+        ]
+    },
+    {
+        "name": "Skills",
+        "commands": [
+            ("skills", "skills", "Skill operations (list, search, show)"),
+        ]
+    },
+    {
+        "name": "Session",
+        "commands": [
+            ("session", "session", "Session operations (new, list, save, delete)"),
+        ]
+    },
+    {
+        "name": "System",
+        "commands": [
+            ("config", "config", "Configuration (get, set, show)"),
+            ("tools", "tools", "Tool operations (list, run)"),
+            ("help", "help", "Show this help"),
+            ("exit", "exit", "Exit Argus (alias: quit)"),
+        ]
+    },
+]
+
+
 class CommandRegistry:
     def __init__(self):
         self._commands: Dict[str, callable] = {}

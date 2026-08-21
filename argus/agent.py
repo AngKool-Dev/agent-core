@@ -317,6 +317,7 @@ class ArgusAgent:
 
             if runtime_response.get("complete"):
                 results["status"] = "COMPLETED"
+                results["success"] = True
                 results["final_response"] = runtime_response.get("response", "Done")
                 break
 
@@ -328,6 +329,7 @@ class ArgusAgent:
 
             if not tool_calls:
                 results["status"] = "COMPLETED"
+                results["success"] = True
                 results["final_response"] = "No further actions needed"
                 break
 
@@ -364,6 +366,7 @@ class ArgusAgent:
 
             if self._should_stop_after_observation(batch_results, current_step):
                 results["status"] = "COMPLETED"
+                results["success"] = True
                 results["final_response"] = results.get("final_response") or "Task completed"
                 break
 
@@ -372,6 +375,7 @@ class ArgusAgent:
                 self._current_step_action = current_step.action
             if not current_step and all(s.completed for s in plan_steps):
                 results["status"] = "COMPLETED"
+                results["success"] = True
                 results["final_response"] = results.get("final_response") or "Task completed"
                 break
 
@@ -609,18 +613,27 @@ class ArgusAgent:
 
             file_path = str(self.project_path / filename)
 
-            content_match = re.search(r'containing\s+(?:a\s+)?(?:program|script|Python\s+program)\s+(?:that\s+)?(.+?)(?:\.|$)', request, re.IGNORECASE | re.DOTALL)
+            content_match = re.search(r'containing\s+(?:a\s+)?(?:program|script|Python\s+program)\s+(?:that\s+)?(.+?)(?:\.|\Z)', request, re.IGNORECASE | re.DOTALL)
+            print_match = None
+            if not content_match:
+                print_match = re.search(r"containing\s+print\s*\(\s*['\"](.+?)['\"]\s*\)", request, re.IGNORECASE | re.DOTALL)
+            if not content_match:
+                content_match = re.search(r'containing\s+(.+?)(?:\.|\Z)', request, re.IGNORECASE | re.DOTALL)
             if content_match:
-                content_desc = content_match.group(1).strip()
-                if "prints" in content_desc:
-                    print_match = re.search(r'prints\s+(.+)', content_desc, re.IGNORECASE)
-                    if print_match:
-                        print_text = print_match.group(1).strip().rstrip('.').strip()
-                        content = f'print("{print_text}")\n'
+                if print_match:
+                    print_text = print_match.group(1).strip().rstrip('.').strip()
+                    content = f'print("{print_text}")\n'
+                else:
+                    content_desc = content_match.group(1).strip()
+                    if "prints" in content_desc:
+                        print_match2 = re.search(r'prints\s+(.+)', content_desc, re.IGNORECASE)
+                        if print_match2:
+                            print_text = print_match2.group(1).strip().rstrip('.').strip()
+                            content = f'print("{print_text}")\n'
+                        else:
+                            content = f'"""{filename}"""\n{content_desc}\n'
                     else:
                         content = f'"""{filename}"""\n{content_desc}\n'
-                else:
-                    content = f'"""{filename}"""\n{content_desc}\n'
             else:
                 lines_match = re.findall(r'-\s*(.+)', request)
                 if lines_match:
