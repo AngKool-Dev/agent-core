@@ -52,6 +52,7 @@ class ArgusConfig:
                 "run_tests": True,
                 "enable_engineering_loop": False,
                 "max_repair_attempts": 2,
+                "enable_investigation": True,
             },
             "skills": {
                 "paths": [

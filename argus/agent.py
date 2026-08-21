@@ -32,6 +32,7 @@ from argus.engineering import (
     should_enter_engineering_loop,
     select_verification_commands,
     extract_modified_files,
+    is_trivial_request,
 )
 
 
@@ -651,6 +652,11 @@ class ArgusAgent:
         state.phase = EngineeringPhase.UNDERSTAND
         self._status(f"Phase: UNDERSTAND")
 
+        state.phase = EngineeringPhase.INVESTIGATE
+        self._status(f"Phase: INVESTIGATE")
+        if not state.investigation_findings:
+            self._run_investigation(request)
+
         state.phase = EngineeringPhase.PLAN
         self._status(f"Phase: PLAN")
         state.plan_steps = base_result.get("plan", [])
@@ -837,6 +843,75 @@ class ArgusAgent:
             return summary
         except Exception as e:
             return f"Model repair failed: {str(e)}"
+
+    def _build_investigation_context(self, request: str) -> Dict[str, Any]:
+        recent_observations = []
+        if self._engineering_state and self._engineering_state.investigation_findings:
+            for finding in self._engineering_state.investigation_findings[-3:]:
+                recent_observations.append(
+                    f"Investigation: {finding.source} {finding.action}: {finding.result_summary[:200]}"
+                )
+
+        return {
+            "user_request": request,
+            "project_context": self._project_context.to_dict(),
+            "project_profile": self._project_context,
+            "conversation": self._conversation.to_list(),
+            "available_tools": self._tool_registry.list_tools(),
+            "recent_tool_results": [],
+            "recent_observations": recent_observations,
+            "current_step": "investigate",
+            "active_skills": [s.to_dict() for s in getattr(self, "_active_skills", [])],
+            "skill_instructions": "",
+            "memory_context": self.memory.retrieve_relevant(request),
+            "instructions": [
+                "You are Argus, an autonomous coding agent in INVESTIGATE mode.",
+                "Your goal is to gather evidence about the codebase before planning.",
+                "Use the available tools to inspect relevant files, search for symbols, check git status, and retrieve project memory.",
+                "Focus on finding the most relevant information for the task.",
+                "Return your findings as a concise summary.",
+            ],
+        }
+
+    def _run_investigation(self, request: str) -> None:
+        if not self._model:
+            return
+
+        context = self._build_investigation_context(request)
+        try:
+            response = self._model_reason(context, request)
+            tool_calls = response.get("tool_calls", [])
+            if not tool_calls:
+                if self._engineering_state:
+                    self._engineering_state.add_investigation(
+                        source="model",
+                        action="reason",
+                        result_summary=response.get("response", "No investigation actions returned"),
+                    )
+                return
+
+            for tc in tool_calls:
+                if self._cancelled:
+                    break
+                tool_result = self._execute_tool_call(tc)
+                if self._engineering_state:
+                    relevant_files = []
+                    if tool_result.success and tool_result.tool in ("read_file", "grep", "glob"):
+                        output = tool_result.output or ""
+                        for line in output.splitlines()[:10]:
+                            if ":" in line:
+                                relevant_files.append(line.split(":")[0].strip())
+                            elif line.strip().endswith(".py") or line.strip().endswith(".js"):
+                                relevant_files.append(line.strip())
+
+                    self._engineering_state.add_investigation(
+                        source=tool_result.tool,
+                        action=str(tc.get("arguments", {}))[:200],
+                        result_summary=(tool_result.output or tool_result.error or "")[:300],
+                        relevant_files=relevant_files,
+                    )
+        except Exception:
+            pass
 
     def _engineering_result(self, base_result: Dict[str, Any]) -> Dict[str, Any]:
         if self._engineering_state:

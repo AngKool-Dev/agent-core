@@ -1,10 +1,12 @@
-"""Argus Engineering Loop v2.
+"""Argus Engineering Loop v3.
 
 Extends the existing Argus agent loop with explicit engineering phases:
-  UNDERSTAND → PLAN → EXECUTE → VERIFY → REVIEW → (REPAIR → VERIFY AGAIN)* → FINALIZE
+  UNDERSTAND → INVESTIGATE → PLAN → EXECUTE → VERIFY → REVIEW → (REPAIR → VERIFY AGAIN)* → FINALIZE
 
 The repair phase is model-driven: when verification fails, the model receives
 the failure context and can autonomously apply fixes via tool calls.
+
+The investigation phase gathers evidence before planning for non-trivial tasks.
 
 Reuses existing ModelRouter, Memory, Skills, ProjectProfile, GitWorkflow,
 Permissions, and Reliability controls.
@@ -23,6 +25,7 @@ from argus.memory import ArgusMemory
 
 class EngineeringPhase(str, Enum):
     UNDERSTAND = "UNDERSTAND"
+    INVESTIGATE = "INVESTIGATE"
     PLAN = "PLAN"
     EXECUTE = "EXECUTE"
     VERIFY = "VERIFY"
@@ -50,6 +53,26 @@ class EngineeringEvidence:
 
 
 @dataclass
+class InvestigationEvidence:
+    source: str
+    action: str
+    result_summary: str
+    relevant_files: List[str] = field(default_factory=list)
+    confidence: Optional[float] = None
+    timestamp: float = field(default_factory=time.time)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "source": self.source,
+            "action": self.action,
+            "result_summary": self.result_summary,
+            "relevant_files": self.relevant_files,
+            "confidence": self.confidence,
+            "timestamp": self.timestamp,
+        }
+
+
+@dataclass
 class EngineeringTaskState:
     goal: str
     phase: EngineeringPhase = EngineeringPhase.UNDERSTAND
@@ -57,6 +80,7 @@ class EngineeringTaskState:
     completed_steps: List[str] = field(default_factory=list)
     active_step: Optional[str] = None
     evidence: List[EngineeringEvidence] = field(default_factory=list)
+    investigation_findings: List[InvestigationEvidence] = field(default_factory=list)
     verification_results: List[Dict[str, Any]] = field(default_factory=list)
     review_findings: List[str] = field(default_factory=list)
     repair_attempts: int = 0
@@ -71,6 +95,15 @@ class EngineeringTaskState:
             output_summary=output_summary,
         ))
 
+    def add_investigation(self, source: str, action: str, result_summary: str, relevant_files: Optional[List[str]] = None, confidence: Optional[float] = None) -> None:
+        self.investigation_findings.append(InvestigationEvidence(
+            source=source,
+            action=action,
+            result_summary=result_summary,
+            relevant_files=relevant_files or [],
+            confidence=confidence,
+        ))
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "goal": self.goal,
@@ -79,6 +112,7 @@ class EngineeringTaskState:
             "completed_steps": self.completed_steps,
             "active_step": self.active_step,
             "evidence": [e.to_dict() for e in self.evidence[-10:]],
+            "investigation_findings": [f.to_dict() for f in self.investigation_findings[-10:]],
             "verification_results": self.verification_results[-5:],
             "review_findings": self.review_findings[-10:],
             "repair_attempts": self.repair_attempts,
@@ -95,6 +129,7 @@ class EngineeringLoopConfig:
     run_format_check: bool = True
     run_build_check: bool = True
     run_tests: bool = True
+    enable_investigation: bool = True
 
 
 def should_enter_engineering_loop(request: str, tool_results: List[Any]) -> bool:
@@ -178,3 +213,19 @@ def extract_modified_files(tool_results: List[Any]) -> List[str]:
             if path:
                 modified.append(path)
     return modified
+
+
+def is_trivial_request(request: str) -> bool:
+    request_lower = request.lower()
+    trivial_indicators = [
+        "what's in", "what is in", "show me", "read ", "list ", "cat ",
+        "what's the", "what is the", "what is ", "tell me about", "explain ",
+        "hello", "hi ", "hey", "test",
+    ]
+    for indicator in trivial_indicators:
+        if request_lower.startswith(indicator):
+            return True
+    if len(request.split()) <= 2 and not any(kw in request_lower for kw in ["fix", "bug", "error", "implement", "add", "create", "refactor", "improve"]):
+        return True
+    return False
+

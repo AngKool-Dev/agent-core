@@ -15,6 +15,7 @@ from argus.engineering import (
     should_enter_engineering_loop,
     select_verification_commands,
     extract_modified_files,
+    is_trivial_request,
 )
 from argus.context.project import ProjectProfile
 from argus.memory import ArgusMemory
@@ -684,3 +685,173 @@ class TestEngineeringLoopAutonomousRepair:
         with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
             result = agent._run_engineering_loop("fix the bug", base_result)
         assert "engineering" in result
+
+
+class TestTrivialRequestDetection:
+    def test_simple_greeting_is_trivial(self):
+        assert is_trivial_request("hello") is True
+
+    def test_simple_hi_is_trivial(self):
+        assert is_trivial_request("hi there") is True
+
+    def test_read_request_is_trivial(self):
+        assert is_trivial_request("read README.md") is True
+
+    def test_show_me_request_is_trivial(self):
+        assert is_trivial_request("show me the code") is True
+
+    def test_explain_request_is_trivial(self):
+        assert is_trivial_request("explain the auth module") is True
+
+    def test_fix_request_is_not_trivial(self):
+        assert is_trivial_request("fix the bug") is False
+
+    def test_implement_request_is_not_trivial(self):
+        assert is_trivial_request("implement feature X") is False
+
+    def test_short_non_engineering_is_trivial(self):
+        assert is_trivial_request("what is this") is True
+
+    def test_short_engineering_is_not_trivial(self):
+        assert is_trivial_request("fix bug") is False
+
+
+class TestEngineeringLoopInvestigation:
+    def test_investigate_phase_exists(self):
+        assert EngineeringPhase.INVESTIGATE == "INVESTIGATE"
+
+    def test_engineering_state_has_investigation_findings(self):
+        state = EngineeringTaskState(goal="fix bug")
+        assert state.investigation_findings == []
+
+    def test_add_investigation_evidence(self):
+        state = EngineeringTaskState(goal="fix bug")
+        state.add_investigation(
+            source="grep",
+            action="search auth",
+            result_summary="found auth.py",
+            relevant_files=["src/auth.py"],
+            confidence=0.9,
+        )
+        assert len(state.investigation_findings) == 1
+        assert state.investigation_findings[0].source == "grep"
+        assert state.investigation_findings[0].relevant_files == ["src/auth.py"]
+        assert state.investigation_findings[0].confidence == 0.9
+
+    def test_investigation_to_dict(self):
+        state = EngineeringTaskState(goal="fix bug")
+        state.add_investigation(source="read_file", action="read auth.py", result_summary="code here")
+        data = state.to_dict()
+        assert len(data["investigation_findings"]) == 1
+        assert data["investigation_findings"][0]["source"] == "read_file"
+
+    def test_run_investigation_with_model(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._engineering_state = EngineeringTaskState(goal="fix the bug")
+        agent._model = object()
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": "Investigating...",
+                "tool_calls": [{"tool": "read_file", "arguments": {"path": "README.md"}}],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            agent._run_investigation("fix the bug")
+
+        assert len(agent._engineering_state.investigation_findings) == 1
+        assert agent._engineering_state.investigation_findings[0].source == "read_file"
+
+    def test_run_investigation_no_model(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._engineering_state = EngineeringTaskState(goal="fix the bug")
+        agent._model = None
+        agent._run_investigation("fix the bug")
+        assert len(agent._engineering_state.investigation_findings) == 0
+
+    def test_run_investigation_respects_cancellation(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._engineering_state = EngineeringTaskState(goal="fix the bug")
+
+        def mock_model_reason(context, request):
+            agent._cancelled = True
+            return {
+                "complete": True,
+                "response": "Cancelled",
+                "tool_calls": [],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            agent._run_investigation("fix the bug")
+        assert len(agent._engineering_state.investigation_findings) == 0
+
+    def test_engineering_loop_runs_investigation_before_plan(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._model = object()
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [],
+        }
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": "Investigating...",
+                "tool_calls": [{"tool": "read_file", "arguments": {"path": "foo.py"}}],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            with patch.object(agent, '_run_verification_command', return_value=(True, "passed")):
+                result = agent._run_engineering_loop("fix the bug", base_result)
+
+        assert result["engineering"]["phase"] == EngineeringPhase.FINALIZE
+        assert len(result["engineering"]["investigation_findings"]) == 1
+        assert result["engineering"]["investigation_findings"][0]["source"] == "read_file"
+
+    def test_trivial_task_skips_engineering_loop(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        result = agent.execute("hello")
+        assert "engineering" not in result
+        assert result["status"] == "COMPLETED"
+
+    def test_non_trivial_task_enters_engineering_loop(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        result = agent.execute("fix the bug")
+        assert "engineering" in result or result["status"] in ("COMPLETED", "FAILED")
+
+    def test_investigation_evidence_structure(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._engineering_state = EngineeringTaskState(goal="fix bug")
+        agent._run_investigation("fix the bug")
+
+        for finding in agent._engineering_state.investigation_findings:
+            assert "source" in finding.to_dict()
+            assert "action" in finding.to_dict()
+            assert "result_summary" in finding.to_dict()
+            assert "relevant_files" in finding.to_dict()
+            assert "timestamp" in finding.to_dict()
