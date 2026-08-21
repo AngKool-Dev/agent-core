@@ -95,6 +95,8 @@ class ArgusREPL:
             workspace_boundaries_enabled=self.config.get("agent.workspace_boundaries_enabled", True),
             model=self.config.get("model.name"),
             provider=self.config.get("model.provider"),
+            enable_engineering_loop=self.config.get("agent.enable_engineering_loop", False),
+            max_repair_attempts=self.config.get("agent.max_repair_attempts", 2),
         )
 
     def _build_skill_paths(self):

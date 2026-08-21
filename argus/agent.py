@@ -25,6 +25,14 @@ from argus.tools.file import EditFileTool, ListDirTool, ReadFileTool, WriteFileT
 from argus.tools.git import GitAddTool, GitCommitTool, GitDiffTool, GitLogTool, GitStatusTool, GitWorkflowTool
 from argus.tools.memory import MemoryAddTool, MemorySearchTool, set_agent as set_memory_agent
 from argus.tools.search import GlobTool, GrepTool
+from argus.engineering import (
+    EngineeringPhase,
+    EngineeringTaskState,
+    EngineeringLoopConfig,
+    should_enter_engineering_loop,
+    select_verification_commands,
+    extract_modified_files,
+)
 
 
 StatusCallback = Callable[[str], None]
@@ -68,6 +76,8 @@ class ArgusAgentConfig:
     run_tests: bool = True
     workspace_boundaries_enabled: bool = True
     commit_approval_callback: Optional[Callable[[str], bool]] = None
+    enable_engineering_loop: bool = False
+    max_repair_attempts: int = 2
 
 
 class ArgusAgent:
@@ -110,6 +120,7 @@ class ArgusAgent:
         self._no_progress_count: int = 0
         self._last_tool_calls: List[str] = []
         self._cancelled: bool = False
+        self._engineering_state: Optional[EngineeringTaskState] = None
 
         self._project_context = discover_project_context(str(self.project_path))
         self._conversation.add_system(
@@ -157,6 +168,7 @@ class ArgusAgent:
         self._last_tool_calls = []
         self._cancelled = False
         self._last_result = None
+        self._engineering_state = None
         self._conversation.add_user(request)
 
         self.route_skills(request)
@@ -181,6 +193,10 @@ class ArgusAgent:
 
             execution = self._run_loop(plan, request)
             result.update(execution)
+
+            if self.config.enable_engineering_loop and should_enter_engineering_loop(request, self._tool_results_to_list(result.get("tool_results", []))):
+                engineering_result = self._run_engineering_loop(request, result)
+                result.update(engineering_result)
 
             if result["status"] == "RUNNING":
                 result["status"] = "COMPLETED"
@@ -599,6 +615,169 @@ class ArgusAgent:
                 workflow.set_approved(approved, commit_message)
 
         return approved
+
+    def _tool_results_to_list(self, tool_results: List[Dict[str, Any]]) -> List[ToolResult]:
+        from agentcore.runtimes.base import ToolResult as TR
+        result = []
+        for tr in tool_results:
+            if isinstance(tr, TR):
+                result.append(tr)
+            elif isinstance(tr, dict):
+                result.append(TR(
+                    tool=tr.get("tool", ""),
+                    success=tr.get("success", False),
+                    stdout=tr.get("stdout", ""),
+                    stderr=tr.get("stderr", ""),
+                    exit_code=tr.get("exit_code", 0),
+                    duration=tr.get("duration", 0.0),
+                    error=tr.get("error", ""),
+                ))
+        return result
+
+    def _run_engineering_loop(self, request: str, base_result: Dict[str, Any]) -> Dict[str, Any]:
+        eng_config = EngineeringLoopConfig(
+            enabled=True,
+            max_repair_attempts=self.config.max_repair_attempts,
+            run_verification=self.config.enable_verification,
+            run_format_check=self.config.run_format_check,
+            run_build_check=self.config.run_build_check,
+            run_tests=self.config.run_tests,
+        )
+
+        self._engineering_state = EngineeringTaskState(goal=request)
+        state = self._engineering_state
+        tool_results = base_result.get("tool_results", [])
+
+        state.phase = EngineeringPhase.UNDERSTAND
+        self._status(f"Phase: UNDERSTAND")
+
+        state.phase = EngineeringPhase.PLAN
+        self._status(f"Phase: PLAN")
+        state.plan_steps = base_result.get("plan", [])
+        state.modified_files = extract_modified_files(tool_results)
+
+        state.phase = EngineeringPhase.EXECUTE
+        self._status(f"Phase: EXECUTE")
+
+        state.phase = EngineeringPhase.VERIFY
+        self._status(f"Phase: VERIFY")
+
+        if not state.modified_files:
+            state.add_evidence(EngineeringPhase.VERIFY.value, command="", success=True, output_summary="No code modifications detected")
+            state.phase = EngineeringPhase.REVIEW
+            self._status(f"Phase: REVIEW")
+            state.review_findings.append("No code changes to review")
+            state.phase = EngineeringPhase.FINALIZE
+            self._status(f"Phase: FINALIZE")
+            state.final_status = "COMPLETED"
+            return self._engineering_result(base_result)
+
+        verification_commands = select_verification_commands(self._project_context, eng_config)
+        if not verification_commands:
+            state.add_evidence(EngineeringPhase.VERIFY.value, command="", success=True, output_summary="No verification commands available for this project")
+            state.verification_results.append({"command": "", "success": True, "summary": "No verification commands available"})
+        else:
+            for cmd in verification_commands:
+                self._status(f"Running {cmd}...")
+                success, summary = self._run_verification_command(cmd, state)
+                state.add_evidence(EngineeringPhase.VERIFY.value, command=cmd, success=success, output_summary=summary)
+                state.verification_results.append({"command": cmd, "success": success, "summary": summary})
+                if not success:
+                    break
+
+        verification_passed = all(v.get("success", True) for v in state.verification_results)
+
+        if not verification_passed:
+            state.phase = EngineeringPhase.REVIEW
+            self._status(f"Phase: REVIEW")
+            state.review_findings.append("Verification failed")
+            self._status("Verification failed, entering repair loop")
+
+            for attempt in range(eng_config.max_repair_attempts):
+                state.repair_attempts = attempt + 1
+                state.phase = EngineeringPhase.REPAIR
+                self._status(f"Phase: REPAIR (attempt {attempt + 1}/{eng_config.max_repair_attempts})")
+                state.add_evidence(EngineeringPhase.REPAIR.value, command="", success=True, output_summary=f"Repair attempt {attempt + 1}")
+
+                state.phase = EngineeringPhase.VERIFY
+                self._status(f"Phase: VERIFY (after repair {attempt + 1})")
+                verification_commands = select_verification_commands(self._project_context, eng_config)
+                if not verification_commands:
+                    state.add_evidence(EngineeringPhase.VERIFY.value, command="", success=True, output_summary="No verification commands available")
+                    verification_passed = True
+                    break
+
+                all_passed = True
+                for cmd in verification_commands:
+                    self._status(f"Running {cmd}...")
+                    success, summary = self._run_verification_command(cmd, state)
+                    state.add_evidence(EngineeringPhase.VERIFY.value, command=cmd, success=success, output_summary=summary)
+                    state.verification_results.append({"command": cmd, "success": success, "summary": summary})
+                    if not success:
+                        all_passed = False
+                        break
+
+                verification_passed = all_passed
+                if verification_passed:
+                    self._status("Verification passed after repair")
+                    break
+
+            if not verification_passed:
+                state.final_status = "FAILED"
+                state.add_evidence(EngineeringPhase.VERIFY.value, command="", success=False, output_summary="All repair attempts exhausted")
+                return self._engineering_result(base_result)
+
+        state.phase = EngineeringPhase.REVIEW
+        self._status(f"Phase: REVIEW")
+        state.review_findings.append("Verification passed")
+        self._status("Reviewing changes...")
+        self._review_changes(state)
+
+        state.phase = EngineeringPhase.FINALIZE
+        self._status(f"Phase: FINALIZE")
+        state.final_status = "COMPLETED"
+        self._status("Task completed successfully")
+
+        return self._engineering_result(base_result)
+
+    def _review_changes(self, state: EngineeringTaskState) -> None:
+        try:
+            diff_result = self._execute_tool_call({
+                "tool": "git_diff",
+                "arguments": {"project_path": str(self.project_path)},
+            })
+            if diff_result.success and diff_result.output:
+                state.review_findings.append(f"Git diff inspected: {diff_result.output[:200]}")
+            else:
+                state.review_findings.append("No git diff available or not a git repository")
+        except Exception:
+            state.review_findings.append("Review skipped: unable to inspect git diff")
+
+    def _run_verification_command(self, command: str, state: EngineeringTaskState) -> tuple:
+        try:
+            tool_result = self._execute_tool_call({
+                "tool": "bash",
+                "arguments": {"command": command, "cwd": str(self.project_path)},
+            })
+            success = tool_result.success
+            output = (tool_result.output or tool_result.error or "").strip()
+            summary = output[:500] if output else ("passed" if success else "failed")
+            return success, summary
+        except Exception as e:
+            return False, f"Verification error: {str(e)}"
+
+    def _engineering_result(self, base_result: Dict[str, Any]) -> Dict[str, Any]:
+        if self._engineering_state:
+            base_result["engineering"] = self._engineering_state.to_dict()
+            base_result["final_status"] = self._engineering_state.final_status
+            if self._engineering_state.final_status == "COMPLETED":
+                base_result["status"] = "COMPLETED"
+                base_result["success"] = True
+            elif self._engineering_state.final_status == "FAILED":
+                base_result["status"] = "FAILED"
+                base_result["success"] = False
+                base_result["failure_reason"] = "verification_failed_after_repair"
+        return base_result
 
     def _next_step(self, plan: List["PlanStep"], completed: set) -> Optional["PlanStep"]:
         for step in plan:

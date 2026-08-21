@@ -46,6 +46,12 @@ class ArgusConfig:
                 "max_consecutive_failures": 3,
                 "max_no_progress": 3,
                 "workspace_boundaries_enabled": True,
+                "enable_verification": True,
+                "run_format_check": True,
+                "run_build_check": True,
+                "run_tests": True,
+                "enable_engineering_loop": False,
+                "max_repair_attempts": 2,
             },
             "skills": {
                 "paths": [
