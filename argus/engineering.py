@@ -29,6 +29,7 @@ class EngineeringPhase(str, Enum):
     PLAN = "PLAN"
     EXECUTE = "EXECUTE"
     VERIFY = "VERIFY"
+    REPLAN = "REPLAN"
     REVIEW = "REVIEW"
     REPAIR = "REPAIR"
     FINALIZE = "FINALIZE"
@@ -84,6 +85,8 @@ class EngineeringTaskState:
     verification_results: List[Dict[str, Any]] = field(default_factory=list)
     review_findings: List[str] = field(default_factory=list)
     repair_attempts: int = 0
+    plan_revision_count: int = 0
+    revised_plans: List[List[Dict[str, Any]]] = field(default_factory=list)
     final_status: Optional[str] = None
     modified_files: List[str] = field(default_factory=list)
 
@@ -104,6 +107,11 @@ class EngineeringTaskState:
             confidence=confidence,
         ))
 
+    def record_revised_plan(self, plan: List[Dict[str, Any]]) -> None:
+        self.revised_plans.append(plan)
+        self.plan_revision_count = len(self.revised_plans)
+        self.plan_steps = plan
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "goal": self.goal,
@@ -116,6 +124,8 @@ class EngineeringTaskState:
             "verification_results": self.verification_results[-5:],
             "review_findings": self.review_findings[-10:],
             "repair_attempts": self.repair_attempts,
+            "plan_revision_count": self.plan_revision_count,
+            "revised_plans": self.revised_plans[-5:],
             "final_status": self.final_status,
             "modified_files": self.modified_files[-20:],
         }
@@ -125,6 +135,7 @@ class EngineeringTaskState:
 class EngineeringLoopConfig:
     enabled: bool = False
     max_repair_attempts: int = 2
+    max_plan_revisions: int = 2
     run_verification: bool = True
     run_format_check: bool = True
     run_build_check: bool = True

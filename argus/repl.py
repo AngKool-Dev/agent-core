@@ -97,6 +97,7 @@ class ArgusREPL:
             provider=self.config.get("model.provider"),
             enable_engineering_loop=self.config.get("agent.enable_engineering_loop", False),
             max_repair_attempts=self.config.get("agent.max_repair_attempts", 2),
+            max_plan_revisions=self.config.get("agent.max_plan_revisions", 2),
         )
 
     def _build_skill_paths(self):

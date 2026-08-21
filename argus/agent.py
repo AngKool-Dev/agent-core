@@ -79,6 +79,7 @@ class ArgusAgentConfig:
     commit_approval_callback: Optional[Callable[[str], bool]] = None
     enable_engineering_loop: bool = False
     max_repair_attempts: int = 2
+    max_plan_revisions: int = 2
 
 
 class ArgusAgent:
@@ -639,6 +640,7 @@ class ArgusAgent:
         eng_config = EngineeringLoopConfig(
             enabled=True,
             max_repair_attempts=self.config.max_repair_attempts,
+            max_plan_revisions=getattr(self.config, "max_plan_revisions", 2),
             run_verification=self.config.enable_verification,
             run_format_check=self.config.run_format_check,
             run_build_check=self.config.run_build_check,
@@ -699,51 +701,84 @@ class ArgusAgent:
             state.phase = EngineeringPhase.REVIEW
             self._status(f"Phase: REVIEW")
             state.review_findings.append("Verification failed")
-            self._status("Verification failed, entering repair loop")
+            self._status("Verification failed, checking if replanning is needed")
 
-            verification_failure = {
-                "command": state.verification_results[-1].get("command", "") if state.verification_results else "",
-                "summary": state.verification_results[-1].get("summary", "") if state.verification_results else "",
-            }
+            replanned = False
+            if self._should_replan(state):
+                state.phase = EngineeringPhase.REPLAN
+                self._status(f"Phase: REPLAN (revision {state.plan_revision_count + 1}/{eng_config.max_plan_revisions})")
+                replan_summary = self._run_model_replan(state)
+                state.add_evidence(EngineeringPhase.REPLAN.value, command="", success=True, output_summary=replan_summary)
+                if state.plan_revision_count < eng_config.max_plan_revisions:
+                    state.phase = EngineeringPhase.EXECUTE
+                    self._status(f"Phase: EXECUTE (revised plan)")
+                    state.phase = EngineeringPhase.VERIFY
+                    self._status(f"Phase: VERIFY (after replan)")
+                    verification_commands = select_verification_commands(self._project_context, eng_config)
+                    if verification_commands:
+                        all_passed = True
+                        for cmd in verification_commands:
+                            if self._cancelled:
+                                all_passed = False
+                                break
+                            self._status(f"Running {cmd}...")
+                            success, summary = self._run_verification_command(cmd, state)
+                            state.add_evidence(EngineeringPhase.VERIFY.value, command=cmd, success=success, output_summary=summary)
+                            state.verification_results.append({"command": cmd, "success": success, "summary": summary})
+                            if not success:
+                                all_passed = False
+                                break
+                        verification_passed = all_passed
+                    else:
+                        verification_passed = True
+                    replanned = verification_passed
 
-            for attempt in range(eng_config.max_repair_attempts):
-                state.repair_attempts = attempt + 1
-                state.phase = EngineeringPhase.REPAIR
-                self._status(f"Phase: REPAIR (attempt {attempt + 1}/{eng_config.max_repair_attempts})")
+            if not replanned:
+                self._status("Verification failed, entering repair loop")
 
-                repair_summary = self._run_model_repair(state, verification_failure)
-                state.add_evidence(EngineeringPhase.REPAIR.value, command="", success=True, output_summary=repair_summary)
+                verification_failure = {
+                    "command": state.verification_results[-1].get("command", "") if state.verification_results else "",
+                    "summary": state.verification_results[-1].get("summary", "") if state.verification_results else "",
+                }
 
-                state.phase = EngineeringPhase.VERIFY
-                self._status(f"Phase: VERIFY (after repair {attempt + 1})")
-                verification_commands = select_verification_commands(self._project_context, eng_config)
-                if not verification_commands:
-                    state.add_evidence(EngineeringPhase.VERIFY.value, command="", success=True, output_summary="No verification commands available")
-                    verification_passed = True
-                    break
+                for attempt in range(eng_config.max_repair_attempts):
+                    state.repair_attempts = attempt + 1
+                    state.phase = EngineeringPhase.REPAIR
+                    self._status(f"Phase: REPAIR (attempt {attempt + 1}/{eng_config.max_repair_attempts})")
 
-                all_passed = True
-                for cmd in verification_commands:
-                    if self._cancelled:
-                        all_passed = False
+                    repair_summary = self._run_model_repair(state, verification_failure)
+                    state.add_evidence(EngineeringPhase.REPAIR.value, command="", success=True, output_summary=repair_summary)
+
+                    state.phase = EngineeringPhase.VERIFY
+                    self._status(f"Phase: VERIFY (after repair {attempt + 1})")
+                    verification_commands = select_verification_commands(self._project_context, eng_config)
+                    if not verification_commands:
+                        state.add_evidence(EngineeringPhase.VERIFY.value, command="", success=True, output_summary="No verification commands available")
+                        verification_passed = True
                         break
-                    self._status(f"Running {cmd}...")
-                    success, summary = self._run_verification_command(cmd, state)
-                    state.add_evidence(EngineeringPhase.VERIFY.value, command=cmd, success=success, output_summary=summary)
-                    state.verification_results.append({"command": cmd, "success": success, "summary": summary})
-                    if not success:
-                        all_passed = False
+
+                    all_passed = True
+                    for cmd in verification_commands:
+                        if self._cancelled:
+                            all_passed = False
+                            break
+                        self._status(f"Running {cmd}...")
+                        success, summary = self._run_verification_command(cmd, state)
+                        state.add_evidence(EngineeringPhase.VERIFY.value, command=cmd, success=success, output_summary=summary)
+                        state.verification_results.append({"command": cmd, "success": success, "summary": summary})
+                        if not success:
+                            all_passed = False
+                            break
+
+                    verification_passed = all_passed
+                    if verification_passed:
+                        self._status("Verification passed after repair")
                         break
 
-                verification_passed = all_passed
-                if verification_passed:
-                    self._status("Verification passed after repair")
-                    break
-
-            if not verification_passed:
-                state.final_status = "FAILED"
-                state.add_evidence(EngineeringPhase.VERIFY.value, command="", success=False, output_summary="All repair attempts exhausted")
-                return self._engineering_result(base_result)
+                if not verification_passed:
+                    state.final_status = "FAILED"
+                    state.add_evidence(EngineeringPhase.VERIFY.value, command="", success=False, output_summary="All repair attempts exhausted")
+                    return self._engineering_result(base_result)
 
         state.phase = EngineeringPhase.REVIEW
         self._status(f"Phase: REVIEW")
@@ -843,6 +878,91 @@ class ArgusAgent:
             return summary
         except Exception as e:
             return f"Model repair failed: {str(e)}"
+
+    def _should_replan(self, state: EngineeringTaskState) -> bool:
+        if not state:
+            return False
+        if not self._model:
+            return False
+        if state.plan_revision_count >= getattr(self.config, "max_plan_revisions", 2):
+            return False
+        if not state.verification_results:
+            return False
+        last_verification = state.verification_results[-1]
+        if last_verification.get("success", True):
+            return False
+        if not state.plan_steps:
+            return False
+        return True
+
+    def _build_replan_context(self, state: EngineeringTaskState) -> Dict[str, Any]:
+        last_verification = state.verification_results[-1] if state.verification_results else {}
+        recent_observations = [
+            f"Verification failed for command: {last_verification.get('command', '')}",
+            f"Failure output: {last_verification.get('summary', '')[:500]}",
+        ]
+        if state.investigation_findings:
+            for finding in state.investigation_findings[-3:]:
+                recent_observations.append(
+                    f"Investigation: {finding.source} {finding.action}: {finding.result_summary[:200]}"
+                )
+        if state.modified_files:
+            recent_observations.append(f"Modified files: {', '.join(state.modified_files)}")
+
+        return {
+            "user_request": state.goal,
+            "project_context": self._project_context.to_dict(),
+            "project_profile": self._project_context,
+            "conversation": self._conversation.to_list(),
+            "available_tools": self._tool_registry.list_tools(),
+            "recent_tool_results": [],
+            "recent_observations": recent_observations,
+            "current_step": "replan",
+            "active_skills": [s.to_dict() for s in getattr(self, "_active_skills", [])],
+            "skill_instructions": "",
+            "memory_context": self.memory.retrieve_relevant(state.goal),
+            "instructions": [
+                "You are Argus, an autonomous coding agent in REPLAN mode.",
+                "The current plan led to a verification failure. You must revise the plan.",
+                f"Original request: {state.goal}",
+                f"Current plan: {state.plan_steps}",
+                f"Completed steps: {state.completed_steps}",
+                f"New evidence: {last_verification.get('summary', '')[:500]}",
+                "Return a revised plan as JSON in this format:",
+                '{"plan": [{"action": "step_name", "description": "what to do"}]}',
+                "The revised plan should address the verification failure.",
+            ],
+        }
+
+    def _run_model_replan(self, state: EngineeringTaskState) -> str:
+        if not self._model:
+            return "No model available for replanning"
+
+        context = self._build_replan_context(state)
+        try:
+            response = self._model_reason(context, state.goal)
+            text = response.get("response", "")
+            revised_plan = self._parse_revised_plan(text)
+            if revised_plan:
+                state.record_revised_plan(revised_plan)
+                return f"Plan revised (revision {state.plan_revision_count})"
+            return f"Model returned no revised plan: {text[:200]}"
+        except Exception as e:
+            return f"Replanning failed: {str(e)}"
+
+    def _parse_revised_plan(self, text: str) -> List[Dict[str, Any]]:
+        import json
+        import re
+        json_match = re.search(r'\{.*\}', text, re.DOTALL)
+        if json_match:
+            try:
+                data = json.loads(json_match.group())
+                plan = data.get("plan", [])
+                if isinstance(plan, list):
+                    return [step for step in plan if isinstance(step, dict) and "action" in step]
+            except Exception:
+                pass
+        return []
 
     def _build_investigation_context(self, request: str) -> Dict[str, Any]:
         recent_observations = []

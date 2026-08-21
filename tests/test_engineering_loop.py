@@ -855,3 +855,307 @@ class TestEngineeringLoopInvestigation:
             assert "result_summary" in finding.to_dict()
             assert "relevant_files" in finding.to_dict()
             assert "timestamp" in finding.to_dict()
+
+
+class TestEngineeringLoopPlanRevision:
+    def test_plan_created_after_investigation(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [{"action": "investigate", "description": "Explore code"}, {"action": "implement", "description": "Fix bug"}],
+        }
+        with patch.object(agent, '_run_verification_command', return_value=(True, "passed")):
+            result = agent._run_engineering_loop("fix the bug", base_result)
+        assert result["engineering"]["plan_steps"] == base_result["plan"]
+
+    def test_execution_follows_initial_plan(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [{"action": "investigate", "description": "Explore code"}, {"action": "implement", "description": "Fix bug"}],
+        }
+        with patch.object(agent, '_run_verification_command', return_value=(True, "passed")):
+            result = agent._run_engineering_loop("fix the bug", base_result)
+        assert result["engineering"]["plan_steps"] == base_result["plan"]
+        assert result["engineering"]["plan_revision_count"] == 0
+
+    def test_contradictory_evidence_detected(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._model = object()
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [{"action": "investigate", "description": "Explore code"}, {"action": "implement", "description": "Fix bug"}],
+        }
+        assert agent._should_replan(agent._engineering_state) is False
+        agent._engineering_state = EngineeringTaskState(goal="fix the bug")
+        agent._engineering_state.plan_steps = base_result["plan"]
+        agent._engineering_state.verification_results = [{"command": "pytest", "success": False, "summary": "tests failed"}]
+        assert agent._should_replan(agent._engineering_state) is True
+
+    def test_model_receives_contradictory_evidence(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._model = object()
+        state = EngineeringTaskState(goal="fix the bug")
+        state.plan_steps = [{"action": "investigate", "description": "Explore code"}]
+        state.verification_results = [{"command": "pytest", "success": False, "summary": "tests failed"}]
+
+        context = agent._build_replan_context(state)
+        assert context["current_step"] == "replan"
+        assert "verification failure" in context["instructions"][1].lower()
+        assert state.goal in context["instructions"][2]
+
+    def test_revised_plan_is_generated(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._model = object()
+        state = EngineeringTaskState(goal="fix the bug")
+        state.plan_steps = [{"action": "investigate", "description": "Explore code"}]
+        state.verification_results = [{"command": "pytest", "success": False, "summary": "tests failed"}]
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": '{"plan": [{"action": "investigate_auth", "description": "Investigate auth module"}]}',
+                "tool_calls": [],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            summary = agent._run_model_replan(state)
+
+        assert state.plan_revision_count == 1
+        assert len(state.revised_plans) == 1
+        assert state.revised_plans[0][0]["action"] == "investigate_auth"
+        assert "Plan revised" in summary
+
+    def test_revised_plan_replaces_stale_plan(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._model = object()
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [{"action": "investigate", "description": "Explore code"}],
+        }
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": '{"plan": [{"action": "investigate_auth", "description": "Investigate auth module"}, {"action": "fix_auth", "description": "Fix auth"}]}',
+                "tool_calls": [],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            with patch.object(agent, '_run_verification_command', side_effect=[
+                (False, "test failed"),
+                (True, "passed"),
+                (True, "passed"),
+                (True, "passed"),
+            ]):
+                result = agent._run_engineering_loop("fix the bug", base_result)
+
+        assert result["engineering"]["plan_revision_count"] == 1
+        assert result["engineering"]["plan_steps"][0]["action"] == "investigate_auth"
+
+    def test_plan_revision_count_increments(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._model = object()
+        state = EngineeringTaskState(goal="fix the bug")
+        state.plan_steps = [{"action": "investigate", "description": "Explore code"}]
+        state.verification_results = [{"command": "pytest", "success": False, "summary": "tests failed"}]
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": '{"plan": [{"action": "revised", "description": "Revised plan"}]}',
+                "tool_calls": [],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            agent._run_model_replan(state)
+        assert state.plan_revision_count == 1
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            agent._run_model_replan(state)
+        assert state.plan_revision_count == 2
+
+    def test_max_plan_revisions_enforced(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2, max_plan_revisions=2),
+        )
+        agent._model = object()
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [{"action": "investigate", "description": "Explore code"}],
+        }
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": '{"plan": [{"action": "revised", "description": "Revised plan"}]}',
+                "tool_calls": [],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            with patch.object(agent, '_run_verification_command', side_effect=[
+                (False, "test failed"),
+                (False, "still failing"),
+                (False, "still failing"),
+                (False, "still failing"),
+                (False, "still failing"),
+            ]):
+                result = agent._run_engineering_loop("fix the bug", base_result)
+
+        assert result["engineering"]["plan_revision_count"] <= 2
+
+    def test_repeated_contradictory_evidence_no_infinite_loop(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2, max_plan_revisions=1),
+        )
+        agent._model = object()
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [{"action": "investigate", "description": "Explore code"}],
+        }
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": '{"plan": [{"action": "revised", "description": "Revised plan"}]}',
+                "tool_calls": [],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            with patch.object(agent, '_run_verification_command', return_value=(False, "still failing")):
+                result = agent._run_engineering_loop("fix the bug", base_result)
+
+        assert result["engineering"]["plan_revision_count"] <= 1
+
+    def test_cancellation_during_replanning(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        agent._model = object()
+        state = EngineeringTaskState(goal="fix the bug")
+        state.plan_steps = [{"action": "investigate", "description": "Explore code"}]
+        state.verification_results = [{"command": "pytest", "success": False, "summary": "tests failed"}]
+
+        def mock_model_reason(context, request):
+            agent._cancelled = True
+            return {
+                "complete": True,
+                "response": "Cancelled",
+                "tool_calls": [],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            summary = agent._run_model_replan(state)
+        assert "failed" in summary.lower() or "cancelled" in summary.lower()
+
+    def test_status_callback_reports_replanning(self):
+        phases = []
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+            status_callback=lambda m: phases.append(m),
+        )
+        agent._model = object()
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [{"action": "investigate", "description": "Explore code"}],
+        }
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": '{"plan": [{"action": "revised", "description": "Revised plan"}]}',
+                "tool_calls": [],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            with patch.object(agent, '_run_verification_command', side_effect=[
+                (False, "test failed"),
+                (True, "passed"),
+                (True, "passed"),
+                (True, "passed"),
+            ]):
+                agent._run_engineering_loop("fix the bug", base_result)
+
+        replan_messages = [p for p in phases if "REPLAN" in p]
+        assert len(replan_messages) > 0
+
+    def test_autonomous_repair_remains_compatible(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2, max_plan_revisions=0),
+        )
+        agent._model = object()
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [{"action": "investigate", "description": "Explore code"}],
+        }
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": "Fixing",
+                "tool_calls": [{"tool": "edit_file", "arguments": {"path": "foo.py", "old_string": "bug", "new_string": "fix"}}],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            with patch.object(agent, '_run_verification_command', side_effect=[
+                (False, "test failed"),
+                (True, "passed"),
+                (True, "passed"),
+                (True, "passed"),
+            ]):
+                result = agent._run_engineering_loop("fix the bug", base_result)
+
+        assert result["engineering"]["final_status"] == "COMPLETED"
+        repair_evidence = [e for e in result["engineering"]["evidence"] if e["phase"] == "REPAIR"]
+        assert len(repair_evidence) == 1
+        assert "Model repair executed" in repair_evidence[0]["output_summary"]
