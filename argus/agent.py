@@ -678,6 +678,8 @@ class ArgusAgent:
             state.verification_results.append({"command": "", "success": True, "summary": "No verification commands available"})
         else:
             for cmd in verification_commands:
+                if self._cancelled:
+                    break
                 self._status(f"Running {cmd}...")
                 success, summary = self._run_verification_command(cmd, state)
                 state.add_evidence(EngineeringPhase.VERIFY.value, command=cmd, success=success, output_summary=summary)
@@ -693,11 +695,18 @@ class ArgusAgent:
             state.review_findings.append("Verification failed")
             self._status("Verification failed, entering repair loop")
 
+            verification_failure = {
+                "command": state.verification_results[-1].get("command", "") if state.verification_results else "",
+                "summary": state.verification_results[-1].get("summary", "") if state.verification_results else "",
+            }
+
             for attempt in range(eng_config.max_repair_attempts):
                 state.repair_attempts = attempt + 1
                 state.phase = EngineeringPhase.REPAIR
                 self._status(f"Phase: REPAIR (attempt {attempt + 1}/{eng_config.max_repair_attempts})")
-                state.add_evidence(EngineeringPhase.REPAIR.value, command="", success=True, output_summary=f"Repair attempt {attempt + 1}")
+
+                repair_summary = self._run_model_repair(state, verification_failure)
+                state.add_evidence(EngineeringPhase.REPAIR.value, command="", success=True, output_summary=repair_summary)
 
                 state.phase = EngineeringPhase.VERIFY
                 self._status(f"Phase: VERIFY (after repair {attempt + 1})")
@@ -709,6 +718,9 @@ class ArgusAgent:
 
                 all_passed = True
                 for cmd in verification_commands:
+                    if self._cancelled:
+                        all_passed = False
+                        break
                     self._status(f"Running {cmd}...")
                     success, summary = self._run_verification_command(cmd, state)
                     state.add_evidence(EngineeringPhase.VERIFY.value, command=cmd, success=success, output_summary=summary)
@@ -765,6 +777,66 @@ class ArgusAgent:
             return success, summary
         except Exception as e:
             return False, f"Verification error: {str(e)}"
+
+    def _build_repair_context(self, state: EngineeringTaskState, verification_failure: Dict[str, Any]) -> Dict[str, Any]:
+        failure_command = verification_failure.get("command", "")
+        failure_summary = verification_failure.get("summary", "")
+        recent_observations = [
+            f"Verification failed for command: {failure_command}",
+            f"Failure output: {failure_summary[:500]}",
+        ]
+        if state.modified_files:
+            recent_observations.append(f"Modified files: {', '.join(state.modified_files)}")
+
+        return {
+            "user_request": state.goal,
+            "project_context": self._project_context.to_dict(),
+            "project_profile": self._project_context,
+            "conversation": self._conversation.to_list(),
+            "available_tools": self._tool_registry.list_tools(),
+            "recent_tool_results": [],
+            "recent_observations": recent_observations,
+            "current_step": "repair",
+            "active_skills": [s.to_dict() for s in getattr(self, "_active_skills", [])],
+            "skill_instructions": "",
+            "memory_context": self.memory.retrieve_relevant(state.goal),
+            "instructions": [
+                "You are Argus, an autonomous coding agent in REPAIR mode.",
+                "A verification command failed. Analyze the failure and fix the code.",
+                f"Failed command: {failure_command}",
+                f"Failure details: {failure_summary[:500]}",
+                "Use the available tools to inspect the code, identify the issue, and apply a fix.",
+                "After making changes, verify the fix if possible.",
+            ],
+        }
+
+    def _run_model_repair(self, state: EngineeringTaskState, verification_failure: Dict[str, Any]) -> str:
+        if not self._model:
+            return "No model available for autonomous repair"
+
+        context = self._build_repair_context(state, verification_failure)
+        try:
+            response = self._model_reason(context, state.goal)
+            tool_calls = response.get("tool_calls", [])
+            if not tool_calls:
+                return response.get("response", "Model returned no repair actions")
+
+            results = []
+            for tc in tool_calls:
+                tool_result = self._execute_tool_call(tc)
+                results.append(tool_result)
+                state.modified_files.extend(extract_modified_files([tool_result]))
+
+            successes = [r for r in results if r.success]
+            failures = [r for r in results if not r.success]
+            summary = f"Model repair executed {len(results)} tool call(s): {len(successes)} succeeded, {len(failures)} failed"
+            if failures:
+                errors = [r.error for r in failures[:3] if r.error]
+                if errors:
+                    summary += f". Errors: {'; '.join(errors)}"
+            return summary
+        except Exception as e:
+            return f"Model repair failed: {str(e)}"
 
     def _engineering_result(self, base_result: Dict[str, Any]) -> Dict[str, Any]:
         if self._engineering_state:

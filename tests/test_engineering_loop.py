@@ -486,3 +486,201 @@ class TestEngineeringLoopMissingVerification:
         assert result["engineering"]["final_status"] == "COMPLETED"
         evidence = result["engineering"]["evidence"]
         assert any("No verification commands available" in e.get("output_summary", "") for e in evidence)
+
+
+class TestEngineeringLoopAutonomousRepair:
+    def test_model_repair_succeeds_on_first_attempt(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [],
+        }
+        agent._model = object()
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": "I will fix the bug by editing foo.py",
+                "tool_calls": [{"tool": "edit_file", "arguments": {"path": "foo.py", "old_string": "bug", "new_string": "fix"}}],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            with patch.object(agent, '_run_verification_command', side_effect=[
+                (False, "test failed"),
+                (True, "passed"),
+                (True, "passed"),
+                (True, "passed"),
+            ]):
+                result = agent._run_engineering_loop("fix the bug", base_result)
+        assert result["engineering"]["final_status"] == "COMPLETED"
+        assert result["engineering"]["repair_attempts"] == 1
+        repair_evidence = [e for e in result["engineering"]["evidence"] if e["phase"] == "REPAIR"]
+        assert len(repair_evidence) == 1
+        assert "Model repair executed" in repair_evidence[0]["output_summary"]
+
+    def test_model_repair_succeeds_after_initial_failure(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [],
+        }
+        agent._model = object()
+
+        call_count = [0]
+        def mock_model_reason(context, request):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                return {
+                    "complete": False,
+                    "response": "First repair attempt",
+                    "tool_calls": [{"tool": "read_file", "arguments": {"path": "foo.py"}}],
+                }
+            return {
+                "complete": False,
+                "response": "Second repair attempt with fix",
+                "tool_calls": [{"tool": "edit_file", "arguments": {"path": "foo.py", "old_string": "bug", "new_string": "fix"}}],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            with patch.object(agent, '_run_verification_command', side_effect=[
+                (False, "test failed"),
+                (False, "still failing"),
+                (True, "passed"),
+                (True, "passed"),
+                (True, "passed"),
+            ]):
+                result = agent._run_engineering_loop("fix the bug", base_result)
+        assert result["engineering"]["final_status"] == "COMPLETED"
+        assert result["engineering"]["repair_attempts"] == 2
+
+    def test_model_repair_exhausts_max_attempts(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [],
+        }
+        agent._model = object()
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": "Trying to fix",
+                "tool_calls": [{"tool": "read_file", "arguments": {"path": "foo.py"}}],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            with patch.object(agent, '_run_verification_command', side_effect=[
+                (False, "still failing"),
+                (False, "still failing"),
+                (False, "still failing"),
+            ]):
+                result = agent._run_engineering_loop("fix the bug", base_result)
+        assert result["engineering"]["final_status"] == "FAILED"
+        assert result["engineering"]["repair_attempts"] == 2
+
+    def test_model_repair_no_model_available(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [],
+        }
+        agent._model = None
+        with patch.object(agent, '_run_verification_command', side_effect=[
+            (False, "test failed"),
+            (True, "passed"),
+            (True, "passed"),
+            (True, "passed"),
+        ]):
+            result = agent._run_engineering_loop("fix the bug", base_result)
+        assert result["engineering"]["final_status"] == "COMPLETED"
+        repair_evidence = [e for e in result["engineering"]["evidence"] if e["phase"] == "REPAIR"]
+        assert len(repair_evidence) == 1
+        assert "No model available" in repair_evidence[0]["output_summary"]
+
+    def test_model_repair_tracks_modified_files(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [],
+        }
+        agent._model = object()
+
+        def mock_model_reason(context, request):
+            return {
+                "complete": False,
+                "response": "Editing files",
+                "tool_calls": [{"tool": "edit_file", "arguments": {"path": "bar.py", "old_string": "x", "new_string": "y"}}],
+            }
+
+        def mock_execute_tool_call(tc):
+            if tc.get("tool") == "edit_file":
+                return ToolResult(tool="edit_file", success=True, output="Edited bar.py", metadata={"path": "bar.py"})
+            return ToolResult(tool=tc.get("tool", ""), success=True, output="ok")
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            with patch.object(agent, '_execute_tool_call', side_effect=mock_execute_tool_call):
+                with patch.object(agent, '_run_verification_command', side_effect=[
+                    (False, "test failed"),
+                    (True, "passed"),
+                    (True, "passed"),
+                    (True, "passed"),
+                ]):
+                    result = agent._run_engineering_loop("fix the bug", base_result)
+        assert result["engineering"]["final_status"] == "COMPLETED"
+        assert "bar.py" in result["engineering"]["modified_files"]
+
+    def test_model_repair_respects_cancellation(self):
+        agent = ArgusAgent(
+            project_path=".",
+            config=ArgusAgentConfig(enable_engineering_loop=True, max_repair_attempts=2),
+        )
+        base_result = {
+            "request": "fix the bug",
+            "tool_results": [
+                ToolResult(tool="write_file", success=True, output="written", metadata={"path": "foo.py"}),
+            ],
+            "plan": [],
+        }
+        agent._model = object()
+
+        def mock_model_reason(context, request):
+            agent._cancelled = True
+            return {
+                "complete": True,
+                "response": "Repair",
+                "tool_calls": [],
+            }
+
+        with patch.object(agent, '_model_reason', side_effect=mock_model_reason):
+            result = agent._run_engineering_loop("fix the bug", base_result)
+        assert "engineering" in result

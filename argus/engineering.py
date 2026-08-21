@@ -1,7 +1,10 @@
-"""Argus Engineering Loop v1.
+"""Argus Engineering Loop v2.
 
 Extends the existing Argus agent loop with explicit engineering phases:
-  UNDERSTAND → PLAN → EXECUTE → VERIFY → REVIEW → (REPAIR) → FINALIZE
+  UNDERSTAND → PLAN → EXECUTE → VERIFY → REVIEW → (REPAIR → VERIFY AGAIN)* → FINALIZE
+
+The repair phase is model-driven: when verification fails, the model receives
+the failure context and can autonomously apply fixes via tool calls.
 
 Reuses existing ModelRouter, Memory, Skills, ProjectProfile, GitWorkflow,
 Permissions, and Reliability controls.
@@ -169,8 +172,8 @@ def extract_modified_files(tool_results: List[Any]) -> List[str]:
             if not path and output:
                 parts = output.split()
                 for part in parts:
-                    if part.startswith("to ") or part.startswith("in "):
-                        path = part[3:] if part.startswith("to ") else part[3:]
+                    if part.startswith("to ") or part.startswith("in ") or part.startswith("Edited "):
+                        path = part[3:] if part.startswith("to ") else (part[3:] if part.startswith("in ") else part[7:])
                         break
             if path:
                 modified.append(path)
