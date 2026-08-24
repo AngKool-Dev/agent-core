@@ -12,6 +12,20 @@ dist
 dist-ssr
 *.local
 
+# Rust / Cargo
+target
+**/target
+Cargo.lock
+!src-tauri/Cargo.lock
+*.rs.bk
+
+# Tauri
+src-tauri/+
+
+# Environment / secrets
+.env
+.env.*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

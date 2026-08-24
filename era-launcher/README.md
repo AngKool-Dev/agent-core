@@ -1,7 +1,47 @@
-# Tauri + React + Typescript
+# ARGUS
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+ARGUS is a lightweight, terminal-native Minecraft launcher for Windows.
 
-## Recommended IDE Setup
+## About
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+ARGUS provides a fast, keyboard-driven interface for managing Minecraft instances, detecting Java installations, and launching Minecraft with a streamlined workflow.
+
+## Status
+
+ARGUS is proprietary software. The source code is not publicly available.
+Public releases and issue tracking are provided through the official repository.
+
+## Website
+
+https://argus-launcher.pages.dev
+
+## Download
+
+https://github.com/AngKool-Dev/argus-launcher/releases/latest/download/era-launcher.exe
+
+## Reporting Issues
+
+https://github.com/AngKool-Dev/argus-launcher/issues
+
+## Build (Internal)
+
+This project uses Rust, Tauri, React, and TypeScript.
+
+### Prerequisites
+
+- Rust (stable)
+- Node.js
+- npm or pnpm
+
+### Build
+
+`ash
+npm install
+npm run tauri build
+`
+
+## License
+
+Copyright (c) 2026 AngKool-Dev. All rights reserved.
+
+See [LICENSE](LICENSE) for details.
