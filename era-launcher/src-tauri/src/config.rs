@@ -77,24 +77,13 @@ impl Default for WindowConfig {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
+#[derive(Default)]
 pub struct Config {
     pub settings: Settings,
     pub instances: Vec<InstanceConfig>,
     pub accounts: Vec<Account>,
     pub window: WindowConfig,
     pub default_account: Option<String>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            settings: Settings::default(),
-            instances: Vec::new(),
-            accounts: Vec::new(),
-            window: WindowConfig::default(),
-            default_account: None,
-        }
-    }
 }
 
 impl Config {

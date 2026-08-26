@@ -5,6 +5,7 @@ import type {
   ModrinthProject,
   ModrinthVersion,
   JavaInstallation,
+  LaunchResult,
 } from "./types";
 
 export async function getConfig(): Promise<Config> {
@@ -35,27 +36,36 @@ export async function scanVersions(): Promise<any[]> {
   return invoke("scan_versions");
 }
 
-export async function getVersions(): Promise<string[]> {
+export async function prepareInstance(instance: InstanceConfig, instancesDir: string): Promise<void> {
+  return invoke("prepare_instance", { instance, instancesDir });
+}
+
+export async function getAllVersions(): Promise<string[]> {
   return invoke("get_versions");
 }
 
-export async function launchInstance(req: {
-  instance_id: string;
-  account_name: string;
-  account_uuid: string;
-  java_path?: string;
-  minecraft_dir?: string;
-  fresh: boolean;
-  memory: number;
-  game_version: string;
-}): Promise<any> {
-  return invoke("launch_instance", { req });
+export async function launchInstance(
+  req: {
+    instance_id: string;
+    account_name: string;
+    account_uuid: string;
+    java_path?: string;
+    minecraft_dir?: string;
+    fresh: boolean;
+    memory: number;
+    game_version: string;
+    loader: string;
+    loader_version?: string;
+  },
+  instancesDir: string
+): Promise<LaunchResult> {
+  return invoke("launch_instance", { req, instancesDir });
 }
 
 export async function searchModrinth(params: {
   query: string;
-  content_type: string;
-  game_version: string;
+  contentType: string;
+  gameVersion: string;
   loader: string;
 }): Promise<ModrinthProject[]> {
   return invoke("search_modrinth", params);
@@ -66,20 +76,41 @@ export async function getModVersions(projectId: string): Promise<ModrinthVersion
 }
 
 export async function installMod(params: {
-  project_id: string;
-  version_id: string;
-  file_url: string;
-  file_name: string;
-  instance_id: string;
-  content_type: string;
+  projectId: string;
+  versionId: string;
+  fileUrl: string;
+  fileName: string;
+  instanceId: string;
+  contentType: string;
+  instancesDir: string;
 }): Promise<void> {
   return invoke("install_mod", params);
+}
+
+export async function getFabricLoaderVersions(gameVersion: string): Promise<string[]> {
+  return invoke("get_fabric_loader_versions", { gameVersion });
+}
+
+export async function getForgeVersions(gameVersion: string): Promise<string[]> {
+  return invoke("get_forge_versions", { gameVersion });
 }
 
 export async function getJavaInstallations(): Promise<JavaInstallation[]> {
   return invoke("get_java_installations");
 }
 
-export async function getLauncherConfigDir(): Promise<string> {
-  return invoke("get_launcher_config_dir");
+export async function getInstancesDir(): Promise<string> {
+  return invoke("get_instances_dir");
+}
+
+export async function getInstallerInfo(): Promise<{
+  install_dir: string;
+  java_detected: { required_major: number; found: number | null };
+  java_installations: { path: string; version: number | null }[];
+}> {
+  return invoke("get_installer_info");
+}
+
+export async function installJavaRuntime(javaVersion: number): Promise<string | null> {
+  return invoke("install_java_runtime", { javaVersion });
 }

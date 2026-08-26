@@ -1,6 +1,3 @@
-pub mod java;
-pub use java::JavaManager;
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Paths {
     pub data_local: std::path::PathBuf,
@@ -29,27 +26,6 @@ impl Paths {
     }
     pub fn instances_dir(&self) -> &std::path::Path {
         &self.instances
-    }
-    pub fn cache_dir(&self) -> &std::path::Path {
-        &self.cache
-    }
-    pub fn instance_dir(&self, id: &str) -> std::path::PathBuf {
-        self.instances.join(id)
-    }
-    pub fn default_minecraft_dir(&self) -> std::path::PathBuf {
-        if cfg!(windows) {
-            dirs::data_dir()
-                .unwrap_or_else(|| std::path::PathBuf::from("."))
-                .join(".minecraft")
-        } else if cfg!(target_os = "macos") {
-            dirs::home_dir()
-                .unwrap_or_else(|| std::path::PathBuf::from("."))
-                .join("Library/Application Support/minecraft")
-        } else {
-            dirs::home_dir()
-                .unwrap_or_else(|| std::path::PathBuf::from("."))
-                .join(".minecraft")
-        }
     }
 }
 

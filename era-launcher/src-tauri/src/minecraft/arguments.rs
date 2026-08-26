@@ -1,5 +1,3 @@
-use crate::prelude::*;
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ArgumentBuilder;
 
@@ -35,12 +33,6 @@ impl ArgumentBuilder {
             }
         }
         result
-    }
-
-    pub fn build_jvm_args(args: &[String], memory: u32) -> Vec<String> {
-        args.iter()
-            .map(|a| a.replace("${MAX_MEMORY}", &memory.to_string()))
-            .collect()
     }
 
     pub fn substitute_tokens(args: &[String], tokens: &[(String, String)]) -> Vec<String> {
@@ -95,10 +87,8 @@ impl ArgumentBuilder {
                         serde_json::Value::Bool(b) => *b,
                         _ => continue,
                     };
-                    if v_bool {
-                        if !features.get(k).copied().unwrap_or(false) {
-                            rule_ok = false;
-                        }
+                    if v_bool && !features.get(k).copied().unwrap_or(false) {
+                        rule_ok = false;
                     }
                 }
             }
@@ -109,5 +99,82 @@ impl ArgumentBuilder {
             }
         }
         matched && allowed
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    fn parse_json(s: &str) -> serde_json::Value {
+        serde_json::from_str(s).unwrap()
+    }
+
+    #[test]
+    fn test_collect_args_plain_strings() {
+        let args = vec![
+            parse_json("\"hello\""),
+            parse_json("\"-Xmx4G\""),
+            parse_json("\"--demo\""),
+        ];
+        let features = HashMap::new();
+        let result = ArgumentBuilder::collect_args(&args, &features);
+        assert_eq!(result, vec!["hello", "-Xmx4G", "--demo"]);
+    }
+
+    #[test]
+    fn test_collect_args_with_rules() {
+        let args = vec![
+            parse_json(
+                "{\"rules\":[{\"action\":\"allow\",\"os\":{\"name\":\"windows\"}}],\"value\":\"win-only\"}",
+            ),
+            parse_json("\"always\""),
+        ];
+        let features = HashMap::new();
+        let result = ArgumentBuilder::collect_args(&args, &features);
+        if cfg!(windows) {
+            assert_eq!(result, vec!["win-only", "always"]);
+        } else {
+            assert_eq!(result, vec!["always"]);
+        }
+    }
+
+    #[test]
+    fn test_substitute_tokens() {
+        let args = vec![
+            "--username ${auth_player_name}".to_string(),
+            "--version ${version_name}".to_string(),
+        ];
+        let tokens = vec![
+            ("auth_player_name".to_string(), "Steve".to_string()),
+            ("version_name".to_string(), "1.21.1".to_string()),
+        ];
+        let result = ArgumentBuilder::substitute_tokens(&args, &tokens);
+        assert_eq!(result, vec!["--username Steve", "--version 1.21.1"]);
+    }
+
+    #[test]
+    fn test_substitute_tokens_no_match() {
+        let args = vec!["--username ${auth_player_name}".to_string()];
+        let tokens: Vec<(String, String)> = vec![];
+        let result = ArgumentBuilder::substitute_tokens(&args, &tokens);
+        assert_eq!(result, vec!["--username ${auth_player_name}"]);
+    }
+
+    #[test]
+    fn test_rules_apply_empty() {
+        let features = HashMap::new();
+        let rules = parse_json("[]");
+        let result = ArgumentBuilder::rules_apply(&rules, &features);
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_rules_apply_no_rules() {
+        let features = HashMap::new();
+        let v = parse_json("null");
+        let result = ArgumentBuilder::rules_apply(&v, &features);
+        assert!(result);
     }
 }

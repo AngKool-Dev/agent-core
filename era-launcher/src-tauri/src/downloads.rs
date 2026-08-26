@@ -101,3 +101,81 @@ impl DownloadManager {
         Ok(hash.eq_ignore_ascii_case(expected))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn test_verify_sha1_correct_hash() {
+        let tmp = std::env::temp_dir().join(format!(
+            "era-hash-test-{}-{}.txt",
+            std::process::id(),
+            rand::random::<u64>()
+        ));
+        {
+            let mut f = std::fs::File::create(&tmp).unwrap();
+            f.write_all(b"hello world").unwrap();
+        }
+        let dm = DownloadManager::new();
+        let expected = "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed";
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(dm.verify_sha1(&tmp, expected)).unwrap();
+        assert!(result);
+        std::fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_verify_sha1_incorrect_hash() {
+        let tmp = std::env::temp_dir().join(format!(
+            "era-hash-test-{}-{}.txt",
+            std::process::id(),
+            rand::random::<u64>()
+        ));
+        {
+            let mut f = std::fs::File::create(&tmp).unwrap();
+            f.write_all(b"hello world").unwrap();
+        }
+        let dm = DownloadManager::new();
+        let expected = "0000000000000000000000000000000000000000";
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(dm.verify_sha1(&tmp, expected)).unwrap();
+        assert!(!result);
+        std::fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_verify_sha1_empty_file() {
+        let tmp = std::env::temp_dir().join(format!(
+            "era-hash-test-{}-{}.txt",
+            std::process::id(),
+            rand::random::<u64>()
+        ));
+        {
+            let _f = std::fs::File::create(&tmp).unwrap();
+        }
+        let dm = DownloadManager::new();
+        let expected = "da39a3ee5e6b4b0d3255bfef95601890afd80709"; // empty string SHA1
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let result = rt.block_on(dm.verify_sha1(&tmp, expected)).unwrap();
+        assert!(result);
+        std::fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_download_progress_serialization() {
+        let progress = DownloadProgress {
+            file_name: "test.jar".to_string(),
+            bytes_downloaded: 1024,
+            total_bytes: Some(4096),
+            is_complete: false,
+        };
+        let json = serde_json::to_string(&progress).unwrap();
+        let deserialized: DownloadProgress = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.file_name, "test.jar");
+        assert_eq!(deserialized.bytes_downloaded, 1024);
+        assert_eq!(deserialized.total_bytes, Some(4096));
+        assert!(!deserialized.is_complete);
+    }
+}

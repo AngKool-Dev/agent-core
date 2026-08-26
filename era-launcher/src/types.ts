@@ -45,15 +45,23 @@ export interface Config {
 }
 
 export interface LaunchState {
-  status: "idle" | "launching" | "running" | "finished" | "failed";
+  status: "idle" | "launching" | "running" | "finished" | "failed" | "stopped";
   exitCode?: number;
   message?: string;
 }
 
+export interface LaunchResult {
+  success: boolean;
+  pid: number | null;
+  exit_code: number | null;
+  message: string;
+  java_path: string | null;
+}
+
 export interface DownloadProgress {
-  file_name: string;
+  file: string;
   bytes_downloaded: number;
-  total_bytes?: number;
+  total_bytes: number | null;
   is_complete: boolean;
 }
 
@@ -92,4 +100,22 @@ export interface JavaInstallation {
   version?: { major: number };
 }
 
-export type Page = "home" | "instances" | "mods" | "settings" | "accounts";
+export type Page = "home" | "instances" | "mods" | "settings" | "accounts" | "install";
+
+export interface InstallProgress {
+  step: string;
+  message: string;
+  progress: number;
+  is_complete: boolean;
+}
+
+export interface InstallerInfo {
+  install_dir: string;
+  java_detected: { required_major: number; found: number | null };
+  java_installations: JavaInstallationInfo[];
+}
+
+export interface JavaInstallationInfo {
+  path: string;
+  version: number | null;
+}

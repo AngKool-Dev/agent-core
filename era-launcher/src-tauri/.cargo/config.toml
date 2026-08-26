@@ -1,0 +1,6 @@
+# This workspace lives on a filesystem that does not support hard links
+# (cargo emits "hard linking files in the incremental compilation cache
+# failed" on every build). Incremental compilation provides little benefit
+# at this crate size, so it is disabled to silence the noise.
+[profile.dev]
+incremental = false

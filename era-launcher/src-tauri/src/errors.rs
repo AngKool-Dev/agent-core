@@ -47,5 +47,3 @@ pub enum LauncherError {
     #[error("Not found: {0}")]
     NotFound(String),
 }
-
-pub type Result<T> = std::result::Result<T, LauncherError>;

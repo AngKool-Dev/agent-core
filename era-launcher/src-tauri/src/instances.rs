@@ -52,14 +52,6 @@ impl InstanceManager {
         &self.instances
     }
 
-    pub fn get(&self, id: &str) -> Option<&InstanceConfig> {
-        self.instances.iter().find(|i| i.id == id)
-    }
-
-    pub fn get_mut(&mut self, id: &str) -> Option<&mut InstanceConfig> {
-        self.instances.iter_mut().find(|i| i.id == id)
-    }
-
     pub fn add(&mut self, instance: InstanceConfig) {
         self.instances.push(instance);
     }
@@ -87,7 +79,9 @@ impl InstanceConfig {
 
     pub fn prepare_dirs(&self, base: &Path) -> crate::prelude::Result<()> {
         let dir = self.instance_dir(base);
-        std::fs::create_dir_all(dir.join("game"))?;
+        // NOTE: no "game" subdirectory — the instance root IS the game
+        // directory (mods/, saves/, resourcepacks/ live here and --gameDir
+        // points here).
         std::fs::create_dir_all(dir.join("libraries"))?;
         std::fs::create_dir_all(dir.join("natives"))?;
         std::fs::create_dir_all(dir.join("assets"))?;
@@ -97,5 +91,102 @@ impl InstanceConfig {
         std::fs::create_dir_all(dir.join("resourcepacks"))?;
         std::fs::create_dir_all(dir.join("shaderpacks"))?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env::temp_dir;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_instance_default() {
+        let inst = InstanceConfig::default();
+        assert_eq!(inst.name, "New Instance");
+        assert_eq!(inst.game_version, "1.21.1");
+        assert_eq!(inst.loader, "vanilla");
+        assert_eq!(inst.memory, 4096);
+        assert!(!inst.id.is_empty());
+    }
+
+    #[test]
+    fn test_instance_dir_path() {
+        let inst = InstanceConfig {
+            id: "test-instance".to_string(),
+            name: "Test".to_string(),
+            game_version: "1.21.1".to_string(),
+            loader: "vanilla".to_string(),
+            loader_version: None,
+            memory: 4096,
+            java: None,
+            game_dir: None,
+            resolution_width: None,
+            resolution_height: None,
+            account_uuid: None,
+            minecraft_dir: None,
+        };
+        let base = PathBuf::from("/instances");
+        let dir = inst.instance_dir(&base);
+        assert_eq!(dir, PathBuf::from("/instances/test-instance"));
+    }
+
+    #[test]
+    fn test_prepare_dirs_creates_structure() {
+        let tmp = temp_dir().join(format!(
+            "era-test-{}-{}",
+            std::process::id(),
+            rand::random::<u64>()
+        ));
+        let inst = InstanceConfig {
+            id: "test-prepare".to_string(),
+            name: "Test".to_string(),
+            game_version: "1.21.1".to_string(),
+            loader: "vanilla".to_string(),
+            loader_version: None,
+            memory: 4096,
+            java: None,
+            game_dir: None,
+            resolution_width: None,
+            resolution_height: None,
+            account_uuid: None,
+            minecraft_dir: None,
+        };
+        inst.prepare_dirs(&tmp).unwrap();
+        let base = inst.instance_dir(&tmp);
+        assert!(base.join("libraries").is_dir());
+        assert!(base.join("natives").is_dir());
+        assert!(base.join("assets").is_dir());
+        assert!(base.join("mods").is_dir());
+        assert!(base.join("config").is_dir());
+        assert!(base.join("saves").is_dir());
+        assert!(base.join("resourcepacks").is_dir());
+        assert!(base.join("shaderpacks").is_dir());
+        std::fs::remove_dir_all(&tmp).ok();
+    }
+
+    #[test]
+    fn test_instance_manager_crud() {
+        let mut mgr = InstanceManager::new();
+        let inst = InstanceConfig::default();
+        mgr.add(inst.clone());
+        assert_eq!(mgr.list().len(), 1);
+        let find = |mgr: &InstanceManager, id: &str| mgr.list().iter().any(|i| i.id == id);
+        assert!(find(&mgr, &inst.id));
+        assert!(mgr.remove(&inst.id));
+        assert_eq!(mgr.list().len(), 0);
+        assert!(!find(&mgr, &inst.id));
+    }
+
+    #[test]
+    fn test_instance_manager_update() {
+        let mut mgr = InstanceManager::new();
+        let inst = InstanceConfig::default();
+        mgr.add(inst.clone());
+        let mut updated = inst.clone();
+        updated.name = "Updated Name".to_string();
+        assert!(mgr.update(updated));
+        let found = mgr.list().iter().find(|i| i.id == inst.id).unwrap();
+        assert_eq!(found.name, "Updated Name");
     }
 }

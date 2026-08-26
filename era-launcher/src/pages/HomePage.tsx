@@ -1,17 +1,20 @@
-import { useState, useEffect } from "react";
-import type { Config, LaunchState } from "../types";
-import { launchInstance, getJavaInstallations } from "../api";
+import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
+import type { Config, LaunchState, DownloadProgress } from "../types";
+import { launchInstance, getJavaInstallations, updateInstance } from "../api";
 
 interface HomePageProps {
   config: Config;
   refreshConfig: () => void;
   launchState: LaunchState;
-  setLaunchState: (s: LaunchState) => void;
+  setLaunchState: Dispatch<SetStateAction<LaunchState>>;
+  instancesDir: string;
+  consoleLines: string[];
+  setConsoleLines: Dispatch<SetStateAction<string[]>>;
+  downloadProgress: DownloadProgress | null;
 }
 
-export default function HomePage({ config, launchState, setLaunchState }: HomePageProps) {
+export default function HomePage({ config, refreshConfig, launchState, setLaunchState, instancesDir, consoleLines, setConsoleLines, downloadProgress }: HomePageProps) {
   const [selectedAccount, setSelectedAccount] = useState<string>(config.default_account || config.accounts[0]?.uuid || "");
-  const [consoleLog, setConsoleLog] = useState<string[]>([]);
   const [javaLabel, setJavaLabel] = useState("Detecting...");
 
   useEffect(() => {
@@ -29,29 +32,46 @@ export default function HomePage({ config, launchState, setLaunchState }: HomePa
     if (!instance) return;
     const account = config.accounts.find((a) => a.uuid === selectedAccount) || config.accounts[0];
     if (!account) {
-      setConsoleLog((prev) => [...prev, "No account selected"]);
+      setConsoleLines((prev) => [...prev, "No account selected"]);
       return;
     }
     setLaunchState({ status: "launching" });
-    setConsoleLog((prev) => [...prev, `Launching ${instance.name}...`]);
+    setConsoleLines((prev) => [...prev, `Launching ${instance.name}...`]);
     try {
-      const result = await launchInstance({
-        instance_id: instance.id,
-        account_name: account.name,
-        account_uuid: account.uuid,
-        java_path: instance.java,
-        minecraft_dir: instance.minecraft_dir,
-        fresh: false,
-        memory: instance.memory,
-        game_version: instance.game_version,
-      });
-      setLaunchState({ status: result.success ? "finished" : "failed", exitCode: result.exit_code, message: result.message });
-      setConsoleLog((prev) => [...prev, result.message]);
+        const result = await launchInstance(
+         {
+            instance_id: instance.id,
+            account_name: account.name,
+            account_uuid: account.uuid,
+            java_path: instance.java,
+            minecraft_dir: instance.minecraft_dir,
+            fresh: false,
+            memory: instance.memory,
+            game_version: instance.game_version,
+            loader: instance.loader,
+            loader_version: instance.loader_version,
+          },
+          instancesDir
+        );
+      setConsoleLines((prev) => [...prev, result.message]);
+      if (result.success && result.java_path && result.java_path !== instance.java) {
+        const updated = { ...instance, java: result.java_path };
+        await updateInstance(updated);
+        refreshConfig();
+      }
     } catch (e) {
       setLaunchState({ status: "failed", message: String(e) });
-      setConsoleLog((prev) => [...prev, `Error: ${e}`]);
+      setConsoleLines((prev) => [...prev, `Error: ${e}`]);
     }
   };
+
+  function formatBytes(bytes: number): string {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+  }
 
   return (
     <div className="page">
@@ -75,6 +95,29 @@ export default function HomePage({ config, launchState, setLaunchState }: HomePa
       </div>
       <div className="card">
         <h3>Quick Launch</h3>
+        {launchState.status !== "idle" && (
+          <div className="status-banner">
+            Status: <strong>{launchState.status.toUpperCase()}</strong>
+            {launchState.message && <span className="status-message">{launchState.message}</span>}
+          </div>
+        )}
+        {downloadProgress && !downloadProgress.is_complete && downloadProgress.total_bytes && (
+          <div className="download-progress">
+            <div className="download-progress-bar">
+              <div
+                className="download-progress-fill"
+                style={{
+                  width: `${(downloadProgress.bytes_downloaded / downloadProgress.total_bytes) * 100}%`,
+                }}
+              />
+            </div>
+            <span className="download-filename">{downloadProgress.file}</span>
+            <span className="download-bytes">
+              {formatBytes(downloadProgress.bytes_downloaded)} /{" "}
+              {formatBytes(downloadProgress.total_bytes)}
+            </span>
+          </div>
+        )}
         {config.accounts.length > 0 && (
           <div className="form-group">
             <label>Account</label>
@@ -97,16 +140,17 @@ export default function HomePage({ config, launchState, setLaunchState }: HomePa
                 onClick={() => handleLaunch(inst.id)}
               >
                 ▶ Launch {inst.name}
+                <span className="instance-meta">v{inst.game_version} | {(inst.memory / 1024).toFixed(1)} GB</span>
               </button>
             ))}
           </div>
         )}
       </div>
-      {consoleLog.length > 0 && (
+      {consoleLines.length > 0 && (
         <div className="card console-card">
           <h3>Console Output</h3>
           <div className="console-output">
-            {consoleLog.map((line, i) => (
+            {consoleLines.map((line, i) => (
               <div key={i} className="console-line">{line}</div>
             ))}
           </div>

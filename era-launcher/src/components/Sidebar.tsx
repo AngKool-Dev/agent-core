@@ -12,6 +12,7 @@ const pages: { id: Page; label: string; icon: string }[] = [
   { id: "mods", label: "Mods", icon: "🧩" },
   { id: "settings", label: "Settings", icon: "⚙️" },
   { id: "accounts", label: "Accounts", icon: "👤" },
+  { id: "install", label: "Install", icon: "⬇️" },
 ];
 
 export default function Sidebar({ currentPage, onNavigate, launchState }: SidebarProps) {

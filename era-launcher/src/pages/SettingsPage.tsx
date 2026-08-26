@@ -20,6 +20,18 @@ export default function SettingsPage({ config, refreshConfig }: SettingsPageProp
     setDefaultAccount(config.default_account || config.accounts[0]?.uuid || "");
   }, [config]);
 
+  const handleThemeChange = (newTheme: "dark" | "light" | "system") => {
+    setTheme(newTheme);
+    const effectiveTheme =
+      newTheme === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+        : newTheme;
+    document.body.classList.toggle("dark", effectiveTheme === "dark");
+    localStorage.setItem("theme", newTheme);
+  };
+
   const handleSave = async () => {
     const updated: Config = {
       ...config,
@@ -63,7 +75,7 @@ export default function SettingsPage({ config, refreshConfig }: SettingsPageProp
           <div className="radio-group">
             {(["dark", "light", "system"] as const).map((t) => (
               <label key={t} className="radio-label">
-                <input type="radio" name="theme" checked={theme === t} onChange={() => setTheme(t)} />
+                <input type="radio" name="theme" checked={theme === t} onChange={() => handleThemeChange(t)} />
                 {t.charAt(0).toUpperCase() + t.slice(1)}
               </label>
             ))}

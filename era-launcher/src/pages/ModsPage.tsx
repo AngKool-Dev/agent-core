@@ -4,11 +4,12 @@ import { searchModrinth, getModVersions, installMod } from "../api";
 
 interface ModsPageProps {
   config: Config;
+  instancesDir: string;
 }
 
 type ContentType = "mod" | "modpack" | "resourcepack" | "shader";
 
-export default function ModsPage({ config }: ModsPageProps) {
+export default function ModsPage({ config, instancesDir }: ModsPageProps) {
   const [query, setQuery] = useState("");
   const [contentType, setContentType] = useState<ContentType>("mod");
   const [gameVersion, setGameVersion] = useState("");
@@ -30,7 +31,7 @@ export default function ModsPage({ config }: ModsPageProps) {
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const hits = await searchModrinth({ query, content_type: contentType, game_version: gameVersion, loader: loader });
+      const hits = await searchModrinth({ query, contentType, gameVersion, loader });
       setResults(hits);
     } catch (e) {
       console.error(e);
@@ -59,12 +60,13 @@ export default function ModsPage({ config }: ModsPageProps) {
     setDownloadProgress({ file: file.filename, percent: 0 });
     try {
       await installMod({
-        project_id: selectedProject.id,
-        version_id: version.id,
-        file_url: file.url,
-        file_name: file.filename,
-        instance_id: installTarget,
-        content_type: contentType,
+        projectId: selectedProject.id,
+        versionId: version.id,
+        fileUrl: file.url,
+        fileName: file.filename,
+        instanceId: installTarget,
+        contentType,
+        instancesDir: instancesDir,
       });
       setDownloadProgress({ file: file.filename, percent: 100 });
       setTimeout(() => setDownloadProgress(null), 2000);
@@ -108,6 +110,7 @@ export default function ModsPage({ config }: ModsPageProps) {
         </div>
       </div>
       {loading && <div className="loading">Loading...</div>}
+      {results.length === 0 && !loading && (query || gameVersion || loader) && <div className="empty-state"><p>No results found. Try adjusting your search filters.</p></div>}
       {downloadProgress && (
         <div className="progress-bar">
           <div className="progress-fill" style={{ width: `${downloadProgress.percent}%` }} />

@@ -20,9 +20,10 @@ impl JavaVersion {
         let parts: Vec<&str> = num_str.split('.').collect();
         let major = parts.first()?.parse().ok()?;
         let minor = parts.get(1).and_then(|v| v.parse().ok()).unwrap_or(0);
+        let major = if major == 1 { minor } else { major };
         Some(Self {
             major,
-            minor,
+            minor: 0,
             path: path.to_path_buf(),
         })
     }
@@ -55,6 +56,24 @@ impl JavaManager {
                 }
             }
         }
+
+        let managed = Self::managed_candidate_paths();
+        for path in managed {
+            if let Ok(output) = Self::run_java_version(&path) {
+                if let Some(version) = JavaVersion::parse_output(&path, &output) {
+                    installs.push(JavaInstallation {
+                        path,
+                        version: Some(version),
+                    });
+                } else {
+                    installs.push(JavaInstallation {
+                        path,
+                        version: None,
+                    });
+                }
+            }
+        }
+
         installs
     }
 
@@ -62,20 +81,39 @@ impl JavaManager {
         let installs = Self::detect_all();
         installs
             .into_iter()
-            .filter(|i| i.version.as_ref().map(|v| v.major) == Some(required_major))
-            .next()
+            .filter(|i| i.version.as_ref().map(|v| v.major) >= Some(required_major))
+            .max_by_key(|i| i.version.as_ref().map(|v| v.major))
     }
 
     pub fn required_for_minecraft(version: &str) -> u32 {
-        let major = version
-            .split('.')
-            .next()
+        let parts: Vec<&str> = version.split('.').collect();
+        let major = parts
+            .first()
             .and_then(|v| v.parse::<u32>().ok())
             .unwrap_or(1);
-        match major {
-            1..=16 => 8,
-            17 => 17,
-            _ => 21,
+        if major == 1 {
+            let minor = parts
+                .get(1)
+                .and_then(|v| v.parse::<u32>().ok())
+                .unwrap_or(0);
+            match minor {
+                0..=7 => 8,
+                8..=12 => 8,
+                13..=15 => 8,
+                16 => 8,
+                17..=18 => 17,
+                19..=21 => 21,
+                22 => 21,
+                _ => 21,
+            }
+        } else {
+            match major {
+                25.. => 25,
+                24 => 21,
+                21 => 21,
+                17..=20 => 21,
+                _ => 8,
+            }
         }
     }
 
@@ -115,6 +153,25 @@ impl JavaManager {
         paths
     }
 
+    fn managed_candidate_paths() -> Vec<PathBuf> {
+        let mut paths = Vec::new();
+        let bin_name = if cfg!(windows) { "javaw.exe" } else { "java" };
+
+        if let Some(data_local) = std::env::var_os("LOCALAPPDATA") {
+            let base = PathBuf::from(data_local)
+                .join("EraLauncher")
+                .join("runtimes");
+            if let Ok(entries) = std::fs::read_dir(base) {
+                for entry in entries.flatten() {
+                    let path = entry.path().join("bin").join(bin_name);
+                    paths.push(path);
+                }
+            }
+        }
+
+        paths
+    }
+
     fn run_java_version(path: &Path) -> Result<String> {
         let output = Command::new(path)
             .arg("-version")
@@ -122,5 +179,164 @@ impl JavaManager {
             .map_err(|e| LauncherError::Process(format!("Failed to run java: {}", e)))?;
         let text = String::from_utf8_lossy(&output.stderr).to_string();
         Ok(text)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_required_for_minecraft_1_8() {
+        assert_eq!(JavaManager::required_for_minecraft("1.8.9"), 8);
+    }
+
+    #[test]
+    fn test_required_for_minecraft_1_16() {
+        assert_eq!(JavaManager::required_for_minecraft("1.16.2"), 8);
+    }
+
+    #[test]
+    fn test_required_for_minecraft_1_17() {
+        assert_eq!(JavaManager::required_for_minecraft("1.17.1"), 17);
+    }
+
+    #[test]
+    fn test_required_for_minecraft_1_20() {
+        assert_eq!(JavaManager::required_for_minecraft("1.20.1"), 21);
+    }
+
+    #[test]
+    fn test_required_for_minecraft_1_21() {
+        assert_eq!(JavaManager::required_for_minecraft("1.21.1"), 21);
+    }
+
+    #[test]
+    fn test_required_for_minecraft_1_12() {
+        assert_eq!(JavaManager::required_for_minecraft("1.12.2"), 8);
+    }
+
+    #[test]
+    fn test_required_for_invalid_version() {
+        assert_eq!(JavaManager::required_for_minecraft("invalid"), 8);
+    }
+
+    #[test]
+    fn test_required_for_empty_version() {
+        assert_eq!(JavaManager::required_for_minecraft(""), 8);
+    }
+
+    #[test]
+    fn test_required_for_minecraft_24_year() {
+        assert_eq!(JavaManager::required_for_minecraft("24.0"), 21);
+    }
+
+    #[test]
+    fn test_required_for_minecraft_25_year() {
+        assert_eq!(JavaManager::required_for_minecraft("25.1"), 25);
+    }
+
+    #[test]
+    fn test_required_for_minecraft_26_year() {
+        assert_eq!(JavaManager::required_for_minecraft("26.2"), 25);
+    }
+
+    #[test]
+    fn test_required_for_minecraft_26_year_no_patch() {
+        assert_eq!(JavaManager::required_for_minecraft("26"), 25);
+    }
+
+    #[test]
+    fn test_parse_output_java_8() {
+        let output =
+            "openjdk version \"1.8.0_331\"\nOpenJDK Runtime Environment (build 1.8.0_331-b09)\n";
+        let result = JavaVersion::parse_output(Path::new("/usr/bin/java"), output);
+        assert!(result.is_some());
+        let v = result.unwrap();
+        assert_eq!(v.major, 8);
+    }
+
+    #[test]
+    fn test_parse_output_java_17() {
+        let output =
+            "openjdk version \"17.0.2\" 2022-01-18\nOpenJDK Runtime Environment (build 17.0.2+8)\n";
+        let result = JavaVersion::parse_output(Path::new("/usr/bin/java"), output);
+        assert!(result.is_some());
+        let v = result.unwrap();
+        assert_eq!(v.major, 17);
+    }
+
+    #[test]
+    fn test_parse_output_java_21() {
+        let output =
+            "openjdk version \"21.0.2\" 2023-10-17\nOpenJDK Runtime Environment (build 21.0.2+7)\n";
+        let result = JavaVersion::parse_output(Path::new("/usr/bin/java"), output);
+        assert!(result.is_some());
+        let v = result.unwrap();
+        assert_eq!(v.major, 21);
+    }
+
+    #[test]
+    fn test_parse_output_invalid() {
+        let output = "some random text without version";
+        let result = JavaVersion::parse_output(Path::new("/usr/bin/java"), output);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_parse_output_empty() {
+        let result = JavaVersion::parse_output(Path::new("/usr/bin/java"), "");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_managed_candidate_paths_uses_localappdata() {
+        let temp = std::env::temp_dir().join(format!("era-test-managed-{}", std::process::id()));
+        let _ = std::fs::create_dir_all(
+            temp.join("EraLauncher")
+                .join("runtimes")
+                .join("java21")
+                .join("bin"),
+        );
+        unsafe {
+            std::env::set_var("LOCALAPPDATA", &temp);
+        }
+        let paths = JavaManager::managed_candidate_paths();
+        assert!(paths.len() >= 1);
+        let expected = temp
+            .join("EraLauncher")
+            .join("runtimes")
+            .join("java21")
+            .join("bin")
+            .join(if cfg!(windows) { "javaw.exe" } else { "java" });
+        assert!(paths.contains(&expected));
+        unsafe {
+            std::env::remove_var("LOCALAPPDATA");
+        }
+        let _ = std::fs::remove_dir_all(temp);
+    }
+
+    #[test]
+    fn test_managed_candidate_paths_ignores_empty_localappdata() {
+        unsafe {
+            std::env::remove_var("LOCALAPPDATA");
+        }
+        let paths = JavaManager::managed_candidate_paths();
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_managed_candidate_paths_skips_missing_directory() {
+        let temp =
+            std::env::temp_dir().join(format!("era-test-managed-missing-{}", std::process::id()));
+        unsafe {
+            std::env::set_var("LOCALAPPDATA", &temp);
+        }
+        let paths = JavaManager::managed_candidate_paths();
+        assert!(paths.is_empty());
+        unsafe {
+            std::env::remove_var("LOCALAPPDATA");
+        }
+        let _ = std::fs::remove_dir_all(temp);
     }
 }
