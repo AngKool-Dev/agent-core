@@ -1,0 +1,44 @@
+# ============================================================
+#  EchoRealms v0.1 - the builds we leave behind
+#
+#  When a player has not been seen for `lifecycle.inactive-days`
+#  and left enough placed blocks in one region, their works begin
+#  to ECHO: a ghost-light hologram marks the site, portal motes
+#  drift through it, and travellers may attune once for lore and
+#  Memory Shards. Returning owners dissolve their echoes.
+# ============================================================
+
+lifecycle:
+  # Days of absence before a builder's works start echoing.
+  inactive-days: 30
+  # At double this age an echo becomes DEEP - richer attunements.
+  deep-days: 60
+  # Minimum placed blocks in one region before an echo can form.
+  min-blocks: 250
+  # How often manifest/dissolve checks run.
+  check-interval-seconds: 300
+  announce-manifest: true
+
+ambience:
+  particle-interval-seconds: 6
+  # Horizontal radius grows with build size, clamped to these.
+  min-radius: 12
+  max-radius: 48
+
+attune:
+  xp: 40
+  deep-xp: 120
+  shard-chance: 0.35
+  shard-min: 1
+  shard-max: 3
+  # Attunement cooldown per player per site, in days.
+  cooldown-days: 7
+
+grid:
+  region-chunks: 8
+
+worlds:
+  disabled: []
+
+storage:
+  autosave-seconds: 300

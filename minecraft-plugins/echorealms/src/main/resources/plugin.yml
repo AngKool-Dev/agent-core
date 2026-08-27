@@ -1,0 +1,25 @@
+name: EchoRealms
+version: '${project.version}'
+main: dev.mcplugins.echorealms.EchoRealmsPlugin
+api-version: '1.21'
+description: Abandoned builds fade into ghostly echo sites that whisper lore and yield Memory Shards.
+author: mcplugins
+website: https://github.com/mcplugins
+
+commands:
+  echo:
+    description: Inspect and attune to build echoes.
+    usage: /echo [list|attune|scan|reload]
+    permission: echorealms.use
+  er:
+    description: EchoRealms quick menu.
+    usage: /er
+    permission: echorealms.use
+
+permissions:
+  echorealms.use:
+    description: View and attune to echoes.
+    default: true
+  echorealms.admin:
+    description: Administrative subcommands.
+    default: op

@@ -1,0 +1,36 @@
+name: ChunkSovereignty
+version: '${project.version}'
+main: dev.mcplugins.chunksovereignty.SovereigntyPlugin
+api-version: '1.21'
+description: Living land claims - domains grow with influence, shrink with neglect, and reward age.
+author: mcplugins
+website: https://github.com/mcplugins
+
+commands:
+  cs:
+    description: ChunkSovereignty menu and subcommands.
+    usage: /cs [claim|unclaim|domain|trust|untrust|sovereignty|particles|help]
+  claim:
+    description: Claim the chunk you stand in for your domain.
+    usage: /claim
+  unclaim:
+    description: Release the chunk you stand in.
+    usage: /unclaim
+  domain:
+    description: Inspect domains and the sovereignty map.
+    usage: /domain [map|here|stats]
+  trust:
+    description: Grant a player building rights across your domain.
+    usage: /trust <player>
+  untrust:
+    description: Revoke a player's rights.
+    usage: /untrust <player>
+  sovereignty:
+    description: Administration commands.
+    usage: /sovereignty [scan|reload]
+    permission: sovereignty.admin
+
+permissions:
+  sovereignty.admin:
+    description: Administrative subcommands.
+    default: op

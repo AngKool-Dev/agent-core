@@ -1,0 +1,55 @@
+# ============================================================
+#  ChunkSovereignty v0.1 - living land claims
+#
+#  Claim a chunk to found your DOMAIN. Activity mints INFLUENCE;
+#  influence expands borders and pays per-chunk upkeep. Domains
+#  that cannot pay upkeep shed their newest chunks. Older, larger
+#  domains earn crop-growth bonuses. Rival borders generate tension.
+# ============================================================
+
+economy:
+  # Influence granted when founding a domain.
+  start-influence: 50
+  # Cost to expand into one adjacent chunk.
+  cost-per-chunk: 25
+  # Hourly upkeep charged per owned chunk; unpaid -> newest chunk released.
+  upkeep-per-chunk-hour: 1.0
+  # Influence minted while online (per minute) if you own a domain.
+  playtime-per-minute: 0.5
+  # Influence minted per block you place inside your own domain.
+  place-influence: 0.05
+
+claims:
+  max-chunks: 24
+  # Tier thresholds by owned-chunk count, with crop-growth bonus %.
+  tiers:
+    - { at: 1,  name: "Hamlet",     crop-bonus: 0 }
+    - { at: 5,  name: "Village",    crop-bonus: 5 }
+    - { at: 13, name: "Town",       crop-bonus: 10 }
+    - { at: 20, name: "City",       crop-bonus: 20 }
+
+protection:
+  enabled: true
+  announce-enter: true
+
+ambience:
+  particle-interval-seconds: 5
+  show-particles: true
+  particle-points: 16
+  particle-density: 2
+  particle-height-inside: 2.0
+  particle-height-border: 1.2
+
+engine:
+  # How often growth/upkeep runs.
+  check-interval-minutes: 60
+  # How often playtime influence is minted.
+  playtime-interval-seconds: 60
+
+worlds:
+  disabled: []
+
+storage:
+  autosave-seconds: 300
+
+debug: false

@@ -1,0 +1,104 @@
+# ============================================================
+#  MobEcology v0.2 - living mob ecosystems
+#
+#  The world is divided into square regions of `grid.region-chunks`
+#  x `grid.region-chunks` chunks. Every region tracks its own mob
+#  populations, farming pressure and adaptations independently.
+# ============================================================
+
+grid:
+  # Chunks per region edge. 8 -> 128x128 block regions.
+  # Changing this after data exists orphans old region files.
+  region-chunks: 8
+
+worlds:
+  # World names where MobEcology does nothing at all.
+  disabled: []
+  # - creative_flatworld
+
+# Population ceilings per REGION, per category.
+# A species' category is decided by its behaviour (Monster/Animal/WaterMob/...),
+# not config, so new mobs from updates classify automatically.
+capacity:
+  passive: 24      # cows, pigs, sheep, villagers, golems, ...
+  hostile: 16      # zombies, creepers, slimes, phantoms, ...
+  water: 20        # fish, squid, dolphins (guardians count as hostile)
+  ambient: 8       # bats
+
+  # Natural spawns are cancelled while a category is above cap * over-spawn-factor.
+  # Spawner-based farms are NEVER gated (SpawnReason.SPAWNER is exempt).
+  over-spawn-factor: 1.5
+
+  # Categories below cap * under-fraction are considered collapsed and get re-seeded.
+  under-fraction: 0.3
+
+# Per-species capacity overrides. Species id = EntityType name, lowercase.
+# An override REPLACES the category cap for that species only.
+capacity-overrides: {}
+  # cow: 10          # make cow farms saturate sooner
+  # creeper: 4       # rare creepers
+  # squid: 40        # squid-rich oceans
+
+# Which natural spawn reasons compete for carrying capacity.
+gating:
+  reasons: [NATURAL, REINFORCEMENTS]
+  # also available: PATROL, RAID, BREEDING(not gated by default builds), ...
+
+census:
+  # How often each region gets a real entity recount (staggered across ticks).
+  interval-seconds: 60
+  # Regions recounted per tick. Raise if censuses lag behind; lower if TPS dips.
+  regions-per-tick: 4
+
+# Re-seeding of collapsed populations near online players.
+boost:
+  enabled: true
+  interval-seconds: 90
+  max-per-run: 6            # total entities spawned per cycle, all players combined
+  radius: 48                # horizontal range around each player
+  defaults:
+    passive: [cow, pig, sheep, chicken, rabbit]
+    hostile: [zombie, skeleton, spider, creeper]
+    ambient: [bat]
+    water: [cod, salmon, squid]   # spawned into actual water columns when found
+
+  # During clear daylight, hostile re-seeds are drawn ONLY from this list,
+  # because seeded zombies/skeletons would instantly burn on the surface.
+  # Rain, thunder or night lift the restriction and use the full hostile list.
+  # Empty the list to allow daytime hostile seeds anyway.
+  day-safe-hostiles: [creeper, spider, cave_spider, slime, husk]
+
+# Predator -> prey species. If ALL prey die out in a region, its natural
+# predator spawns are cancelled until prey return (no starving wolves packs).
+food-web:
+  wolf: [sheep, rabbit, chicken]
+  fox: [chicken, rabbit]
+  polar_bear: []
+  axolotl: []
+
+# ------------------------------------------------------------
+#  Adaptations - mobs fight back against being farmed
+#
+#  Player kills add pressure to the species inside THAT region.
+#  Crossing tier-thresholds upgrades future spawns there:
+#
+#   Tier 1 "Hardy":     +15% max health per tier
+#   Tier 2 core:        Hostiles gain Feral (+damage),
+#                       others gain Thick Hide (+armor)
+#   Tier 2+ accent:     ONE permanent accent per species, rotated by
+#                       species hash so populations feel different:
+#                         Swift    (+speed)      Anchored (+knockback resist)
+#                         Keen     (+follow range)
+#   Tier 3 "Sturdy":    +armor toughness
+#
+#  Pressure decays over time (see decay-per-hour) so abandoned
+#  regions slowly forgive and forget. /ecology reset clears one now.
+# ------------------------------------------------------------
+adaptation:
+  enabled: true
+  kill-weight: 1.0            # pressure added per player kill
+  tier-thresholds: [40, 120, 300]
+  # Fraction of CURRENT pressure removed per hour. 0 disables decay.
+  decay-per-hour: 0.02
+  # false = legacy flat scheme (everyone Swift @2, Keen @3).
+  varied-traits: true

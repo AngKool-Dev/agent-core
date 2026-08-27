@@ -1,0 +1,61 @@
+# ============================================================
+#  SovereignEconomy v0.1 - a living macro economy
+#
+#  Prices FLOAT: every buy pushes them up, every sell drags them
+#  down (scaled by the item's depth). Markets slowly mean-revert
+#  toward baseline. The CPI tracks overall price levels; the
+#  central-bank savings rate adapts to inflation automatically.
+# ============================================================
+
+currency:
+  symbol: "S"
+  name-singular: sovereign
+  name-plural: sovereigns
+  # Balance granted the first time an account is touched.
+  starting-balance: 250
+
+market:
+  # Merchant spread applied around the floating mid-price.
+  spread: 0.05
+  # Fraction of the way back to baseline each interest cycle pulls prices.
+  reversion-per-hour: 0.06
+  commodities:
+    wheat:          { base: 2.5,   depth: 1200 }
+    bread:          { base: 6.0,   depth: 900 }
+    oak_log:        { base: 1.8,   depth: 1500 }
+    cobblestone:    { base: 1.0,   depth: 2500 }
+    coal:           { base: 4.0,   depth: 1400 }
+    raw_iron:       { base: 7.0,   depth: 1000 }
+    iron_ingot:     { base: 11.0,  depth: 900 }
+    raw_copper:     { base: 3.5,   depth: 1200 }
+    copper_ingot:   { base: 6.0,   depth: 1000 }
+    raw_gold:       { base: 14.0,  depth: 700 }
+    gold_ingot:     { base: 22.0,  depth: 600 }
+    redstone:       { base: 3.0,   depth: 1300 }
+    lapis_lazuli:   { base: 5.0,   depth: 1100 }
+    diamond:        { base: 85.0,  depth: 350 }
+    emerald:        { base: 45.0,  depth: 450 }
+    ender_pearl:    { base: 30.0,  depth: 500 }
+    netherite_scrap:  { base: 320.0, depth: 90 }
+    netherite_ingot:  { base: 950.0, depth: 40 }
+    echo_shard:       { base: 260.0, depth: 80 }
+
+storage:
+  autosave-seconds: 300
+
+bank:
+  # Annual savings rate; adapts toward inflation-target automatically.
+  base-annual-rate: 0.04
+  min-annual-rate: 0.005
+  max-annual-rate: 0.10
+  inflation-target: 0.02
+  rate-step: 0.005
+  interval-minutes: 60
+
+events:
+  interval-minutes: 45
+  chance: 0.65
+
+vault:
+  # Expose balances to other plugins through Vault (QuestBook rewards etc).
+  enabled: true

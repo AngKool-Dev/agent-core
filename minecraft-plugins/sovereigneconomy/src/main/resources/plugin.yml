@@ -1,0 +1,40 @@
+name: SovereignEconomy
+version: '${project.version}'
+main: dev.mcplugins.sovereigneconomy.SovereignEconomyPlugin
+api-version: '1.21'
+description: A living macro economy - floating markets, inflation, central-bank interest and boom/bust events.
+author: mcplugins
+website: https://github.com/mcplugins
+softdepend: [Vault]
+loadbefore: [QuestBook]
+
+commands:
+  money:
+    description: Show your sovereign balance.
+    usage: /money [player]
+    aliases: [bal, balance]
+  pay:
+    description: Send sovereigns to another player.
+    usage: /pay <player> <amount>
+  market:
+    description: Browse or trade the floating commodity market.
+    usage: /market [browse|info|buy|sell] [args]
+  bank:
+    description: Manage savings that earn central-bank interest.
+    usage: /bank [deposit|withdraw|status] [amount]
+  eco:
+    description: Economy administration and statistics.
+    usage: /eco [stats|give|set|event|reload]
+    permission: sovoreconomy.admin
+  se:
+    description: SovereignEconomy quick menu.
+    usage: /se
+    permission: sovoreconomy.use
+
+permissions:
+  sovoreconomy.use:
+    description: Use the economy commands.
+    default: true
+  sovoreconomy.admin:
+    description: Economy administration.
+    default: op

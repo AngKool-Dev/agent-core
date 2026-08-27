@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARGUS — The free Minecraft launcher</title>
+  <meta name="description" content="ARGUS is a lightweight Rust-powered Minecraft launcher with automatic Java provisioning, instance management, and Modrinth integration." />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
+</head>
+<body>
+  <nav class="navbar" aria-label="Main">
+    <a href="/" class="nav-logo" aria-label="ARGUS Home">
+      <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+      <span class="logo-text">ARGUS</span>
+    </a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Toggle navigation">
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+    </button>
+    <ul class="nav-menu" id="nav-menu">
+      <li><a href="#features" class="nav-link">Features</a></li>
+      <li><a href="#plugins" class="nav-link">Plugins</a></li>
+      <li><a href="/download" class="nav-link">Download</a></li>
+      <li><a href="https://github.com/AngKool-Dev/argus-releases" class="nav-link nav-link--external" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+    </ul>
+  </nav>
+  <div class="nav-overlay" aria-hidden="true"></div>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="hero-grid"></div>
+        <div class="hero-glow"></div>
+      </div>
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            Free to Use
+          </div>
+          <h1 id="hero-title" class="hero-title">
+            <span class="hero-title-main">ARGUS</span>
+            <span class="hero-title-sub">The free Minecraft launcher.</span>
+          </h1>
+          <p class="hero-desc">A lightweight Rust-powered Minecraft launcher with automatic Java provisioning, instance management, and Modrinth integration.</p>
+          <div class="hero-actions">
+            <a href="/download" data-download class="btn btn-primary">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download for Windows
+            </a>
+            <a href="https://github.com/AngKool-Dev/argus-releases" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              View Releases
+            </a>
+          </div>
+          <div class="hero-meta">
+            <span class="hero-meta-item" data-dl-stat><span data-dl-count>–</span> downloads</span>
+            <span class="hero-meta-sep" data-dl-stat>·</span>
+            <span class="hero-meta-item">Windows x64</span>
+            <span class="hero-meta-sep">·</span>
+            <span class="hero-meta-item">~6 MB</span>
+            <span class="hero-meta-sep">·</span>
+            <span class="hero-meta-item">Rust</span>
+            <span class="hero-meta-sep">·</span>
+            <span class="hero-meta-item">TUI + GUI</span>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="terminal-window">
+            <div class="terminal-header">
+              <span class="terminal-dot terminal-dot--red"></span>
+              <span class="terminal-dot terminal-dot--yellow"></span>
+              <span class="terminal-dot terminal-dot--green"></span>
+              <span class="terminal-title">argus</span>
+            </div>
+            <div class="terminal-body">
+              <div class="terminal-line"><span class="terminal-prompt">$</span> era-launcher</div>
+              <div class="terminal-line terminal-line--muted">ARGUS v0.1.2 — Terminal Minecraft Launcher</div>
+              <div class="terminal-line terminal-line--accent">> Scanning for Java installations...</div>
+              <div class="terminal-line terminal-line--success">Found Java 21 at C:\Users\Administrator\AppData\Local\EraLauncher\runtimes\java21</div>
+              <div class="terminal-line terminal-line--accent">> Loading instances...</div>
+              <div class="terminal-line terminal-line--muted">  [1] Provisioning Test — 1.21.1 vanilla</div>
+              <div class="terminal-line terminal-line--muted">  [2] Instance 1 — 26.2 Fabric</div>
+              <div class="terminal-line terminal-line--accent">> Launching instance [1]...</div>
+              <div class="terminal-line terminal-line--success">Minecraft started. ARGUS suspended.</div>
+              <div class="terminal-cursor"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="features" aria-labelledby="features-title">
+      <div class="container">
+        <h2 id="features-title" class="section-title">Features</h2>
+        <p class="section-subtitle">Everything you need to manage Minecraft, nothing you do not.</p>
+        <div class="features-grid">
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Minecraft Instances</h3>
+            <p class="feature-desc">Manage multiple Minecraft instances from one launcher. Create, configure, and launch separate game setups with custom memory, resolution, and Java versions.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 17 10 11 4 5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Java Provisioning</h3>
+            <p class="feature-desc">ARGUS automatically detects installed Java and downloads managed runtimes when needed. No manual JDK setup required — Java is provisioned on first launch and reused forever.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20z"/>
+                <path d="M2 12h20"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Modrinth</h3>
+            <p class="feature-desc">Discover and install mods, resource packs, shaders, and full Modrinth modpacks. Packs are provisioned automatically — every indexed file is fetched with SHA-1 verification and overrides are applied to your instance.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 17 10 11 4 5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Terminal UI (TUI)</h3>
+            <p class="feature-desc">A keyboard-driven terminal interface built with Ratatui. Fast, efficient, and distraction-free. Perfect for power users and headless servers.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Desktop GUI</h3>
+            <p class="feature-desc">A native desktop interface built with Tauri. Browse instances, manage mods, and configure settings through a familiar point-and-click experience.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Lightweight</h3>
+            <p class="feature-desc">Windows release is approximately 6 MB. No bloat, no telemetry, just the launcher. Runs entirely locally on your machine.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="plugins" aria-labelledby="plugins-title">
+      <div class="container">
+        <h2 id="plugins-title" class="section-title">Server plugins</h2>
+        <p class="section-subtitle">Companion Minecraft server plugins from the same developer.</p>
+        <div class="features-grid">
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2 20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                <path d="M9 7h8"/>
+                <path d="M9 11h6"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Minecraft QuestBook</h3>
+            <p class="feature-desc">Custom quest book plugin for Spigot/Paper servers. Inventory-based quest GUI, NPC dialogue system, multiple objective types — kill mobs, collect items, visit biomes, place blocks — plus quest persistence and reward distribution.</p>
+            <a class="feature-link" href="https://github.com/Angkool-Dev/Minecraft-QuestBook" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="9 12 11 14 15 10"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Sentinel</h3>
+            <p class="feature-desc">Advanced audit logging, inspection &amp; rollback plugin for Paper 1.21+. Backed by SQLite or PostgreSQL, fully asynchronous, and cached to stay fast even on busy servers.</p>
+            <a class="feature-link" href="https://github.com/AngKool-Dev/Sentinel" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3h18v18H3z"/>
+                <path d="M9 9h6v6H9z"/>
+                <path d="M3 9h6"/>
+                <path d="M15 9H21"/>
+                <path d="M3 15h6"/>
+                <path d="M15 15h6"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">ChunkSovereignty</h3>
+            <p class="feature-desc">Living land claims where territory grows with influence, shrinks with neglect, and rewards domain age. Players expand territory through playtime and block placement, manage trusted allies, and see borders as purple particle effects.</p>
+            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/chunksovereignty" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
+                <path d="M12 8v4l2 2"/>
+                <path d="M9 9h.01"/>
+                <path d="M15 9h.01"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">EchoRealms</h3>
+            <p class="feature-desc">Abandoned builds fade into ghostly echo sites that whisper lore and yield Memory Shards. Players attune to echoes for experience, with deep echoes requiring longer cooldowns but granting more rewards.</p>
+            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/echorealms" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 17V5"/>
+                <path d="M5 12h14"/>
+                <path d="M7 19h10"/>
+                <path d="M9 15l3 3 3-3"/>
+                <path d="M4 7h16v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7z"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">MobEcology</h3>
+            <p class="feature-desc">Adaptive mob ecosystems where populations grow and shrink based on carrying capacity. Mobs develop adaptations over time, food chains emerge, and ecosystem balance is visible through a text-based region map.</p>
+            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/mobecology" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1v6m0 0l2-2m-2 2-2-2z"/>
+                <path d="M4.27 4.27L3 5.54l4 4-4 4 1.27 1.27 4-4-4-4z"/>
+                <path d="M12 17.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z"/>
+                <path d="M19 9v6"/>
+                <path d="M9 19h6"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">SovereignEconomy</h3>
+            <p class="feature-desc">A living macro economy with floating market prices that shift with inflation, central-bank interest rates on savings, boom/bust events triggered by player activity, and admin tools to balance the economy.</p>
+            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/sovereigneconomy" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="how-it-works" aria-labelledby="how-title">
+      <div class="container">
+        <h2 id="how-title" class="section-title">How it works</h2>
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">01</span>
+            <h3 class="step-title">Download ARGUS</h3>
+            <p class="step-desc">Grab the Windows executable from the latest GitHub release.</p>
+          </div>
+          <div class="step-sep" aria-hidden="true"></div>
+          <div class="step">
+            <span class="step-num">02</span>
+            <h3 class="step-title">Create or launch an instance</h3>
+            <p class="step-desc">Set up a new Minecraft instance or launch an existing one. Java is auto-detected or downloaded.</p>
+          </div>
+          <div class="step-sep" aria-hidden="true"></div>
+          <div class="step">
+            <span class="step-num">03</span>
+            <h3 class="step-title">Play Minecraft</h3>
+            <p class="step-desc">Jump in. ARGUS handles Java, mods, and instance management.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="free-section" aria-labelledby="free-title">
+      <div class="container">
+        <h2 id="free-title" class="section-title">Free to download</h2>
+        <p class="free-desc">Minecraft should not need a complicated launcher. ARGUS is built to keep the launcher itself free and accessible.</p>
+        <div class="free-badges">
+          <span class="free-badge">No subscription required</span>
+          <span class="free-badge">No account required</span>
+          <span class="free-badge">Portable Windows executable</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="support-section" aria-labelledby="support-title">
+      <div class="container">
+        <h2 id="support-title" class="section-title">Support the project</h2>
+        <p class="support-desc">ARGUS is free — no ads, no tracking, no strings. If you want to fuel development, buy the developer a coffee.</p>
+        <div class="bmc-row">
+          <div class="bmc-actions">
+            <a href="https://buymeacoffee.com/angkool.dev" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg btn-bmc">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                <line x1="6" y1="1" x2="6" y2="4"/>
+                <line x1="10" y1="1" x2="10" y2="4"/>
+                <line x1="14" y1="1" x2="14" y2="4"/>
+              </svg>
+              Buy Me a Coffee
+            </a>
+            <a href="https://www.paypal.com/ncp/payment/XK8D7M8P8XD34" target="_blank" rel="noopener noreferrer" class="btn btn-lg btn-paypal">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                <line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+              Donate via PayPal
+            </a>
+          </div>
+          <a href="https://buymeacoffee.com/angkool.dev" target="_blank" rel="noopener noreferrer" aria-label="Buy Me a Coffee QR code">
+            <img src="/assets/bmc_qr.png" alt="Buy Me a Coffee QR code for angkool.dev" width="140" height="140" class="bmc-qr" loading="lazy" />
+          </a>
+        </div>
+        <p class="bmc-note">Tap a button or scan the code — every bit helps.</p>
+      </div>
+    </section>
+
+    <section class="cta-section" aria-labelledby="cta-title">
+      <div class="container">
+        <h2 id="cta-title" class="cta-title">Ready to play?</h2>
+        <a href="/download" data-download class="btn btn-primary btn-lg">Download for Windows</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a href="/" class="nav-logo" aria-label="ARGUS Home">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+          <span class="logo-text">ARGUS</span>
+        </a>
+        <p class="footer-tagline">Free Minecraft launcher for Windows.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/AngKool-Dev/argus-releases" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://buymeacoffee.com/angkool.dev" target="_blank" rel="noopener noreferrer">Support</a>
+        <a href="/download">Download</a>
+      </div>
+      <p class="footer-legal">Minecraft is a trademark of Mojang Studios. ARGUS is an independent project.</p>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>
