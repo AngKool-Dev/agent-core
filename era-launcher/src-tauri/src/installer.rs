@@ -75,30 +75,38 @@ impl WebInstaller {
             "osx" => "macos",
             _ => "linux",
         };
-        let arch = "x64";
-        let image_type = "jre";
+        let arch = match self.platform.arch {
+            "x86_64" => "x64",
+            "aarch64" => "arm64",
+            "x86" => "x86",
+            other => other,
+        };
 
-        let api_url = format!(
-            "{}/assets/feature_releases/{}/ga?architecture={}&image_type={}&os={}&vendor=eclipse",
-            ADOPTIUM_API, version, arch, image_type, os
-        );
+        for image_type in &["jre", "jdk"] {
+            let api_url = format!(
+                "{}/assets/feature_releases/{}/ga?architecture={}&image_type={}&os={}&vendor=eclipse",
+                ADOPTIUM_API, version, arch, image_type, os
+            );
 
-        let client = reqwest::Client::builder()
-            .user_agent("ARGUS-Launcher/0.1")
-            .build()
-            .ok()?;
+            let client = reqwest::Client::builder()
+                .user_agent("ARGUS-Launcher/0.1")
+                .build()
+                .ok()?;
 
-        let resp = client.get(&api_url).send().await.ok()?;
-        if !resp.status().is_success() {
-            return None;
+            let resp = client.get(&api_url).send().await.ok()?;
+            if !resp.status().is_success() {
+                continue;
+            }
+
+            let json: serde_json::Value = resp.json().await.ok()?;
+            let binaries = json.as_array()?.first()?.get("binaries")?.as_array()?;
+            let package = binaries.first()?.get("package")?;
+            let link = package.get("link")?.as_str()?;
+
+            return Some(link.to_string());
         }
 
-        let json: serde_json::Value = resp.json().await.ok()?;
-        let binaries = json.as_array()?.first()?.get("binaries")?.as_array()?;
-        let package = binaries.first()?.get("package")?;
-        let link = package.get("link")?.as_str()?;
-
-        Some(link.to_string())
+        None
     }
 
     pub fn is_java_installed(&self) -> bool {
