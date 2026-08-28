@@ -1,6 +1,6 @@
 [package]
 name = "era-launcher"
-version = "0.1.3"
+version = "0.1.4"
 description = "A modern Minecraft launcher"
 authors = ["Angkool-Dev"]
 edition = "2024"
