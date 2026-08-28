@@ -1,0 +1,4 @@
+// Windows resource file for era-launcher icon
+#include <windows.h>
+
+IDI_APP_ICON ICON "D:/agent-core/era-launcher/src/resources/era-launcher.ico"
