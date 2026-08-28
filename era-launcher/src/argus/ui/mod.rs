@@ -99,7 +99,7 @@ pub fn draw_header(frame: &mut Frame, area: Rect, state: &AppState, _focus: &Foc
     // Left side: title
     let title = vec![
         Line::from(Span::styled(
-            "ERA LAUNCHER",
+            "ERA LAUNCHER v0.1.4",
             Style::default().fg(t.accent).bold(),
         )),
         Line::from(Span::styled(
