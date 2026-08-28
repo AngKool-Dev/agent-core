@@ -7,6 +7,7 @@ use crate::argus::Section;
 use crate::argus::backend::BackendBridge;
 use crate::argus::backend::RuntimeTracker;
 use crate::argus::state::{AppState, LogLevel, RuntimeState};
+use crate::minecraft::optimization::OptimizationProfile;
 
 #[derive(Debug)]
 pub enum CommandResult {
@@ -423,13 +424,15 @@ impl CommandManager {
                     Java Path: {}\n\
                     Theme: {}\n\
                     Language: {}\n\
+                    Optimization: {}\n\
                     Detected Java: {}\n\
                     \n\
-                    Use: settings memory <N>, settings java auto|<path>, settings theme <dark|light|system>",
+                    Use: settings memory <N>, settings java auto|<path>, settings theme <dark|light|system>, settings optimization <low|mid|high|custom>",
                     settings.default_memory,
                     settings.java_path.as_deref().unwrap_or("Auto-detect"),
                     settings.theme,
                     settings.language,
+                    settings.optimization_profile.as_str(),
                     java_version,
                 );
                 CommandResult::Output(output)
@@ -551,8 +554,48 @@ impl CommandManager {
                             ))
                         }
                     }
+                    "optimization" => {
+                        if let Some(val) = value {
+                            let profile = match val.to_lowercase().as_str() {
+                                "low" => OptimizationProfile::Low,
+                                "mid" => OptimizationProfile::Mid,
+                                "high" => OptimizationProfile::High,
+                                "custom" => OptimizationProfile::Custom,
+                                _ => {
+                                    return CommandResult::Error(format!(
+                                        "Invalid optimization profile '{}'. Use: low, mid, high, custom",
+                                        val
+                                    ))
+                                }
+                            };
+                            if BackendBridge::set_optimization_profile(profile) {
+                                state.log(
+                                    LogLevel::Info,
+                                    "CMD",
+                                    &format!("Optimization profile set to {}", profile.as_str()),
+                                );
+                                CommandResult::Success(Some(format!(
+                                    "Optimization profile set to {} (persisted)",
+                                    profile.as_str()
+                                )))
+                            } else {
+                                CommandResult::Error("Failed to save optimization profile.".to_string())
+                            }
+                        } else {
+                            CommandResult::Output(format!(
+                                "Current optimization profile: {}\n\
+                                Valid values: low, mid, high, custom\n\
+                                \n\
+                                Low: 4GB RAM / Integrated GPU\n\
+                                Mid: 8GB RAM / Dedicated GPU\n\
+                                High: 16GB+ RAM / High-end GPU\n\
+                                Custom: No preset — uses memory + manifest defaults",
+                                settings.optimization_profile.as_str()
+                            ))
+                        }
+                    }
                     _ => CommandResult::Error(format!(
-                        "Unknown settings key '{}'. Available: memory, java, theme, language",
+                        "Unknown settings key '{}'. Available: memory, java, theme, language, optimization",
                         key
                     )),
                 }
@@ -698,6 +741,7 @@ Settings:
   settings memory <N>    Set default memory (MB)
   settings java auto|<path>  Set Java path
   settings theme <dark|light|system>  Set theme (applies instantly)
+  settings optimization <low|mid|high|custom>  Set JVM optimization profile
 
 Accounts (offline):
   account list                Show saved accounts

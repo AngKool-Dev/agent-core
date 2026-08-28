@@ -1,13 +1,16 @@
 use crate::auth::Account;
+use crate::minecraft::optimization::OptimizationProfile;
 use crate::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct Settings {
     pub default_memory: u32,
     pub java_path: Option<String>,
     pub theme: String,
     pub language: String,
+    pub optimization_profile: OptimizationProfile,
 }
 
 impl Default for Settings {
@@ -17,6 +20,7 @@ impl Default for Settings {
             java_path: None,
             theme: "dark".to_string(),
             language: "en".to_string(),
+            optimization_profile: OptimizationProfile::Mid,
         }
     }
 }

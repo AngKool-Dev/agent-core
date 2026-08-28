@@ -19,6 +19,7 @@ pub struct LaunchRequest {
     pub game_version: String,
     pub loader: String,
     pub loader_version: Option<String>,
+    pub optimization_profile: crate::minecraft::optimization::OptimizationProfile,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -187,6 +188,7 @@ impl LaunchEngine {
             req.memory,
             loader_main_class.as_deref(),
             &classpath,
+            req.optimization_profile,
         );
 
         self.emit_status(
@@ -637,6 +639,7 @@ impl LaunchEngine {
         memory: u32,
         loader_main_class: Option<&str>,
         classpath: &str,
+        optimization_profile: crate::minecraft::optimization::OptimizationProfile,
     ) -> (Vec<String>, Vec<String>, String) {
         let tokens = vec![
             ("auth_player_name".to_string(), req.account_name.clone()),
@@ -666,7 +669,10 @@ impl LaunchEngine {
             ("classpath".to_string(), classpath.to_string()),
         ];
 
-        let mut jvm_args = vec![format!("-Xmx{}M", memory), "-Duser.language=en".to_string()];
+        let profile_args = optimization_profile.jvm_args(memory);
+        let mut jvm_args = Vec::new();
+        jvm_args.extend(profile_args);
+        jvm_args.push("-Duser.language=en".to_string());
         let mut game_args: Vec<String> = Vec::new();
 
         if let Some(ref args) = info.arguments {

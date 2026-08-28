@@ -11,6 +11,7 @@ use crate::argus::focus::FocusManager;
 use crate::argus::focus::FocusTarget;
 use crate::argus::state::{AppState, LogLevel, RuntimeState, Section};
 use crate::argus::theme;
+use crate::minecraft::optimization::OptimizationProfile;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
@@ -720,13 +721,14 @@ pub fn draw_settings(frame: &mut Frame, area: Rect, state: &AppState, focus: &Fo
     // selector overlay below re-reads CONFIG, and holding this guard across
     // that call deadlocked the same thread (std Mutex is not re-entrant) —
     // ENTER on "Default Memory" froze the launcher permanently.
-    let (default_memory, java_path, theme_name, language, win_w, win_h, win_max) = {
+    let (default_memory, java_path, theme_name, language, optimization_profile, win_w, win_h, win_max) = {
         let config = CONFIG.lock().unwrap();
         (
             config.settings.default_memory,
             config.settings.java_path.clone(),
             config.settings.theme.clone(),
             config.settings.language.clone(),
+            config.settings.optimization_profile,
             config.window.width,
             config.window.height,
             config.window.maximized,
@@ -759,6 +761,7 @@ pub fn draw_settings(frame: &mut Frame, area: Rect, state: &AppState, focus: &Fo
     let java_style = focused_style("settings_java");
     let theme_style = focused_style("settings_theme");
     let language_style = focused_style("settings_language");
+    let optimization_style = focused_style("settings_optimization");
     let window_style = focused_style("settings_window");
     let account_style = focused_style("settings_account");
 
@@ -782,6 +785,11 @@ pub fn draw_settings(frame: &mut Frame, area: Rect, state: &AppState, focus: &Fo
     items.push(ListItem::new(vec![Line::from(vec![
         Span::styled("◯ Language: ", Style::default().fg(t.text_dim)),
         Span::styled(language, language_style),
+    ])]));
+    items.push(ListItem::new(vec![Line::from(vec![
+        Span::styled("◯ Optimization: ", Style::default().fg(t.text_dim)),
+        Span::styled(optimization_profile.as_str(), optimization_style),
+        Span::styled("  (ENTER to change)", Style::default().fg(t.text_muted)),
     ])]));
     items.push(ListItem::new(vec![Line::from(vec![
         Span::styled("◯ Offline Account: ", Style::default().fg(t.text_dim)),
@@ -907,6 +915,19 @@ fn draw_settings_selector(frame: &mut Frame, area: Rect, state: &AppState, _focu
                 "  [Only English currently available]".to_string(),
             ];
             ("LANGUAGE".to_string(), items)
+        }
+        SettingsEditMode::OptimizationSelector => {
+            let profiles = OptimizationProfile::all();
+            let mut items = Vec::new();
+            for (i, profile) in profiles.iter().enumerate() {
+                let label = if i == state.settings_edit_index {
+                    format!("← {}  selected", profile.as_str())
+                } else {
+                    format!("  {}", profile.as_str())
+                };
+                items.push(label);
+            }
+            ("OPTIMIZATION PROFILE".to_string(), items)
         }
         SettingsEditMode::None => return,
     };

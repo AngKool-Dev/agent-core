@@ -352,6 +352,7 @@ impl ArgusApp {
                 self.focus.register("settings_java", "Java Path");
                 self.focus.register("settings_theme", "Theme");
                 self.focus.register("settings_language", "Language");
+                self.focus.register("settings_optimization", "Optimization");
                 self.focus.register("settings_account", "Offline Account");
                 self.focus.register("settings_window", "Window");
                 self.focus
@@ -1529,6 +1530,9 @@ impl ArgusApp {
             "settings_language" => {
                 self.open_language_info();
             }
+            "settings_optimization" => {
+                self.open_optimization_selector();
+            }
             "settings_account" => {
                 self.open_account_selector();
             }
@@ -2125,6 +2129,27 @@ impl ArgusApp {
         );
     }
 
+    /// Open the optimization profile selector
+    fn open_optimization_selector(&mut self) {
+        let settings = BackendBridge::get_settings();
+        let profiles = crate::minecraft::optimization::OptimizationProfile::all();
+        let selected_idx = profiles
+            .iter()
+            .position(|p| *p == settings.optimization_profile)
+            .unwrap_or(1); // default to Mid if not found
+
+        self.state.settings_edit_mode = SettingsEditMode::OptimizationSelector;
+        self.state.settings_edit_index = selected_idx;
+        self.state.log(
+            LogLevel::Info,
+            "ARGUS",
+            &format!(
+                "Optimization selector opened (current: {})",
+                settings.optimization_profile.as_str()
+            ),
+        );
+    }
+
     /// Handle Up key in settings edit mode
     fn settings_edit_up(&mut self) {
         match &self.state.settings_edit_mode {
@@ -2156,6 +2181,14 @@ impl ArgusApp {
             }
             SettingsEditMode::LanguageInfo => {
                 // Language info is read-only, just navigate
+            }
+            SettingsEditMode::OptimizationSelector => {
+                if self.state.settings_edit_index > 0 {
+                    self.state.settings_edit_index -= 1;
+                }
+                let profile = crate::minecraft::optimization::OptimizationProfile::all()[self.state.settings_edit_index];
+                self.state
+                    .log(LogLevel::Info, "ARGUS", &format!("Optimization: {}", profile.as_str()));
             }
             SettingsEditMode::None => {}
         }
@@ -2195,6 +2228,15 @@ impl ArgusApp {
             }
             SettingsEditMode::LanguageInfo => {
                 // Language info is read-only
+            }
+            SettingsEditMode::OptimizationSelector => {
+                let profiles = crate::minecraft::optimization::OptimizationProfile::all();
+                if self.state.settings_edit_index < profiles.len() - 1 {
+                    self.state.settings_edit_index += 1;
+                }
+                let profile = profiles[self.state.settings_edit_index];
+                self.state
+                    .log(LogLevel::Info, "ARGUS", &format!("Optimization: {}", profile.as_str()));
             }
             SettingsEditMode::None => {}
         }
@@ -2316,6 +2358,24 @@ impl ArgusApp {
                     "ARGUS",
                     "Language: only English is currently available",
                 );
+                self.state.settings_edit_mode = SettingsEditMode::None;
+            }
+            SettingsEditMode::OptimizationSelector => {
+                let profiles = crate::minecraft::optimization::OptimizationProfile::all();
+                let selected = profiles[self.state.settings_edit_index];
+                if BackendBridge::set_optimization_profile(selected) {
+                    self.state.log(
+                        LogLevel::Info,
+                        "BACKEND",
+                        &format!("Optimization profile set to {} (persisted)", selected.as_str()),
+                    );
+                } else {
+                    self.state.log(
+                        LogLevel::Error,
+                        "BACKEND",
+                        &format!("Failed to save optimization profile: {}", selected.as_str()),
+                    );
+                }
                 self.state.settings_edit_mode = SettingsEditMode::None;
             }
             SettingsEditMode::None => {}

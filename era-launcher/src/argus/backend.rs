@@ -15,6 +15,7 @@ use crate::INSTANCE_MANAGER;
 use crate::argus::state::{AppState, LogLevel, RuntimeState};
 use crate::instances::InstanceConfig;
 use crate::minecraft::java::JavaManager;
+use crate::minecraft::optimization::OptimizationProfile;
 use crate::modrinth::{ModrinthClient, Project};
 use crate::platform::Paths;
 use crate::versions::{ScanResult, SystemScanner};
@@ -310,6 +311,13 @@ impl BackendBridge {
             return true;
         }
         false
+    }
+
+    /// Set the optimization profile and persist.
+    pub fn set_optimization_profile(profile: OptimizationProfile) -> bool {
+        let mut settings = Self::get_settings();
+        settings.optimization_profile = profile;
+        Self::save_settings(&settings)
     }
 
     /// Create a new instance using the REAL instance manager and config.
@@ -1570,8 +1578,12 @@ Create a Fabric or Quilt instance first.",
                 progress("Starting Minecraft...");
 
                 let classpath = Self::build_classpath(&client_jar, &all_libs);
+                let optimization_profile = {
+                    let config = crate::CONFIG.lock().unwrap();
+                    config.settings.optimization_profile
+                };
                 let (jvm_args, game_args, manifest_main) =
-                    Self::build_launch_command(&version_info, &inst, &instance_dir, &classpath);
+                    Self::build_launch_command(&version_info, &inst, &instance_dir, &classpath, optimization_profile);
                 let main_class = main_class_override.unwrap_or(manifest_main);
 
                 // Diagnostic + hard validation: a modded launch without its
@@ -2065,6 +2077,7 @@ Create a Fabric or Quilt instance first.",
         instance: &InstanceConfig,
         instance_dir: &Path,
         classpath: &str,
+        optimization_profile: crate::minecraft::optimization::OptimizationProfile,
     ) -> (Vec<String>, Vec<String>, String) {
         use crate::minecraft::arguments::ArgumentBuilder;
 
@@ -2148,14 +2161,11 @@ Create a Fabric or Quilt instance first.",
             ),
         ];
 
-        // JVM args: base heap flags plus the manifest-provided ones. The
-        // manifest's own args already carry -Djava.library.path and the
-        // trailing "-cp ${classpath}" pair for 1.13+.
-        let mut jvm_args = vec![
-            format!("-Xmx{}M", instance.memory),
-            format!("-Xms{}M", (instance.memory / 4).max(512)),
-            "-Duser.language=en".to_string(),
-        ];
+        // JVM args: optimization profile args plus the manifest-provided ones.
+        let profile_args = optimization_profile.jvm_args(instance.memory);
+        let mut jvm_args = Vec::new();
+        jvm_args.extend(profile_args);
+        jvm_args.push("-Duser.language=en".to_string());
         // Game args: use the manifest's official list when available;
         // otherwise fall back to a minimal hand-built set.
         let mut game_args: Vec<String> = Vec::new();

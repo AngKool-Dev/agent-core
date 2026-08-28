@@ -3,6 +3,7 @@
 
 use crate::instances::InstanceConfig;
 use crate::minecraft::java::JavaInstallation;
+use crate::minecraft::optimization::OptimizationProfile;
 use crate::modrinth::Project;
 use crate::versions::ScanResult;
 use std::collections::VecDeque;
@@ -152,6 +153,7 @@ pub enum SettingsEditMode {
     JavaSelector,
     ThemeSelector,
     LanguageInfo,
+    OptimizationSelector,
 }
 
 impl SettingsEditMode {
@@ -330,6 +332,8 @@ pub struct AppState {
     pub update_available: Option<String>,
     /// Version this binary was built from
     pub current_version: &'static str,
+    /// Selected optimization profile for JVM args
+    pub optimization_profile: OptimizationProfile,
 }
 
 /// A confirmation dialog
@@ -417,6 +421,7 @@ impl AppState {
             ],
             update_available: None,
             current_version: env!("CARGO_PKG_VERSION"),
+            optimization_profile: OptimizationProfile::Mid,
         }
     }
 
