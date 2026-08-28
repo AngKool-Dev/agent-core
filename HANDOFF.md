@@ -42,8 +42,8 @@ Added quick-menu commands to all 4 plugins in `D:\agent-core\minecraft-plugins\`
 ### 5. ARGUS v0.1.4 — Current Working Build (TUI-only, no WebView2)
 - **Latest working build**: v0.1.4 TUI-only
 - Source: `D:\agent-core\era-launcher\`
-- Built exe: `D:\agent-core\era-launcher\target\release\era-launcher.exe` (~13.57 MB)
-- SHA-256: `B493AEB0E0225DE4A4E2A621A34E84602610CEB5EF1FF21A462401C7E00EEFEF`
+- Built exe: `D:\agent-core\era-launcher\target\release\era-launcher.exe` (~13.59 MB)
+- SHA-256: `66B97692BFA4B91C78458A66FB4F7EF15C282F5994366CC99148C33D5565CC1D`
 - **No WebView2 dependency** — pure Rust TUI binary (crossterm + ratatui)
 - Build toolchain: Rust stable-x86_64-pc-windows-gnu + WinLibs MinGW-w64 UCRT (GCC 16.1.0)
 - **Features**:
