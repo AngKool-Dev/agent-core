@@ -651,11 +651,15 @@ impl CommandManager {
         };
         match open {
             Ok(_) => {
-                let extra = state
-                    .update_available
-                    .as_ref()
-                    .map(|t| format!(" Latest release: {}.", t))
-                    .unwrap_or_default();
+                let extra = match &state.update_check {
+                    crate::argus::update::UpdateCheckResult::UpdateAvailable(tag) => {
+                        format!(" Latest release: {}.", tag)
+                    }
+                    crate::argus::update::UpdateCheckResult::CheckFailed(err) => {
+                        format!(" Update check failed: {}.", err)
+                    }
+                    crate::argus::update::UpdateCheckResult::UpToDate => String::new(),
+                };
                 CommandResult::Success(Some(format!(
                     "Opening releases page: {}{}. Replace era-launcher.exe with the new download.",
                     url, extra

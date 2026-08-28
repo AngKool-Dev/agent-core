@@ -4,6 +4,7 @@
 use crate::instances::InstanceConfig;
 use crate::minecraft::java::JavaInstallation;
 use crate::minecraft::optimization::OptimizationProfile;
+use crate::argus::update::UpdateCheckResult;
 use crate::modrinth::Project;
 use crate::versions::ScanResult;
 use std::collections::VecDeque;
@@ -328,8 +329,10 @@ pub struct AppState {
     pub settings_edit_index: usize,
     /// Theme options
     pub theme_options: Vec<String>,
-    /// Latest published release tag when newer than the running binary
-    pub update_available: Option<String>,
+    /// Latest update check result
+    pub update_check: UpdateCheckResult,
+    /// When the last update check was performed
+    pub last_update_check: Option<std::time::Instant>,
     /// Version this binary was built from
     pub current_version: &'static str,
     /// Selected optimization profile for JVM args
@@ -419,7 +422,8 @@ impl AppState {
                 "light".to_string(),
                 "system".to_string(),
             ],
-            update_available: None,
+            update_check: UpdateCheckResult::UpToDate,
+            last_update_check: None,
             current_version: env!("CARGO_PKG_VERSION"),
             optimization_profile: OptimizationProfile::Mid,
         }

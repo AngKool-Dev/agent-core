@@ -44,7 +44,7 @@ pub struct ArgusApp {
     focus: FocusManager,
     renderer: Renderer,
     tracker: RuntimeTracker,
-    update_rx: Option<std::sync::mpsc::Receiver<Option<String>>>,
+    update_rx: Option<std::sync::mpsc::Receiver<crate::argus::update::UpdateCheckResult>>,
 }
 
 impl ArgusApp {
@@ -69,7 +69,8 @@ impl ArgusApp {
         self.refresh_data();
         self.setup_focus_targets();
         let current_version = self.state.current_version;
-        self.update_rx = Some(crate::argus::update::spawn_check(current_version));
+        let last_check = self.state.last_update_check;
+        self.update_rx = Some(crate::argus::update::spawn_check(current_version, last_check));
         self.renderer.render(&self.state, &self.focus)?;
 
         let poll_timeout = Duration::from_millis(100);
@@ -81,18 +82,32 @@ impl ArgusApp {
             self.poll_launch_events();
             // Pick up the finished update check (single message, then stop)
             if let Some(rx) = &self.update_rx {
-                if let Ok(latest) = rx.try_recv() {
-                    if let Some(tag) = latest {
-                        self.state.update_available = Some(tag.clone());
-                        self.state.log(
-                            LogLevel::Info,
-                            "ARGUS",
-                            &format!(
-                                "Update available: {} (running v{})",
-                                tag,
-                                env!("CARGO_PKG_VERSION")
-                            ),
-                        );
+                if let Ok(result) = rx.try_recv() {
+                    self.state.last_update_check = Some(std::time::Instant::now());
+                    match result {
+                        crate::argus::update::UpdateCheckResult::UpdateAvailable(tag) => {
+                            self.state.update_check = crate::argus::update::UpdateCheckResult::UpdateAvailable(tag.clone());
+                            self.state.log(
+                                LogLevel::Info,
+                                "ARGUS",
+                                &format!(
+                                    "Update available: {} (running v{})",
+                                    tag,
+                                    env!("CARGO_PKG_VERSION")
+                                ),
+                            );
+                        }
+                        crate::argus::update::UpdateCheckResult::CheckFailed(err) => {
+                            self.state.update_check = crate::argus::update::UpdateCheckResult::CheckFailed(err.clone());
+                            self.state.log(
+                                LogLevel::Warn,
+                                "ARGUS",
+                                &format!("Update check failed: {}", err),
+                            );
+                        }
+                        crate::argus::update::UpdateCheckResult::UpToDate => {
+                            self.state.update_check = crate::argus::update::UpdateCheckResult::UpToDate;
+                        }
                     }
                     self.update_rx = None;
                 }

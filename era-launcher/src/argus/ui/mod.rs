@@ -1119,12 +1119,17 @@ pub fn draw_command_prompt(frame: &mut Frame, area: Rect, state: &AppState) {
 
 /// Draw the status bar at the bottom
 pub fn draw_status_bar(frame: &mut Frame, area: Rect, state: &AppState) {
+    use crate::argus::update::UpdateCheckResult;
     let t = theme::current();
-    let update_note = state
-        .update_available
-        .as_ref()
-        .map(|tag| format!("  ⬆ Update available: {} — type 'update'", tag))
-        .unwrap_or_default();
+    let update_note = match &state.update_check {
+        UpdateCheckResult::UpdateAvailable(tag) => {
+            format!("  ⬆ Update available: {} — type 'update'", tag)
+        }
+        UpdateCheckResult::CheckFailed(err) => {
+            format!("  ⚠ Update check failed: {}", err)
+        }
+        UpdateCheckResult::UpToDate => String::new(),
+    };
     let text = if state.command_prompt_active {
         " [COMMAND] Type command and press ENTER. ESC to cancel.".to_string()
     } else if state.search_mode {
