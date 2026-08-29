@@ -6,6 +6,8 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.UUID;
+
 public final class SovereignEconomyPlugin extends JavaPlugin {
 
     private final Settings settings = new Settings();

@@ -7,7 +7,6 @@
 #  (items with persistent NBT lore/signature).
 #
 #  Cross-plugin bonuses:
-#    - EchoRealms: echo-attuned players get +15% XP per craft
 #    - MobEcology: rare drops (amethyst, artifact, netherite, diamond) give +25% XP
 #    - ChunkSovereignty: players in claimed chunks get +20% XP multiplier
 #    - SovereignEconomy: crafting costs paid in sovereigns via Vault
@@ -29,7 +28,6 @@ economy:
   grandmaster-premium: 0.50
 
 bonuses:
-  echo-attune-xp: 0.15
   ecology-rare-drop-xp: 0.25
   claim-workshop-bonus: 0.20
 

@@ -5,7 +5,7 @@ api-version: '1.21'
 description: Deep crafting specialization with mastery trees, signature items, reputation, and apprenticeship.
 author: mcplugins
 website: https://github.com/Angkool-Dev/minecraft-plugins
-softdepend: [Vault, SovereignEconomy, EchoRealms, ChunkSovereignty, MobEcology]
+softdepend: [Vault, SovereignEconomy, ChunkSovereignty, MobEcology]
 
 commands:
   sf:

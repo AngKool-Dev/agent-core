@@ -17,14 +17,6 @@ public final class PluginWrapper {
 
     private PluginWrapper() { }
 
-    // ── EchoRealms ────────────────────────────────────────
-
-    public static boolean playerHasAttuned(Plugin caller, UUID uuid) {
-        return callPluginSafe(caller, "EchoRealms",
-                "dev.mcplugins.echorealms.EchoRealmsPlugin",
-                null, "playerHasAttuned", uuid);
-    }
-
     // ── ChunkSovereignty ──────────────────────────────────
 
     public static boolean playerHasClaimedChunk(Plugin caller, UUID uuid) {
