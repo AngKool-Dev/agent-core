@@ -1,0 +1,10 @@
+auctions:
+  - id: "example-1"
+    seller: "00000000-0000-0000-0000-000000000000"
+    item:
+      type: DIAMOND_SWORD
+      amount: 1
+    price: 100.0
+    created: 0
+    expires: 0
+    claimed: false

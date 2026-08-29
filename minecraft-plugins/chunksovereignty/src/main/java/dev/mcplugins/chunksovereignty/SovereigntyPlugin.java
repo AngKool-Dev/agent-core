@@ -64,7 +64,7 @@ public final class SovereigntyPlugin extends JavaPlugin {
             }
         }, autosaveTicks, autosaveTicks);
 
-        getLogger().info(() -> "ChunkSovereignty enabled: expansion cost "
+        getLogger().info("ChunkSovereignty enabled: expansion cost "
                 + String.format("%.0f", settings.costPerChunk) + ", upkeep "
                 + String.format("%.1f", settings.upkeepPerChunkHour) + "/chunk/h, cap "
                 + settings.maxChunks + " chunks.");
@@ -195,6 +195,15 @@ public final class SovereigntyPlugin extends JavaPlugin {
 
     public ChunkIndex index() {
         return index;
+    }
+
+    public boolean playerHasClaimedChunk(UUID uuid, String world, int chunkX, int chunkZ) {
+        if (index == null) return false;
+        return index.ownerAt(new ChunkIndex.Claim(world, chunkX, chunkZ)) != null;
+    }
+
+    public boolean playerHasClaimedChunk(UUID uuid) {
+        return index != null && index.countOwned(uuid) > 0;
     }
 
     public DomainEngine engine() {

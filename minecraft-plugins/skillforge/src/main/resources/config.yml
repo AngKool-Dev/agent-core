@@ -1,0 +1,1363 @@
+# ============================================================
+#  SkillForge - Deep Crafting Specialization with Mastery Trees
+#
+#  Specializations define craft domains. Each has a skill tree
+#  organized by tier. Players level by crafting XP; higher tiers
+#  unlock more skills and the ability to produce signature items
+#  (items with persistent NBT lore/signature).
+#
+#  Cross-plugin bonuses:
+#    - EchoRealms: echo-attuned players get +15% XP per craft
+#    - MobEcology: rare drops (amethyst, artifact, netherite, diamond) give +25% XP
+#    - ChunkSovereignty: players in claimed chunks get +20% XP multiplier
+#    - SovereignEconomy: crafting costs paid in sovereigns via Vault
+# ============================================================
+
+currency:
+  symbol: S
+
+storage:
+  autosave-seconds: 300
+
+vault:
+  enabled: true
+
+economy:
+  apprentiship-fee: 250
+  master-cut: 0.10
+  crafting-base-cost: 50
+  grandmaster-premium: 0.50
+
+bonuses:
+  echo-attune-xp: 0.15
+  ecology-rare-drop-xp: 0.25
+  claim-workshop-bonus: 0.20
+
+specializations:
+  blacksmith:
+    name: Blacksmith
+    description: Forge weapons, armor, and metalwork of unmatched durability.
+    color: '&6'
+    max-apprentices: 3
+    starter-skills:
+      - forge-fundamentals
+      - heat-management
+      - hammer-precision
+
+  enchanter:
+    name: Enchanter
+    description: Bind enchantments and cosmic energy into items with precision.
+    color: '&5'
+    max-apprentices: 2
+    starter-skills:
+      - rune-basics
+      - mana-weaving
+      - sigil-painting
+
+  architect:
+    name: Architect
+    description: Shape ender pearls, sculk, and building materials into masterpieces.
+    color: '&3'
+    max-apprentices: 4
+    starter-skills:
+      - spatial-awareness
+      - block-fusion
+      - design-principles
+
+  herbalist:
+    name: Herbalist
+    description: Brew potions, cultivate rare plants, and distill essences.
+    color: '&a'
+    max-apprentices: 2
+    starter-skills:
+      - herb-identification
+      - mortar-grinding
+      - essence-extraction
+
+  artisan:
+    name: Artisan
+    description: General craft mastery across multiple disciplines.
+    color: '&e'
+    max-apprentices: 3
+    starter-skills:
+      - multi-tool
+      - materials-science
+      - finishing-touches
+
+tiers:
+  journeyman:
+    name: Journeyman
+    short: J
+    xp: 0
+  artisan:
+    name: Artisan
+    short: A
+    xp: 800
+  master:
+    name: Master
+    short: M
+    xp: 3500
+  grandmaster:
+    name: Grandmaster
+    short: GM
+    xp: 12000
+  legend:
+    name: Legend
+    short: L
+    xp: 35000
+
+skills:
+  blacksmith:
+    journeyman:
+      forge-fundamentals:
+        name: Forge Fundamentals
+        description: Basic understanding of heat, hammer, and anvil. Every smith starts here.
+        signature: false
+      heat-management:
+        name: Heat Management
+        description: Control forge temperatures precisely. No more guesswork.
+        signature: false
+      hammer-precision:
+        name: Hammer Precision
+        description: Strike with repeatable accuracy. Your edges are true.
+        signature: false
+      quenching-basics:
+        name: Quenching Basics
+        description: Temper metal to reduce brittleness. Hardness without fragility.
+        signature: false
+      edge-alignment:
+        name: Edge Alignment
+        description: Keep blade edges true through repeated strikes.
+        signature: false
+      forge-efficiency:
+        name: Forge Efficiency
+        description: Reduce fuel waste by 20%. Your forge runs leaner.
+        signature: false
+      iron-working:
+        name: Iron Working
+        description: Shape iron with confidence. The foundation of all smithing.
+        signature: false
+      steel-intro:
+        name: Steel Introduction
+        description: Understand carbon content and its effect on steel properties.
+        signature: false
+      tool-fundamentals:
+        name: Tool Fundamentals
+        description: Craft basic tools — axe, pick, shovel — with reliable durability.
+        signature: false
+      anvil-work:
+        name: Anvil Work
+        description: Use the anvil to shape, bend, and cut metal precisely.
+        signature: false
+      forge-safety:
+        name: Forge Safety
+        description: Work safely. No burns, no accidents — every smith knows this.
+        signature: false
+      metal-identification:
+        name: Metal Identification
+        description: Identify any common metal by sight, weight, and spark.
+        signature: false
+
+    artisan:
+      alloy-blending:
+        name: Alloy Blending
+        description: Combine metals for superior properties. Bronze, brass, and beyond.
+        signature: false
+      temper-curve:
+        name: Temper Curve
+        description: Progressive tempering for maximum edge retention without brittleness.
+        signature: false
+      forge-pattern:
+        name: Forge Pattern
+        description: Create decorative patterns on metal — twist, fold, and weld.
+        signature: false
+      weapon-balance:
+        name: Weapon Balance
+        description: Balance weapons for optimal handling. Your blades feel right in hand.
+        signature: false
+      armor-fitting:
+        name: Armor Fitting
+        description: Fit armor to the wearer's build. No gaps, no discomfort.
+        signature: false
+      quenching-ritual:
+        name: Quenching Ritual
+        description: Ceremonial quench for legendary durability. Your items last longer.
+        signature: false
+      steel-forging:
+        name: Steel Forging
+        description: Forge high-carbon steel with confidence. Strong, flexible, sharp.
+        signature: false
+      blade-smithing:
+        name: Blade Smithing
+        description: Shape blades of every type — swords, knives, axes — with precision.
+        signature: false
+      metal-coating:
+        name: Metal Coating
+        description: Coat metal with protective layers — oil, wax, or patina.
+        signature: false
+      forge-music:
+        name: Forge Music
+        description: The rhythm of hammer and anvil becomes art. Your forge sings.
+        signature: false
+      smith-mark:
+        name: Smith Mark
+        description: Your mark appears on every item you craft. A humble signature.
+        signature: false
+      advanced-quenching:
+        name: Advanced Quenching
+        description: Quench in oil, water, or brine for specific properties. Total control.
+        signature: false
+
+    master:
+      blade-soul:
+        name: Blade Soul
+        description: Infuse weapons with a fragment of intent — they remember their purpose.
+        signature: true
+      armor-weave:
+        name: Armor Weave
+        description: Weave metal and leather for articulated protection. No compromise.
+        signature: true
+      master-forge:
+        name: Master Forge
+        description: Operate a master forge that yields 2x output. What you make, multiplies.
+        signature: false
+      smith-signature:
+        name: Smith Signature
+        description: Your mark appears on every item you craft — bold, undeniable.
+        signature: true
+      weapon-mastery:
+        name: Weapon Mastery
+        description: All your weapons gain +1 attack damage. Simple, devastating.
+        signature: true
+      enchant-infusion:
+        name: Enchant Infusion
+        description: Pre-enchant items during forging. The enchantment bonds with the metal.
+        signature: true
+      master-alloy:
+        name: Master Alloy
+        description: Create alloys that don't exist in nature — stronger than steel, lighter than air.
+        signature: true
+      forge-legend:
+        name: Forge Legend
+        description: Your forge becomes a legend — others travel to work at your anvil.
+        signature: true
+      epic-weapon:
+        name: Epic Weapon
+        description: Forge an epic weapon — +3 attack damage, +3 durability per hit.
+        signature: true
+      smith-honor:
+        name: Smith Honor
+        description: Your word is bond. Every item you craft honors the smith's code.
+        signature: true
+      legendary-quench:
+        name: Legendary Quench
+        description: Quench in the heart of a flame — items gain fire resistance in their structure.
+        signature: true
+      master-artisan:
+        name: Master Artisan
+        description: You are a master of your craft. Every item bears your mastery.
+        signature: true
+
+    grandmaster:
+      elemental-forging:
+        name: Elemental Forging
+        description: Forge with fire, ice, lightning, or earth attunement. Your metals remember the elements.
+        signature: true
+      legendary-temper:
+        name: Legendary Temper
+        description: Items survive unbreakable durability thresholds. They refuse to break.
+        signature: true
+      master-workshop:
+        name: Master Workshop
+        description: Claim a workshop zone for 3x efficiency. Your domain, your forge.
+        signature: false
+      smith-godhand:
+        name: Smith Godhand
+        description: Your signature items carry the mark of a grandmaster smith. Recognizable across dimensions.
+        signature: true
+      art-of-the-blade:
+        name: Art of the Blade
+        description: All your weapons have +3 attack damage, sweep attack, and 빛나는 가장자리.
+        signature: true
+      legacy-anvil:
+        name: Legacy Anvil
+        description: Your items can be passed down with damage resistance inheritance. Generations remember.
+        signature: true
+      god-tier-weapon:
+        name: God-Tier Weapon
+        description: Forge a weapon that deals +5 attack damage and ignores armor.
+        signature: true
+      metal-godhood:
+        name: Metal Godhood
+        description: You understand metals so deeply that you can shape them at a molecular level.
+        signature: true
+      forge-myth:
+        name: Forge Myth
+        description: Your forge becomes a myth — people tell stories about the smith who forged stars.
+        signature: true
+      smith-legacy:
+        name: Smith Legacy
+        description: Your name is written into the world — every item with your mark is a testament.
+        signature: true
+      enchanted-forging:
+        name: Enchanted Forging
+        description: Forge enchantments directly into metal — no enchanting table needed.
+        signature: true
+      world-forge:
+        name: World Forge
+        description: Your forge shapes the land around it. Terrain remembers your hammer.
+        signature: true
+
+    legend:
+      creation-ritual:
+        name: Creation Ritual
+        description: Forge items that cannot be destroyed by normal means. They endure forever.
+        signature: true
+      world-forge:
+        name: World Forge
+        description: Your forge shapes the land around it. Mountains rise at your command.
+        signature: true
+      smith-god-forge:
+        name: Smith God-Forge
+        description: Items crafted carry the essence of a master smith who has transcended mortality.
+        signature: true
+      weapon-legacy:
+        name: Weapon Legacy
+        description: Weapons remember their wielder across deaths. They find their way home.
+        signature: true
+      master-alloy:
+        name: Master Alloy
+        description: Create alloys that don't exist in nature. Stronger than any known metal.
+        signature: true
+      smith-apotheosis:
+        name: Smith Apotheosis
+        description: Your signature is legendary — any item with your mark is valued 5x in market.
+        signature: true
+      reality-forging:
+        name: Reality Forging
+        description: Your hammer strikes reality itself. What you forge becomes true.
+        signature: true
+      smith-divinity:
+        name: Smith Divinity
+        description: You are a divine smith. Your creations are gifts from the gods.
+        signature: true
+      legendary-creation:
+        name: Legendary Creation
+        description: Forge legendary items that rewrite the rules of the world.
+        signature: true
+      forge-godhood:
+        name: Forge Godhood
+        description: Your forge is divine — it burns with celestial fire and shapes reality.
+        signature: true
+      eternal-blade:
+        name: Eternal Blade
+        description: Forge a blade that never dulls, never breaks, never loses its edge.
+        signature: true
+      smith-mythos:
+        name: Smith Mythos
+        description: Your legend echoes across dimensions. Smiths everywhere study your work.
+        signature: true
+
+  enchanter:
+    journeyman:
+      rune-basics:
+        name: Rune Basics
+        description: Draw simple runes that amplify enchantments. A foundation of power.
+        signature: false
+      mana-weaving:
+        name: Mana Weaving
+        description: Channel ambient mana into items. Weave the invisible.
+        signature: false
+      sigil-painting:
+        name: Sigil Painting
+        description: Paint sigils that store enchantment data. Symbols that hold power.
+        signature: false
+      enchant-stability:
+        name: Enchant Stability
+        description: Prevent enchantment decay over time. Your enchantments endure.
+        signature: false
+      amplifier-focus:
+        name: Amplifier Focus
+        description: +1 to all enchantment levels on crafted items. A small but steady boost.
+        signature: false
+      mana-sense:
+        name: Mana Sense
+        description: Detect nearby enchantment sources. Know where power flows.
+        signature: false
+      rune-understanding:
+        name: Rune Understanding
+        description: Understand the meaning of every rune. Language of power.
+        signature: false
+      mana-basics:
+        name: Mana Basics
+        description: Basic manipulation of mana. The foundation of all enchantment.
+        signature: false
+      sigil-basics:
+        name: Sigil Basics
+        description: Draw basic sigils that store simple enchantments.
+        signature: false
+      enchant-basics:
+        name: Enchant Basics
+        description: Apply basic enchantments to items. Sharpness, protection, efficiency.
+        signature: false
+      mana-channeling:
+        name: Mana Channeling
+        description: Channel mana through your hands into items. Direct, focused.
+        signature: false
+      rune-drawing:
+        name: Rune Drawing
+        description: Draw runes with precision. Every line carries meaning.
+        signature: false
+
+    artisan:
+      rune-lattices:
+        name: Rune Lattices
+        description: Weave multi-rune patterns for compound effects. Complexity yields power.
+        signature: false
+      mana-accretion:
+        name: Mana Accretion
+        description: Build up mana reserves over consecutive crafts. Your well deepens.
+        signature: false
+      sigil-master:
+        name: Sigil Master
+        description: Design custom sigils for any effect. Your symbols, your power.
+        signature: false
+      cosmic-attunement:
+        name: Cosmic Attunement
+        description: Align enchantments with celestial cycles. Moon phase matters.
+        signature: false
+      enchant-weaving:
+        name: Enchant Weaving
+        description: Stack multiple enchantments on one item. Power layers.
+        signature: false
+      focus-crystal:
+        name: Focus Crystal
+        description: Use crystals to amplify your enchantments. Crystal focus, clear power.
+        signature: false
+      advanced-runes:
+        name: Advanced Runes
+        description: Draw advanced runes that hold complex enchantments. True artistry.
+        signature: false
+      mana-weaving-advanced:
+        name: Mana Weaving Advanced
+        description: Weave mana with precision. Every thread counts.
+        signature: false
+      sigil-advanced:
+        name: Sigil Advanced
+        description: Paint advanced sigils that store complex enchantments.
+        signature: false
+      enchant-advanced:
+        name: Enchant Advanced
+        description: Apply advanced enchantments — efficiency, protection, power.
+        signature: false
+      cosmic-basics:
+        name: Cosmic Basics
+        description: Understand celestial cycles and their effect on enchantments.
+        signature: false
+      mana-crystal:
+        name: Mana Crystal
+        description: Use mana crystals to store and focus enchantments.
+        signature: false
+
+    master:
+      enchant-mastery:
+        name: Enchant Mastery
+        description: Craft items with double the normal enchantment potency. Your enchantments are strong.
+        signature: true
+      skyrend-binding:
+        name: Skyrend Binding
+        description: Bind cosmic energy into items — they glow under the night sky.
+        signature: true
+      enchant-artisan:
+        name: Enchant Artisan
+        description: All your crafted items come with one free minor enchantment. A master's touch.
+        signature: true
+      sigil-of-ages:
+        name: Sigil of Ages
+        description: Enchantments you apply resist removal by unbreaking+. Eternal power.
+        signature: true
+      mana-well:
+        name: Mana Well
+        description: Your presence boosts nearby enchantment power. You are a well of power.
+        signature: true
+      arcane-craft:
+        name: Arcane Craft
+        description: Craft enchanted items without an enchanting table. Pure will, pure power.
+        signature: true
+      cosmic-mastery:
+        name: Cosmic Mastery
+        description: Master celestial cycles. Your enchantments align with the stars.
+        signature: true
+      rune-mastery:
+        name: Rune Mastery
+        description: Master every rune. Your runes hold infinite power.
+        signature: true
+      mana-mastery:
+        name: Mana Mastery
+        description: Master mana itself. You command the invisible.
+        signature: true
+      sigil-mastery:
+        name: Sigil Mastery
+        description: Master every sigil. Your sigils hold ultimate power.
+        signature: true
+      enchant-godhand:
+        name: Enchant Godhand
+        description: Your enchantments are god-tier — they rewrite item properties.
+        signature: true
+      arcane-mastery:
+        name: Arcane Mastery
+        description: You understand arcane arts at their deepest level.
+        signature: true
+
+    grandmaster:
+      celestial-enchanter:
+        name: Celestial Enchanter
+        description: Enchantments align with moon phase for maximum effect. Lunar power.
+        signature: true
+      void-weaving:
+        name: Void Weaving
+        description: Weave void energy — items gain vanquish effect on hit. Darkness, power.
+        signature: true
+      enchant-godhand:
+        name: Enchant Godhand
+        description: Your enchantments are unbreakable by normal means. Eternal enchantment.
+        signature: true
+      master-sigil:
+        name: Master Sigil
+        description: Your sigils work on any item, any material. Universal sigils.
+        signature: true
+      spell-forging:
+        name: Spell Forging
+        description: Forge actual spells into scroll form. Words of power, captured.
+        signature: true
+      enchant-apotheosis:
+        name: Enchant Apotheosis
+        description: Items you enchant gain precedence in all enchantment conflicts. Supreme enchantment.
+        signature: true
+      cosmic-godhand:
+        name: Cosmic Godhand
+        description: Your cosmic enchantments are legendary — they bend reality.
+        signature: true
+      void-mastery:
+        name: Void Mastery
+        description: You master void energy. Darkness bends to your will.
+        signature: true
+      spell-master:
+        name: Spell Master
+        description: You master spells. Every word of power is yours.
+        signature: true
+      enchant-legend:
+        name: Enchant Legend
+        description: Your enchantments become legends — others seek them out.
+        signature: true
+      arcane-godhand:
+        name: Arcane Godhand
+        description: Your arcane power is god-tier — you rewrite reality with a word.
+        signature: true
+      cosmic-apotheosis:
+        name: Cosmic Apotheosis
+        description: Your cosmic enchantments transcend dimensions. They reshape reality.
+        signature: true
+
+    legend:
+      creation-weave:
+        name: Creation Weave
+        description: Weave enchantments that rewrite item lore. Items remember their origin.
+        signature: true
+      world-rune:
+        name: World Rune
+        description: Carve runes that alter local enchantment laws. You change the rules.
+        signature: false
+      enchant-legacy:
+        name: Enchant Legacy
+        description: Enchantments you apply persist through item deaths. Eternal enchantment.
+        signature: true
+      grand-enchanter:
+        name: Grand Enchanter
+        description: All your items glow with arcane energy in darkness. You are a beacon.
+        signature: true
+      cosmic-destiny:
+        name: Cosmic Destiny
+        description: Your items are destined — they always land critical hits in their first use after a kill.
+        signature: true
+      enchant-godhood:
+        name: Enchant Godhood
+        description: Your signature enchantments are legendary — worth 3x market value.
+        signature: true
+      reality-weaving:
+        name: Reality Weaving
+        description: You weave reality itself. Your enchantments change the world.
+        signature: true
+      cosmic-divinity:
+        name: Cosmic Divinity
+        description: You are a cosmic deity of enchantment. Your power spans dimensions.
+        signature: true
+      void-godhood:
+        name: Void Godhood
+        description: You master void energy completely. You are the darkness.
+        signature: true
+      spell-godhood:
+        name: Spell Godhood
+        description: Your spells are divine — they rewrite reality.
+        signature: true
+      enchant-mythos:
+        name: Enchant Mythos
+        description: Your enchantments are myths — stories told across dimensions.
+        signature: true
+      arcane-apotheosis:
+        name: Arcane Apotheosis
+        description: You transcend arcane arts. You are beyond enchantment.
+        signature: true
+
+  architect:
+    journeyman:
+      spatial-awareness:
+        name: Spatial Awareness
+        description: Visualize structures in 3D before building. See what will be.
+        signature: false
+      block-fusion:
+        name: Block Fusion
+        description: Fuse blocks together for seamless structures. No seams, no gaps.
+        signature: false
+      design-principles:
+        name: Design Principles
+        description: Apply golden ratio and symmetry to builds. Beauty through mathematics.
+        signature: false
+      material-choice:
+        name: Material Choice
+        description: Choose optimal materials for structural integrity. Strength through choice.
+        signature: false
+      foundation-laying:
+        name: Foundation Laying
+        description: Lay foundations that resist collapse. Solid ground.
+        signature: false
+      aesthetic-sense:
+        name: Aesthetic Sense
+        description: Sense when a build looks right. The eye of an artist.
+        signature: false
+      block-placement:
+        name: Block Placement
+        description: Place blocks with precision. Every block in its place.
+        signature: false
+      structure-basics:
+        name: Structure Basics
+        description: Understand basic structural principles. Walls, floors, roofs.
+        signature: false
+      design-basics:
+        name: Design Basics
+        description: Basic design principles. Proportion, balance, harmony.
+        signature: false
+      material-science:
+        name: Material Science
+        description: Understand materials — stone, wood, glass, metal.
+        signature: false
+      spatial-basics:
+        name: Spatial Basics
+        description: Basic spatial awareness. Understand dimensions.
+        signature: false
+      aesthetic-basics:
+        name: Aesthetic Basics
+        description: Basic aesthetic sense. Beauty through simplicity.
+        signature: false
+
+    artisan:
+      ender-weaving:
+        name: Ender Weaving
+        description: Teleport blocks into place for impossible builds. Defy distance.
+        signature: false
+      sculk-integration:
+        name: Sculk Integration
+        description: Grow sculk into structures for organic shapes. Living architecture.
+        signature: false
+      structural-analysis:
+        name: Structural Analysis
+        description: Analyze load-bearing and stress points. Know where buildings fail.
+        signature: false
+      landscape-shaping:
+        name: Landscape Shaping
+        description: Shape terrain to match your design. Land obeys you.
+        signature: false
+      modular-design:
+        name: Modular Design
+        description: Design structures as reusable modules. Build once, deploy everywhere.
+        signature: false
+      light-orchestration:
+        name: Light Orchestration
+        description: Arrange lighting for maximum atmosphere. Light tells stories.
+        signature: false
+      ender-basics:
+        name: Ender Basics
+        description: Basic ender pearl manipulation. Teleportation fundamentals.
+        signature: false
+      sculk-basics:
+        name: Sculk Basics
+        description: Basic sculk integration. Organic growth fundamentals.
+        signature: false
+      structural-basics:
+        name: Structural Basics
+        description: Basic structural analysis. Understanding loads and stresses.
+        signature: false
+      landscape-basics:
+        name: Landscape Basics
+        description: Basic landscape shaping. Terrain modification fundamentals.
+        signature: false
+      modular-basics:
+        name: Modular Basics
+        description: Basic modular design. Reusable component fundamentals.
+        signature: false
+      light-basics:
+        name: Light Basics
+        description: Basic light orchestration. Lighting fundamentals.
+        signature: false
+
+    master:
+      master-architect:
+        name: Master Architect
+        description: Build instantly — no placement delay for your designs. Speed through mastery.
+        signature: true
+      artifact-construction:
+        name: Artifact Construction
+        description: Build artifacts that persist as unique named items. Your creations endure.
+        signature: true
+      guardian-statue:
+        name: Guardian Statue
+        description: Statues you build defend their location. Silent sentinels.
+        signature: true
+      blueprint-memory:
+        name: Blueprint Memory
+        description: Remember any structure you've built and rebuild it instantly. Perfect recall.
+        signature: true
+      sonic-architecture:
+        name: Sonic Architecture
+        description: Use sculk sensors and shriekers for automated defense. Living security.
+        signature: true
+      dimensional-architecture:
+        name: Dimensional Architecture
+        description: Build across dimensions with linked portals. Architecture without borders.
+        signature: true
+      master-design:
+        name: Master Design
+        description: Master design principles. Your buildings are works of art.
+        signature: true
+      master-material:
+        name: Master Material
+        description: Master all materials. You shape stone, wood, glass, metal, sculk.
+        signature: true
+      master-spatial:
+        name: Master Spatial
+        description: Master spatial awareness. You see every dimension.
+        signature: true
+      master-light:
+        name: Master Light
+        description: Master light. Your buildings glow with perfect illumination.
+        signature: true
+      master-ender:
+        name: Master Ender
+        description: Master ender weaving. You teleport blocks at will.
+        signature: true
+      master-sculk:
+        name: Master Sculk
+        description: Master sculk integration. Your buildings grow organically.
+        signature: true
+
+    grandmaster:
+      world-shaper:
+        name: World Shaper
+        description: Reshape chunks around your structures for dramatic effect. Land bends.
+        signature: true
+      legendary-blueprint:
+        name: Legendary Blueprint
+        description: Your blueprints become unique named items. Designs endure.
+        signature: true
+      architect-godhand:
+        name: Architect Godhand
+        description: Structures you build are immune to natural decay. Eternal buildings.
+        signature: true
+      floating-castle:
+        name: Floating Castle
+        description: Build structures that defy gravity. Castles in the sky.
+        signature: true
+      monument-creation:
+        name: Monument Creation
+        description: Create monuments that become echo sites. Your buildings whisper.
+        signature: true
+      architect-apotheosis:
+        name: Architect Apotheosis
+        description: Buildings you create are valued at 5x in market. Masterpieces.
+        signature: true
+      world-architect:
+        name: World Architect
+        description: You shape worlds. Your buildings define landscapes.
+        signature: true
+      master-architect-godhand:
+        name: Master Architect Godhand
+        description: Your architectural power is god-tier. You build reality.
+        signature: true
+      legendary-design:
+        name: Legendary Design
+        description: Your designs are legendary — studied by architects everywhere.
+        signature: true
+      master-world:
+        name: Master World
+        description: You master worlds. Your buildings shape reality.
+        signature: true
+      architect-legend:
+        name: Architect Legend
+        description: Your buildings are legends — stories told across dimensions.
+        signature: true
+      world-apotheosis:
+        name: World Apotheosis
+        description: You transcend architecture. You create realities.
+        signature: true
+
+    legend:
+      reality-architecture:
+        name: Reality Architecture
+        description: Build structures that rewrite local reality. Your buildings change the world.
+        signature: true
+      world-monument:
+        name: World Monument
+        description: Your monuments become world landmarks visible from far. They define horizons.
+        signature: true
+      architect-legend:
+        name: Architect Legend
+        description: Any structure bearing your signature is a landmark. Your name is on the world.
+        signature: true
+      dimension-architect:
+        name: Dimension Architect
+        description: Build bridges between dimensions. Your architecture transcends worlds.
+        signature: true
+      master-creation:
+        name: Master Creation
+        description: Items you craft as an architect are signature masterpieces. Art, architecture, legacy.
+        signature: true
+      architect-godhood:
+        name: Architect Godhood
+        description: Your name is written into the world — any structure you touch becomes a legend.
+        signature: true
+      reality-godhand:
+        name: Reality Godhand
+        description: Your reality architecture is god-tier. You build worlds.
+        signature: true
+      world-divinity:
+        name: World Divinity
+        description: You are a divine architect. Your buildings are gifts from the gods.
+        signature: true
+      dimension-godhood:
+        name: Dimension Godhood
+        description: You master dimensions. Your architecture spans all worlds.
+        signature: true
+      legend-apotheosis:
+        name: Legend Apotheosis
+        description: You transcend legend. Your buildings are myths.
+        signature: true
+      architect-mythos:
+        name: Architect Mythos
+        description: Your architecture is myth — stories that define civilizations.
+        signature: true
+      reality-apotheosis:
+        name: Reality Apotheosis
+        description: You transcend reality. Your buildings create new worlds.
+        signature: true
+
+  herbalist:
+    journeyman:
+      herb-identification:
+        name: Herb Identification
+        description: Identify any plant by sight. Know the green world.
+        signature: false
+      mortar-grinding:
+        name: Mortar Grinding
+        description: Grind herbs to perfect fineness. The grind determines the brew.
+        signature: false
+      essence-extraction:
+        name: Essence Extraction
+        description: Extract pure essences from plants. Capture the soul of the herb.
+        signature: false
+      potion-brewing:
+        name: Potion Brewing
+        description: Brew basic potions with no failure rate. Reliable, consistent.
+        signature: false
+      ingredient-knowledge:
+        name: Ingredient Knowledge
+        description: Know the properties of every ingredient. Wisdom of the apothecary.
+        signature: false
+      fermentation-basics:
+        name: Fermentation Basics
+        description: Ferment ingredients for improved effects. Time transforms.
+        signature: false
+      plant-identification:
+        name: Plant Identification
+        description: Identify plants by leaf, stem, flower, and scent.
+        signature: false
+      herb-basics:
+        name: Herb Basics
+        description: Basic herb knowledge. Common herbs and their uses.
+        signature: false
+      mortar-basics:
+        name: Mortar Basics
+        description: Basic mortar grinding. The foundation of preparation.
+        signature: false
+      essence-basics:
+        name: Essence Basics
+        description: Basic essence extraction. Capture the pure.
+        signature: false
+      potion-basics:
+        name: Potion Basics
+        description: Basic potion brewing. Foundational recipes.
+        signature: false
+      ingredient-basics:
+        name: Ingredient Basics
+        description: Basic ingredient knowledge. Understand what you use.
+        signature: false
+
+    artisan:
+      rare-herb-finding:
+        name: Rare Herb Finding
+        description: Find rare herbs in the wild. Track the uncommon.
+        signature: false
+      potion-master:
+        name: Potion Master
+        description: Brew potions with extended duration. Your potions last longer.
+        signature: false
+      essence-purification:
+        name: Essence Purification
+        description: Purify essences to 100% potency. No impurities, pure power.
+        signature: false
+      brew-ritual:
+        name: Brew Ritual
+        description: Ritual brews gain bonus effects. Your ceremony matters.
+        signature: false
+      herb-garden:
+        name: Herb Garden
+        description: Grow a personal herb garden that yields rare plants. Cultivate abundance.
+        signature: false
+      distillation:
+        name: Distillation
+        description: Distill essences into concentrated form. Essence becomes essence.
+        signature: false
+      rare-plant-finding:
+        name: Rare Plant Finding
+        description: Find rare plants in the wild. Track the extraordinary.
+        signature: false
+      advanced-herbs:
+        name: Advanced Herbs
+        description: Understand advanced herbs and their complex properties.
+        signature: false
+      advanced-mortar:
+        name: Advanced Mortar
+        description: Advanced mortar grinding. Perfect fineness every time.
+        signature: false
+      advanced-essence:
+        name: Advanced Essence
+        description: Advanced essence extraction. Capture the pure with precision.
+        signature: false
+      advanced-potion:
+        name: Advanced Potion
+        description: Advanced potion brewing. Complex recipes mastered.
+        signature: false
+      advanced-ingredient:
+        name: Advanced Ingredient
+        description: Advanced ingredient knowledge. Every substance understood.
+        signature: false
+
+    master:
+      master-alchemist:
+        name: Master Alchemist
+        description: Brew potions with double strength. Your potions are twice as effective.
+        signature: true
+      signature-brew:
+        name: Signature Brew
+        description: Your potions carry your signature — visible effect particles. Unmistakable.
+        signature: true
+      rare-plant-cultivation:
+        name: Rare Plant Cultivation
+        description: Cultivate plants that don't spawn naturally. You bring rarity into being.
+        signature: true
+      brew-legacy:
+        name: Brew Legacy
+        description: Potions you brew resist degradation over time. Your creations endure.
+        signature: true
+      essence-weaving:
+        name: Essence Weaving
+        description: Weave essences into items for passive effects. Essence becomes property.
+        signature: true
+      alchemy-master:
+        name: Alchemy Master
+        description: All your potions cure any status effect. Complete restoration.
+        signature: true
+      master-herbs:
+        name: Master Herbs
+        description: You master all herbs. Every plant is yours to use.
+        signature: true
+      master-mortar:
+        name: Master Mortar
+        description: You master mortar grinding. Perfect preparation every time.
+        signature: true
+      master-essence:
+        name: Master Essence
+        description: You master essence extraction. Pure capture every time.
+        signature: true
+      master-brew:
+        name: Master Brew
+        description: You master potion brewing. Perfect brews every time.
+        signature: true
+      master-ingredient:
+        name: Master Ingredient
+        description: You master every ingredient. Complete knowledge.
+        signature: true
+      master-alchemy:
+        name: Master Alchemy
+        description: You master alchemy. You understand the transformation of matter.
+        signature: true
+
+    grandmaster:
+      grand-alchemist:
+        name: Grand Alchemist
+        description: Potions you brew have 3x base potency. Triple strength, triple effect.
+        signature: true
+      legendary-brew:
+        name: Legendary Brew
+        description: Brew legendary potions not normally craftable. Beyond the ordinary.
+        signature: true
+      herb-godhand:
+        name: Herb Godhand
+        description: Plants you touch become rare. Your touch transforms.
+        signature: true
+      master-distillery:
+        name: Master Distillery
+        description: Set up a master distillery that produces 2x output. Abundance through mastery.
+        signature: true
+      brews-of-gods:
+        name: Brews of Gods
+        description: Brew potions of godly effect — immortal flames, eternal frost, etc.
+        signature: true
+      alchemy-apotheosis:
+        name: Alchemy Apotheosis
+        description: Your signature brews are valued 3x in market. Divine creations.
+        signature: true
+      grand-herbs:
+        name: Grand Herbs
+        description: You master grand herbs. Plants beyond ordinary rarity.
+        signature: true
+      grand-mortar:
+        name: Grand Mortar
+        description: You master grand mortar grinding. Perfect preparation, divine fineness.
+        signature: true
+      grand-essence:
+        name: Grand Essence
+        description: You master grand essence extraction. Capture the divine.
+        signature: true
+      grand-brew:
+        name: Grand Brew
+        description: You master grand potion brewing. Legendary brews every time.
+        signature: true
+      grand-ingredient:
+        name: Grand Ingredient
+        description: You master grand ingredients. Substances beyond ordinary.
+        signature: true
+      grand-alchemy:
+        name: Grand Alchemy
+        description: You master grand alchemy. Transmutation beyond ordinary.
+        signature: true
+
+    legend:
+      creation-potion:
+        name: Creation Potion
+        description: Brew potions that create effects out of nothing. From void, power.
+        signature: true
+      world-herb:
+        name: World Herb
+        description: Cultivate herbs that change world properties. Your plants reshape reality.
+        signature: true
+      alchemist-legend:
+        name: Alchemist Legend
+        description: Any potion bearing your signature is a legend. Your brews are myths.
+        signature: true
+      essence-godhood:
+        name: Essence Godhood
+        description: Your essence-infused items gain godlike properties. Divine infusion.
+        signature: true
+      master-alchemical-creation:
+        name: Master Alchemical Creation
+        description: Create entirely new potion effects. You invent the impossible.
+        signature: true
+      alchemy-godhood:
+        name: Alchemy Godhood
+        description: Your brews are the stuff of legend — worth 4x market value. Divine creations.
+        signature: true
+      legend-herbs:
+        name: Legend Herbs
+        description: You master legend herbs. Plants that define myths.
+        signature: true
+      legend-mortar:
+        name: Legend Mortar
+        description: You master legend mortar grinding. Preparation that creates legends.
+        signature: true
+      legend-essence:
+        name: Legend Essence
+        description: You master legend essence extraction. Capture the mythic.
+        signature: true
+      legend-brew:
+        name: Legend Brew
+        description: You master legend potion brewing. Potions that become myths.
+        signature: true
+      legend-ingredient:
+        name: Legend Ingredient
+        description: You master legend ingredients. Substances that define legends.
+        signature: true
+      legend-alchemy:
+        name: Legend Alchemy
+        description: You master legend alchemy. Transmutation that creates myths.
+        signature: true
+
+  artisan:
+    journeyman:
+      multi-tool:
+        name: Multi-Tool
+        description: Use any tool for any basic task. Versatility through skill.
+        signature: false
+      materials-science:
+        name: Materials Science
+        description: Understand the properties of all materials. Knowledge of substance.
+        signature: false
+      finishing-touches:
+        name: Finishing Touches
+        description: Apply final polish to any crafted item. The last touch matters.
+        signature: false
+      craft-efficiency:
+        name: Craft Efficiency
+        description: Craft with 20% less material waste. Lean, efficient work.
+        signature: false
+      tool-maintenance:
+        name: Tool Maintenance
+        description: Maintain all tools for peak performance. Care extends life.
+        signature: false
+      repair-skills:
+        name: Repair Skills
+        description: Repair any item to full durability. Restoration through skill.
+        signature: false
+      basic-craft:
+        name: Basic Craft
+        description: Basic crafting skills. The foundation of all artisan work.
+        signature: false
+      basic-tools:
+        name: Basic Tools
+        description: Use basic tools — pick, axe, shovel, hoe — with competence.
+        signature: false
+      basic-materials:
+        name: Basic Materials
+        description: Understand basic materials — wood, stone, metal, glass.
+        signature: false
+      basic-finishing:
+        name: Basic Finishing
+        description: Apply basic finishing touches. Polish, clean, perfect.
+        signature: false
+      basic-efficiency:
+        name: Basic Efficiency
+        description: Basic craft efficiency. Reduce waste, improve output.
+        signature: false
+      basic-repair:
+        name: Basic Repair
+        description: Basic repair skills. Fix damaged items with competence.
+        signature: false
+
+    artisan:
+      master-craft:
+        name: Master Craft
+        description: Craft any item with master-level quality. Excellence through practice.
+        signature: false
+      material-fusion:
+        name: Material Fusion
+        description: Fuse different materials for composite items. Combine strengths.
+        signature: false
+      craft-signature:
+        name: Craft Signature
+        description: Your mark appears on every crafted item. Recognizable work.
+        signature: true
+      tool-specialization:
+        name: Tool Specialization
+        description: Specialize in one tool type for +1 efficiency. Master one, excel.
+        signature: false
+      craft-ritual:
+        name: Craft Ritual
+        description: Ritual crafts yield bonus XP. Your ceremony fuels progress.
+        signature: false
+      material-enchant:
+        name: Material Enchant
+        description: Pre-enchant materials before crafting. Power before form.
+        signature: false
+      advanced-craft:
+        name: Advanced Craft
+        description: Advanced crafting skills. Complex items, precise work.
+        signature: false
+      advanced-tools:
+        name: Advanced Tools
+        description: Advanced tool use. Specialized tools mastered.
+        signature: false
+      advanced-materials:
+        name: Advanced Materials
+        description: Advanced material knowledge. Exotic substances understood.
+        signature: false
+      advanced-finishing:
+        name: Advanced Finishing
+        description: Advanced finishing touches. Perfect polish, flawless result.
+        signature: false
+      advanced-efficiency:
+        name: Advanced Efficiency
+        description: Advanced craft efficiency. Minimal waste, maximum output.
+        signature: false
+      advanced-repair:
+        name: Advanced Repair
+        description: Advanced repair skills. Restore damaged items to new.
+        signature: false
+
+    master:
+      master-artisan:
+        name: Master Artisan
+        description: Craft items of master quality automatically. Mastery is habit.
+        signature: true
+      multi-disciplinary:
+        name: Multi-Disciplinary
+        description: Switch specializations without penalty. Versatility at the highest level.
+        signature: true
+      craft-godhand:
+        name: Craft Godhand
+        description: Your crafted items are the best in the world. Unmatched quality.
+        signature: true
+      artifact-crafting:
+        name: Artifact Crafting
+        description: Craft unique named artifacts. Your creations bear names.
+        signature: true
+      master-workshop:
+        name: Master Workshop
+        description: Your workshop yields 2x all outputs. Efficiency through mastery.
+        signature: true
+      craft-legacy:
+        name: Craft Legacy
+        description: Items you craft persist their quality through repairs. Eternal quality.
+        signature: true
+      master-tools:
+        name: Master Tools
+        description: You master all tools. Every tool is an extension of your will.
+        signature: true
+      master-materials:
+        name: Master Materials
+        description: You master all materials. Every substance obeys you.
+        signature: true
+      master-finishing:
+        name: Master Finishing
+        description: You master finishing. Every item you craft is perfect.
+        signature: true
+      master-efficiency:
+        name: Master Efficiency
+        description: You master efficiency. Your work produces maximum from minimum.
+        signature: true
+      master-repair:
+        name: Master Repair
+        description: You master repair. Damaged items become new under your hands.
+        signature: true
+      master-craft-quality:
+        name: Master Craft Quality
+        description: Your craft quality is unmatched. Every item is a masterpiece.
+        signature: true
+
+    grandmaster:
+      grand-artisan:
+        name: Grand Artisan
+        description: Craft items of grandmaster quality automatically. Grandmaster is nature.
+        signature: true
+      legendary-craft:
+        name: Legendary Craft
+        description: Craft items that are legendary in every way. Items become myths.
+        signature: true
+      artisan-godhand:
+        name: Artisan Godhand
+        description: Your creations are valued at 5x market price. Divine craftsmanship.
+        signature: true
+      master-creation:
+        name: Master Creation
+        description: Create items that cannot be replicated. Unique, unrepeatable.
+        signature: true
+      craft-apotheosis:
+        name: Craft Apotheosis
+        description: Every item you touch becomes a masterpiece. Your touch transforms.
+        signature: true
+      artisan-legend:
+        name: Artisan Legend
+        description: Your name is synonymous with craft excellence. Legendary artisan.
+        signature: true
+      grand-tools:
+        name: Grand Tools
+        description: You master grand tools. Tools beyond ordinary.
+        signature: true
+      grand-materials:
+        name: Grand Materials
+        description: You master grand materials. Substances beyond ordinary.
+        signature: true
+      grand-finishing:
+        name: Grand Finishing
+        description: You master grand finishing. Finish beyond ordinary.
+        signature: true
+      grand-efficiency:
+        name: Grand Efficiency
+        description: You master grand efficiency. Efficiency beyond ordinary.
+        signature: true
+      grand-repair:
+        name: Grand Repair
+        description: You master grand repair. Repair beyond ordinary.
+        signature: true
+      grand-craft-quality:
+        name: Grand Craft Quality
+        description: Your grand craft quality is beyond ordinary. Grandmaster quality.
+        signature: true
+
+    legend:
+      creation-artisan:
+        name: Creation Artisan
+        description: Create entirely new item types. You invent the impossible.
+        signature: true
+      world-craft:
+        name: World Craft
+        description: Your crafts reshape the world around them. Your items change reality.
+        signature: true
+      artisan-godhood:
+        name: Artisan Godhood
+        description: Your signature items are god-tier — unbreakable, legendary, worth 5x market value.
+        signature: true
+      master-creator:
+        name: Master Creator
+        description: Create items that change the rules of the game. Rulebreakers.
+        signature: true
+      craft-必杀:
+        name: Craft必杀
+        description: Items you craft have a必杀 property — once per day they deal critical damage.
+        signature: true
+      artisan-apotheosis:
+        name: Artisan Apotheosis
+        description: You are the artisan apotheosis — your crafts are the stuff of legend.
+        signature: true
+      legend-tools:
+        name: Legend Tools
+        description: You master legend tools. Tools that define myths.
+        signature: true
+      legend-materials:
+        name: Legend Materials
+        description: You master legend materials. Substances that define myths.
+        signature: true
+      legend-finishing:
+        name: Legend Finishing
+        description: You master legend finishing. Finish that creates myths.
+        signature: true
+      legend-efficiency:
+        name: Legend Efficiency
+        description: You master legend efficiency. Efficiency that creates myths.
+        signature: true
+      legend-repair:
+        name: Legend Repair
+        description: You master legend repair. Repair that creates myths.
+        signature: true
+      legend-craft-quality:
+        name: Legend Craft Quality
+        description: Your legend craft quality creates myths. Legendary quality.
+        signature: true

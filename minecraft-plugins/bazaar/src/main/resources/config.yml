@@ -1,0 +1,38 @@
+settings:
+  enabled: true
+  auto-clear-interval-seconds: 600
+  max-listings-per-player: 10
+  listing-duration-seconds: 604800
+  require-permission: false
+  tax-percent: 0
+  broadcast-sales: true
+
+gui:
+  title: "Bazaar"
+  size: 54
+  page-size: 36
+
+items:
+  whitelist: []
+  blacklist:
+    - NETHER_STAR
+    - DRAGON_EGG
+    - COMMAND_BLOCK
+    - COMMAND_BLOCK_MINECART
+    - BARRIER
+    - STRUCTURE_BLOCK
+    - JIGSAW
+    - KNOWLEDGE_BOOK
+
+messages:
+  prefix: "&8[&6Bazaar&8] "
+  no-permission: "&cYou don't have permission to do that."
+  not-enough-money: "&cYou don't have enough money."
+  item-not-found: "&cItem not found."
+  auction-created: "&aAuction created for &e{item}&a at &e{price}&a."
+  auction-cancelled: "&aAuction cancelled."
+  auction-expired: "&cYour auction for &e{item}&c has expired."
+  auction-sold: "&aYour auction for &e{item}&a was sold for &e{price}&a!"
+  purchase-confirm: "&aYou bought &e{item}&a for &e{price}&a!"
+  no-auctions: "&7No auctions found."
+  max-listings: "&cYou have reached the maximum number of listings."

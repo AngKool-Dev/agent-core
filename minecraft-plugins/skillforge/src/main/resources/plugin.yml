@@ -1,0 +1,43 @@
+name: SkillForge
+version: '0.2.0-SNAPSHOT'
+main: dev.mcplugins.skillforge.SkillForgePlugin
+api-version: '1.21'
+description: Deep crafting specialization with mastery trees, signature items, reputation, and apprenticeship.
+author: mcplugins
+website: https://github.com/Angkool-Dev/minecraft-plugins
+softdepend: [Vault, SovereignEconomy, EchoRealms, ChunkSovereignty, MobEcology]
+
+commands:
+  sf:
+    description: SkillForge quick menu.
+    usage: /sf
+    permission: skillforge.use
+  skillforge:
+    aliases: [sf]
+    description: SkillForge quick menu.
+    usage: /sf
+    permission: skillforge.use
+  skill:
+    description: Specialization, XP, unlocks, skill tree, and tiers.
+    usage: /skill [set|xp|unlock|tree|check|inspect|sign|tiers] [args]
+    permission: skillforge.use
+  apprentice:
+    description: Register, remove, or list apprentices.
+    usage: /apprentice [add|remove|list] [player]
+    permission: skillforge.use
+  award:
+    description: Award XP to yourself or simulate a craft.
+    usage: /award [xp <amount>|craft]
+    permission: skillforge.use
+  craft:
+    description: Craft and signature item management.
+    usage: /craft [sign]
+    permission: skillforge.use
+
+permissions:
+  skillforge.use:
+    description: Use SkillForge commands.
+    default: true
+  skillforge.admin:
+    description: SkillForge administration.
+    default: op

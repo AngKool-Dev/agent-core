@@ -1,0 +1,43 @@
+name: Bazaar
+version: '${project.version}'
+main: dev.mcplugins.bazaar.BazaarPlugin
+api-version: '1.21'
+description: Player-driven auction house with GUI menus.
+author: mcplugins
+website: https://github.com/mcplugins
+softdepend: [Vault, SovereignEconomy]
+
+commands:
+  bazaar:
+    description: Open the bazaar.
+    usage: /bazaar [sell|list|cancel|search|mylistings|help]
+    aliases: [ah, auction, auctionhouse]
+  sell:
+    description: Sell an item in the bazaar.
+    usage: /bazaar sell <price> [duration]
+    permission: bazaar.sell
+  list:
+    description: List your active auctions.
+    usage: /bazaar list
+    permission: bazaar.list
+  cancel:
+    description: Cancel an active auction.
+    usage: /bazaar cancel <id>
+    permission: bazaar.cancel
+
+permissions:
+  bazaar.use:
+    description: Use the bazaar.
+    default: true
+  bazaar.sell:
+    description: List items for sale.
+    default: true
+  bazaar.list:
+    description: View your listings.
+    default: true
+  bazaar.cancel:
+    description: Cancel your listings.
+    default: true
+  bazaar.admin:
+    description: Admin commands.
+    default: op

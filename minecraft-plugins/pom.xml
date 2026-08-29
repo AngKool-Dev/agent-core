@@ -15,6 +15,9 @@
         <module>sovereigneconomy</module>
         <module>echorealms</module>
         <module>chunksovereignty</module>
+        <module>skillforge</module>
+        <module>purge</module>
+        <module>bazaar</module>
     </modules>
 
     <properties>

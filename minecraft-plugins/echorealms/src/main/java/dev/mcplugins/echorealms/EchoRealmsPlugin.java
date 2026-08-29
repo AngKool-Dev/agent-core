@@ -76,6 +76,16 @@ public final class EchoRealmsPlugin extends JavaPlugin {
         return manager;
     }
 
+    public boolean playerHasAttuned(UUID uuid) {
+        if (manager == null) return false;
+        for (EchoRegion region : manager.regions()) {
+            for (BuilderSite site : region.sites.values()) {
+                if (site.attunedAt.containsKey(uuid)) return true;
+            }
+        }
+        return false;
+    }
+
     public void reloadSettings() {
         reloadConfig();
         settings.load(this);

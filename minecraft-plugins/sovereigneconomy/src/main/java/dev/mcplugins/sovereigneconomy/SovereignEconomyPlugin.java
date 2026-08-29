@@ -122,4 +122,13 @@ public final class SovereignEconomyPlugin extends JavaPlugin {
         reloadConfig();
         settings.load(this);
     }
+
+    // ── SkillForge integration ─────────────────────────────
+    public int getWalletBalanceDirect(UUID uuid) {
+        return (int) Math.round(ledger.account(uuid).wallet);
+    }
+
+    public void deductWalletBalanceDirect(UUID uuid, double amount) {
+        ledger.withdraw(uuid, amount);
+    }
 }

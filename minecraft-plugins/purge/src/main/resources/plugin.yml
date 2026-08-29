@@ -1,0 +1,30 @@
+name: Purge
+version: '${project.version}'
+main: dev.mcplugins.purge.PurgePlugin
+api-version: '1.21'
+description: Periodically clears dropped items and excess mobs to keep the server responsive.
+author: mcplugins
+website: https://github.com/mcplugins
+
+commands:
+  purge:
+    description: Purge control and status.
+    usage: /purge <status|clear|reload|enable|disable>
+    aliases: [cl, lag]
+    permission: purge.use
+  lag:
+    description: Alias for /purge status.
+    usage: /lag
+    aliases: [purge]
+    permission: purge.use
+
+permissions:
+  purge.use:
+    description: View Purge status and run /purge status.
+    default: true
+  purge.clear:
+    description: Run /purge clear to manually clear items/mobs.
+    default: op
+  purge.admin:
+    description: Reload, enable or disable the auto-purge scheduler.
+    default: op

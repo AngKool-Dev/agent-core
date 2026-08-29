@@ -18,6 +18,7 @@ import java.util.UUID;
 public final class DomainCommand implements CommandExecutor, TabCompleter {
 
     private final SovereigntyPlugin plugin;
+    private final java.util.Map<UUID, Long> pendingUnclaimAll = new java.util.HashMap<>();
 
     public DomainCommand(SovereigntyPlugin plugin) {
         this.plugin = plugin;
@@ -28,6 +29,8 @@ public final class DomainCommand implements CommandExecutor, TabCompleter {
         switch (cmd.getName().toLowerCase(Locale.ROOT)) {
             case "claim" -> claim(sender);
             case "unclaim" -> unclaim(sender);
+            case "unclaimall" -> unclaimAll(sender);
+            case "confirm" -> confirmUnclaimAll(sender);
             case "domain" -> domain(sender, args);
             case "trust" -> trustToggle(sender, args, true);
             case "untrust" -> trustToggle(sender, args, false);
@@ -42,9 +45,15 @@ public final class DomainCommand implements CommandExecutor, TabCompleter {
             showMenu(sender);
             return;
         }
-        switch (args[0].toLowerCase(Locale.ROOT)) {
+        String sub = args[0].toLowerCase(Locale.ROOT);
+        if (sub.equals("confirm")) {
+            confirmUnclaimAll(sender);
+            return;
+        }
+        switch (sub) {
             case "claim" -> claim(sender);
             case "unclaim" -> unclaim(sender);
+            case "unclaimall" -> unclaimAll(sender);
             case "domain" -> domain(sender, java.util.Arrays.copyOfRange(args, 1, args.length));
             case "trust" -> trustToggle(sender, java.util.Arrays.copyOfRange(args, 1, args.length), true);
             case "untrust" -> trustToggle(sender, java.util.Arrays.copyOfRange(args, 1, args.length), false);
@@ -147,6 +156,49 @@ public final class DomainCommand implements CommandExecutor, TabCompleter {
         idx.remove(c);
         plugin.markDirty();
         ok(p, "Released " + c.x() + "," + c.z() + " back to the wilds.");
+    }
+
+    private void unclaimAll(CommandSender sender) {
+        Player p = requirePlayer(sender);
+        if (p == null) {
+            return;
+        }
+        UUID id = p.getUniqueId();
+        long now = System.currentTimeMillis();
+        Long previous = pendingUnclaimAll.get(id);
+        if (previous != null && now - previous < 60_000) {
+            err(p, "You already have a pending unclaimall. Use /cs confirm to finish it.");
+            return;
+        }
+        pendingUnclaimAll.put(id, now);
+        ok(p, "§c§lWARNING: §7This will release §eALL §7of your claims.");
+        ok(p, "Type §e/cs confirm §7within §e60 seconds §7to confirm.");
+        ok(p, "Or wait and the request will expire.");
+    }
+
+    private void confirmUnclaimAll(CommandSender sender) {
+        Player p = requirePlayer(sender);
+        if (p == null) {
+            return;
+        }
+        UUID id = p.getUniqueId();
+        Long requestedAt = pendingUnclaimAll.remove(id);
+        if (requestedAt == null || System.currentTimeMillis() - requestedAt > 60_000) {
+            err(p, "No pending unclaimall request. Use /cs unclaimall first.");
+            return;
+        }
+        ChunkIndex idx = plugin.index();
+        int count = idx.countOwned(id);
+        if (count == 0) {
+            ok(p, "You have no claims to release.");
+            return;
+        }
+        List<ChunkIndex.Claim> toRemove = new java.util.ArrayList<>(idx.chunksOf(id));
+        for (ChunkIndex.Claim c : toRemove) {
+            idx.remove(c);
+        }
+        plugin.markDirty();
+        ok(p, "Released " + toRemove.size() + " claims back to the wilds.");
     }
 
     private void domain(CommandSender sender, String[] args) {
@@ -311,7 +363,7 @@ public final class DomainCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
         if (cmd.getName().equalsIgnoreCase("cs") && args.length == 1) {
-            return List.of("claim", "unclaim", "domain", "trust", "untrust",
+            return List.of("claim", "unclaim", "unclaimall", "confirm", "domain", "trust", "untrust",
                     "sovereignty", "particles", "help").stream()
                     .filter(x -> x.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
         }

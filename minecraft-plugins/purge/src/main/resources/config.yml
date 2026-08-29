@@ -1,0 +1,85 @@
+settings:
+  enabled: true
+  interval-seconds: 600
+  warn-before-seconds: 10
+  broadcast-clear: true
+
+warn: true
+broadcast-summary: true
+
+clearing:
+  items:
+    enabled: true
+    grace-period-seconds: 0
+    whitelist:
+      - NETHERITE_INGOT
+      - NETHERITE_SWORD
+      - NETHERITE_PICKAXE
+      - NETHERITE_AXE
+      - NETHERITE_SHOVEL
+      - NETHERITE_HOE
+      - NETHERITE_HELMET
+      - NETHERITE_CHESTPLATE
+      - NETHERITE_LEGGINGS
+      - NETHERITE_BOOTS
+      - TOTEM_OF_UNDYING
+      - ELYTRA
+      - DRAGON_HEAD
+      - DRAGON_EGG
+      - BEACON
+      - NETHER_STAR
+  mobs:
+    enabled: true
+    hostiles: true
+    passives: true
+    passive-cap-per-world: 40
+    protect-tamed: true
+    protect-named: true
+    keep-villagers: true
+    clear-falling-blocks: true
+    protected-entity-types:
+      - COW
+      - PIG
+      - SHEEP
+      - CHICKEN
+      - MOOSHROOM
+      - RABBIT
+      - HORSE
+      - DONKEY
+      - MULE
+      - LLAMA
+      - TRADER_LLAMA
+      - CAMEL
+      - FOX
+      - FROG
+      - GOAT
+      - SKELETON_HORSE
+      - ZOMBIE_HORSE
+      - BEE
+      - CAT
+      - WOLF
+      - PARROT
+      - AXOLOTL
+      - TURTLE
+      - DOLPHIN
+      - POLAR_BEAR
+      - ARMADILLO
+    disabled-worlds: []
+
+messages:
+  prefix: '&8[&6Purge&8] '
+  enable: '&aAuto-purge enabled. Interval: &e{interval}&a.'
+  disable: '&cAuto-purge disabled.'
+  reload: '&aPurge configuration reloaded.'
+  warn: '&e&l! &cPurging dropped items and excess mobs in &e{seconds}&c second(s)...'
+  cleared-items: '&aRemoved &e{items}&a dropped item(s).'
+  cleared-hostiles: '&aRemoved &e{hostiles}&a hostile mob(s).'
+  cleared-passives: '&aRemoved &e{passives}&a excess passive mob(s).'
+  summary: '&7Auto-purge complete: &e{items} &7items, &e{hostiles} &7hostiles, &e{passives}
+    &7excess passives removed.'
+  status-enabled: '&aAuto-purge is &2ENABLED&a (every &e{interval}&a seconds).'
+  status-disabled: '&cAuto-purge is &4DISABLED&c.'
+  manual-clear: '&aManual purge complete: &e{items} &aitems, &e{hostiles} &ahostiles,
+    &e{passives} &aexcess passives removed.'
+  nothing-to-clear: '&7Nothing to purge.'
+  no-permission: '&cYou don''t have permission to do that.'
