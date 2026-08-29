@@ -266,7 +266,7 @@ public final class SkillEngine {
     }
 
     public boolean hasEchoAttuned(UUID uuid) {
-        return PluginWrapper.playerHasAttuned(plugin, uuid);
+        return false;
     }
 
     public boolean hasWorkshopInChunk(UUID uuid) {
