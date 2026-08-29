@@ -1,0 +1,23 @@
+id: q0088
+title: "Storm Tribute 088"
+description: "Quartermasters have shortlisted String. Fulfil 281 before the season turns. Small steps still count on this road"
+type: COLLECTION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0087
+objectives:
+  - description: "Collect 281 string"
+    type: COLLECT_ITEM
+    target: STRING
+    amount: 281
+  - description: "Collect 285 bone"
+    type: COLLECT_ITEM
+    target: BONE
+    amount: 285
+rewards:
+  items:
+    IRON_INGOT: 3
+    COPPER_INGOT: 1
+  experience: 5013
+  money: 6326

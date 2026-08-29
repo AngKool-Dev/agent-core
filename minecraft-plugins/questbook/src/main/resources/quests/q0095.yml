@@ -1,0 +1,23 @@
+id: q0095
+title: "Storm Cornerstone 095"
+description: "Blueprints call for 285 oak planks. The rest is sweat and stubbornness. Small steps still count on this road"
+type: CONSTRUCTION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0094
+objectives:
+  - description: "Place 285 oak planks"
+    type: PLACE_BLOCK
+    target: OAK_PLANKS
+    amount: 285
+  - description: "Place 288 sandstone"
+    type: PLACE_BLOCK
+    target: SANDSTONE
+    amount: 288
+rewards:
+  items:
+    IRON_INGOT: 3
+    IRON_INGOT: 1
+  experience: 5485
+  money: 7014

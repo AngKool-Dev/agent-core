@@ -1,0 +1,31 @@
+id: q0883
+title: "Eternal Foundation 883"
+description: "The frontier grows one wall at a time. Lay 265 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0882
+objectives:
+  - description: "Place 265 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 265
+  - description: "Place 268 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 268
+  - description: "Place 271 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 271
+  - description: "Place 274 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 274
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 75729
+  money: 142278

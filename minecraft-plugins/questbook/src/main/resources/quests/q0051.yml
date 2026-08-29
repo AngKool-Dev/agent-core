@@ -1,0 +1,23 @@
+id: q0051
+title: "Obsidian Edifice 051"
+description: "The frontier grows one wall at a time. Lay 155 stone and be part of it. Small steps still count on this road"
+type: CONSTRUCTION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0050
+objectives:
+  - description: "Place 155 stone"
+    type: PLACE_BLOCK
+    target: STONE
+    amount: 155
+  - description: "Place 158 oak planks"
+    type: PLACE_BLOCK
+    target: OAK_PLANKS
+    amount: 158
+rewards:
+  items:
+    RAW_IRON: 2
+    GUNPOWDER: 1
+  experience: 2638
+  money: 3029

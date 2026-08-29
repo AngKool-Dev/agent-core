@@ -1,0 +1,31 @@
+id: q0539
+title: "Eternal Cornerstone 539"
+description: "The frontier grows one wall at a time. Lay 165 blackstone and be part of it. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0538
+objectives:
+  - description: "Place 165 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 165
+  - description: "Place 168 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 168
+  - description: "Place 171 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 171
+  - description: "Place 174 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 174
+rewards:
+  items:
+    NETHERITE_SCRAP: 10
+    DIAMOND: 5
+  experience: 42342
+  money: 73069

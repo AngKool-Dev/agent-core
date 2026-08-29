@@ -1,0 +1,31 @@
+id: q0491
+title: "Hollow Edifice 491"
+description: "The frontier grows one wall at a time. Lay 151 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0490
+objectives:
+  - description: "Place 151 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 151
+  - description: "Place 154 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 154
+  - description: "Place 157 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 157
+  - description: "Place 160 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 160
+rewards:
+  items:
+    NETHERITE_INGOT: 10
+    NETHERITE_SCRAP: 5
+  experience: 37937
+  money: 64424

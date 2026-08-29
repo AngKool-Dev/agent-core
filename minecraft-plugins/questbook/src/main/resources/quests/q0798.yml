@@ -1,0 +1,35 @@
+id: q0798
+title: "Abyssal Crusade 798"
+description: "The watchtower logs name Shulkers as this month's threat. Answer with 112 confirmed kills. Few pages turn past this point. Fewer still turn back"
+type: COMBAT
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0797
+objectives:
+  - description: "Slay 112 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 112
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+rewards:
+  items:
+    GLOWSTONE_DUST: 15
+    ENDER_EYE: 7
+  experience: 67218
+  money: 124106
+  rare_items:
+    - material: NETHERITE_INGOT
+      amount: 1
+      chance: 10

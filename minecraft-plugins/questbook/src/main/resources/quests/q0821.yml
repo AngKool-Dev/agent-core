@@ -1,0 +1,31 @@
+id: q0821
+title: "Hollow Expedition 821"
+description: "Trade routes bend around the Deep Dark for want of a map. Be the one who fixes that. What waits ahead has ended better adventurers than most. Few have signed this page; fewer still twice. The ink here is darker than usual. A marginal note reads: bring help"
+type: EXPLORATION
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0820
+objectives:
+  - description: "Travel to the Deep Dark biome"
+    type: VISIT_BIOME
+    target: DEEP_DARK
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Snowy Taiga biome"
+    type: VISIT_BIOME
+    target: SNOWY_TAIGA
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 15
+    GLOWSTONE_DUST: 7
+  experience: 69506
+  money: 128959

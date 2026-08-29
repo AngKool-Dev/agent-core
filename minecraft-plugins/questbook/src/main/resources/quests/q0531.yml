@@ -1,0 +1,31 @@
+id: q0531
+title: "Eternal Edifice 531"
+description: "The frontier grows one wall at a time. Lay 162 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0530
+objectives:
+  - description: "Place 162 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 162
+  - description: "Place 165 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 165
+  - description: "Place 168 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 168
+  - description: "Place 171 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 171
+rewards:
+  items:
+    DIAMOND: 10
+    NAUTILUS_SHELL: 5
+  experience: 41603
+  money: 71609

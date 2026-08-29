@@ -1,0 +1,31 @@
+id: q0943
+title: "Iron Foundation 943"
+description: "Blueprints call for 296 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0942
+objectives:
+  - description: "Place 296 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 296
+  - description: "Place 299 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 299
+  - description: "Place 302 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 302
+  - description: "Place 305 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 305
+rewards:
+  items:
+    GLOWSTONE_DUST: 17
+    GLOWSTONE_DUST: 8
+  experience: 81827
+  money: 155482

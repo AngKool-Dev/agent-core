@@ -1,0 +1,27 @@
+id: q0396
+title: "Obsidian Ledger 396"
+description: "The smiths trade favours for Iron ingot. 315 units buys goodwill and coin alike. The road steepens; so do the rewards"
+type: COLLECTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0395
+objectives:
+  - description: "Collect 315 iron ingot"
+    type: COLLECT_ITEM
+    target: IRON_INGOT
+    amount: 315
+  - description: "Collect 319 gold ingot"
+    type: COLLECT_ITEM
+    target: GOLD_INGOT
+    amount: 319
+  - description: "Collect 323 redstone"
+    type: COLLECT_ITEM
+    target: REDSTONE
+    amount: 323
+rewards:
+  items:
+    DIAMOND: 8
+    DIAMOND: 4
+  experience: 29450
+  money: 48192

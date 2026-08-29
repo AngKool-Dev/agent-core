@@ -1,0 +1,31 @@
+id: q0928
+title: "Mirage Tribute 928"
+description: "Quartermasters have shortlisted Shulker shell. Fulfil 48 before the season turns. Few pages turn past this point. Fewer still turn back. The book files this one carefully. Few have signed this page; fewer still twice. The ink here is darker than usual. A marginal note reads: bring help"
+type: COLLECTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0927
+objectives:
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 311 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 311
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 128 phantom membrane"
+    type: COLLECT_ITEM
+    target: PHANTOM_MEMBRANE
+    amount: 128
+rewards:
+  items:
+    GLOWSTONE_DUST: 17
+    GLOWSTONE_DUST: 8
+  experience: 80296
+  money: 152153

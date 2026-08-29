@@ -1,0 +1,32 @@
+id: q0959
+title: "Void Cornerstone 959"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Blueprints call for 288 blackstone. The rest is sweat and stubbornness"
+type: CONSTRUCTION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0958
+requires_dragon_killed: true
+objectives:
+  - description: "Place 288 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 288
+  - description: "Place 291 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 291
+  - description: "Place 294 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 294
+  - description: "Place 297 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 297
+rewards:
+  items:
+    NETHERITE_INGOT: 17
+    NETHERITE_INGOT: 8
+  experience: 83465
+  money: 159054

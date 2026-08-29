@@ -1,0 +1,35 @@
+id: q0900
+title: "Ashen Harvest 900"
+description: "The ranks whisper your name a little louder today. Diamond never sits idle in capable hands. Deliver 291 and the ledger stays balanced. The book keeps score, and it is watching closely now"
+type: COLLECTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0899
+objectives:
+  - description: "Collect 291 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 291
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 303 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 303
+rewards:
+  items:
+    ENDER_EYE: 17
+    ENDER_EYE: 8
+  experience: 77450
+  money: 145988
+  rare_items:
+    - material: HEART_OF_THE_SEA
+      amount: 1
+      chance: 2

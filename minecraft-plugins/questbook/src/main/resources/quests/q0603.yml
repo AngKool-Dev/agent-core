@@ -1,0 +1,35 @@
+id: q0603
+title: "Iron Foundation 603"
+description: "The frontier grows one wall at a time. Lay 183 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0602
+objectives:
+  - description: "Place 183 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 183
+  - description: "Place 186 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 186
+  - description: "Place 189 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 189
+  - description: "Place 192 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 192
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 12
+    NAUTILUS_SHELL: 6
+  experience: 48324
+  money: 85019
+  rare_items:
+    - material: NETHER_STAR
+      amount: 1
+      chance: 2

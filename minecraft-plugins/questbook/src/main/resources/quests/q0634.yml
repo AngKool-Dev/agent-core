@@ -1,0 +1,31 @@
+id: q0634
+title: "Solar Reckoning 634"
+description: "There is a price on Breezes this season. Collect on 60 of them; nobody asks how. The book keeps score, and it is watching closely now. The ink here is darker than usual"
+type: COMBAT
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0633
+objectives:
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 92 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 92
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+rewards:
+  items:
+    ECHO_SHARD: 12
+    NETHERITE_INGOT: 6
+  experience: 51263
+  money: 90972

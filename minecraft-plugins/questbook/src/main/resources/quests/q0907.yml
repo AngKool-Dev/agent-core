@@ -1,0 +1,31 @@
+id: q0907
+title: "Torrent Masonry 907"
+description: "The frontier grows one wall at a time. Lay 277 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0906
+objectives:
+  - description: "Place 277 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 277
+  - description: "Place 280 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 280
+  - description: "Place 283 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 283
+  - description: "Place 286 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 286
+rewards:
+  items:
+    GLOWSTONE_DUST: 17
+    GLOWSTONE_DUST: 8
+  experience: 78160
+  money: 147523

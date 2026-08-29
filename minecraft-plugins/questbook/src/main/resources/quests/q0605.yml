@@ -1,0 +1,31 @@
+id: q0605
+title: "Iron Horizon 605"
+description: "Trade routes bend around the Deep Dark for want of a map. Be the one who fixes that. This is where the story stops being kind. Few have signed this page; fewer still twice"
+type: EXPLORATION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0604
+objectives:
+  - description: "Travel to the Deep Dark biome"
+    type: VISIT_BIOME
+    target: DEEP_DARK
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Snowy Taiga biome"
+    type: VISIT_BIOME
+    target: SNOWY_TAIGA
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    NAUTILUS_SHELL: 12
+    ECHO_SHARD: 6
+  experience: 48513
+  money: 85400

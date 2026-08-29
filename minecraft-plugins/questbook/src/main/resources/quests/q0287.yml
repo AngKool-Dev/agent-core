@@ -1,0 +1,27 @@
+id: q0287
+title: "Void Masonry 287"
+description: "Blueprints call for 189 quartz block. The rest is sweat and stubbornness. Names that matter are earned at this depth of the book"
+type: CONSTRUCTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0286
+objectives:
+  - description: "Place 189 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 189
+  - description: "Place 192 deepslate"
+    type: PLACE_BLOCK
+    target: DEEPSLATE
+    amount: 192
+  - description: "Place 195 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 195
+rewards:
+  items:
+    OBSIDIAN: 6
+    QUARTZ: 3
+  experience: 20158
+  money: 31205

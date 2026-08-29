@@ -1,0 +1,27 @@
+id: q0348
+title: "Ember Tribute 348"
+description: "Quartermasters have shortlisted Iron ingot. Fulfil 265 before the season turns. Careful - the world pushes back harder the further you go"
+type: COLLECTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0347
+objectives:
+  - description: "Collect 265 iron ingot"
+    type: COLLECT_ITEM
+    target: IRON_INGOT
+    amount: 265
+  - description: "Collect 269 gold ingot"
+    type: COLLECT_ITEM
+    target: GOLD_INGOT
+    amount: 269
+  - description: "Collect 273 redstone"
+    type: COLLECT_ITEM
+    target: REDSTONE
+    amount: 273
+rewards:
+  items:
+    RAW_GOLD: 7
+    DIAMOND: 3
+  experience: 25294
+  money: 40478

@@ -1,0 +1,31 @@
+id: q0707
+title: "Frost Masonry 707"
+description: "The frontier grows one wall at a time. Lay 214 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0706
+objectives:
+  - description: "Place 214 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 214
+  - description: "Place 217 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 217
+  - description: "Place 220 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 220
+  - description: "Place 223 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 223
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 13
+    NAUTILUS_SHELL: 6
+  experience: 58284
+  money: 105391

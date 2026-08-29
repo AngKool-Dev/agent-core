@@ -1,0 +1,31 @@
+id: q0947
+title: "Iron Masonry 947"
+description: "The frontier grows one wall at a time. Lay 298 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0946
+objectives:
+  - description: "Place 298 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 298
+  - description: "Place 301 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 301
+  - description: "Place 304 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 304
+  - description: "Place 307 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 307
+rewards:
+  items:
+    ENDER_PEARL: 17
+    ENDER_PEARL: 8
+  experience: 82236
+  money: 156373

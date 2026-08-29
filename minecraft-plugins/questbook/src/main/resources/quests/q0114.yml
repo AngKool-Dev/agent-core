@@ -1,0 +1,27 @@
+id: q0114
+title: "Abyssal Reckoning 114"
+description: "There is a price on Hoglins this season. Collect on 19 of them; nobody asks how. Names that matter are earned at this depth of the book"
+type: COMBAT
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0113
+objectives:
+  - description: "Slay 19 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 19
+  - description: "Slay 21 Witches"
+    type: KILL_MOB
+    target: WITCH
+    amount: 21
+  - description: "Slay 23 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 23
+rewards:
+  items:
+    GOLD_INGOT: 3
+    GOLD_INGOT: 1
+  experience: 6798
+  money: 8972

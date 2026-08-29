@@ -1,0 +1,32 @@
+id: q0971
+title: "Solar Edifice 971"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. The frontier grows one wall at a time. Lay 291 blackstone and be part of it"
+type: CONSTRUCTION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0970
+requires_dragon_killed: true
+objectives:
+  - description: "Place 291 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 291
+  - description: "Place 294 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 294
+  - description: "Place 297 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 297
+  - description: "Place 300 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 300
+rewards:
+  items:
+    SHULKER_SHELL: 18
+    NETHER_STAR: 9
+  experience: 84696
+  money: 161747

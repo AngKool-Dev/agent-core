@@ -1,0 +1,27 @@
+id: q0334
+title: "Thorn Reckoning 334"
+description: "There is a price on Hoglins this season. Collect on 109 of them; nobody asks how. Names that matter are earned at this depth of the book"
+type: COMBAT
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0333
+objectives:
+  - description: "Slay 109 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 109
+  - description: "Slay 111 Witches"
+    type: KILL_MOB
+    target: WITCH
+    amount: 111
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+rewards:
+  items:
+    MAGMA_CREAM: 7
+    OBSIDIAN: 3
+  experience: 24100
+  money: 38295

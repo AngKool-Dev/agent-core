@@ -1,0 +1,27 @@
+id: q0211
+title: "Ashen Edifice 211"
+description: "The frontier grows one wall at a time. Lay 115 bricks and be part of it. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0210
+objectives:
+  - description: "Place 115 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 115
+  - description: "Place 118 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 118
+  - description: "Place 121 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 121
+rewards:
+  items:
+    REDSTONE: 5
+    QUARTZ: 2
+  experience: 14033
+  money: 20600

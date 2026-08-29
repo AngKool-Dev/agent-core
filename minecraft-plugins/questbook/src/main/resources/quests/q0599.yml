@@ -1,0 +1,31 @@
+id: q0599
+title: "Iron Cornerstone 599"
+description: "Blueprints call for 182 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0598
+objectives:
+  - description: "Place 182 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 182
+  - description: "Place 185 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 185
+  - description: "Place 188 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 188
+  - description: "Place 191 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 191
+rewards:
+  items:
+    NETHERITE_INGOT: 11
+    NETHERITE_SCRAP: 5
+  experience: 47947
+  money: 84259

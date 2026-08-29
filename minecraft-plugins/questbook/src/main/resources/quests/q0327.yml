@@ -1,0 +1,27 @@
+id: q0327
+title: "Thorn Masonry 327"
+description: "Blueprints call for 228 waxed copper block. The rest is sweat and stubbornness. By now, quitting would cost more than continuing"
+type: CONSTRUCTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0326
+objectives:
+  - description: "Place 228 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 228
+  - description: "Place 231 polished deepslate"
+    type: PLACE_BLOCK
+    target: POLISHED_DEEPSLATE
+    amount: 231
+  - description: "Place 234 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 234
+rewards:
+  items:
+    BLAZE_ROD: 7
+    MAGMA_CREAM: 3
+  experience: 23506
+  money: 37216

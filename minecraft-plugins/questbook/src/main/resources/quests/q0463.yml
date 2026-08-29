@@ -1,0 +1,31 @@
+id: q0463
+title: "Crimson Foundation 463"
+description: "Blueprints call for 143 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0462
+objectives:
+  - description: "Place 143 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 143
+  - description: "Place 146 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 146
+  - description: "Place 149 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 149
+  - description: "Place 152 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 152
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_SCRAP: 4
+  experience: 35403
+  money: 59514

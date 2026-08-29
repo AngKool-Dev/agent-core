@@ -1,0 +1,31 @@
+id: q0470
+title: "Crimson Reckoning 470"
+description: "Ghasts have been pushing past the borders after dark. Thin their ranks by 67 before the trails go cold. What waits ahead has ended better adventurers than most"
+type: COMBAT
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0469
+objectives:
+  - description: "Slay 67 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 67
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 71 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 71
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+rewards:
+  items:
+    ECHO_SHARD: 9
+    NETHERITE_INGOT: 4
+  experience: 36034
+  money: 60732

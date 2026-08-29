@@ -1,0 +1,31 @@
+id: q0551
+title: "Ashen Edifice 551"
+description: "Blueprints call for 168 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0550
+objectives:
+  - description: "Place 168 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 168
+  - description: "Place 171 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 171
+  - description: "Place 174 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 174
+  - description: "Place 177 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 177
+rewards:
+  items:
+    DIAMOND: 11
+    NAUTILUS_SHELL: 5
+  experience: 43455
+  money: 75274

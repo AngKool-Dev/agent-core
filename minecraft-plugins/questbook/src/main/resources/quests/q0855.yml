@@ -1,0 +1,35 @@
+id: q0855
+title: "Shattered Cornerstone 855"
+description: "Blueprints call for 257 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0854
+objectives:
+  - description: "Place 257 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 257
+  - description: "Place 260 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 260
+  - description: "Place 263 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 263
+  - description: "Place 266 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 266
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 72909
+  money: 136221
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 2

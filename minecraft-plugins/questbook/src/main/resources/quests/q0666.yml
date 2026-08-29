@@ -1,0 +1,35 @@
+id: q0666
+title: "Thorn Hunt 666"
+description: "Every Piglin_Brute taken is a traveller spared. Make it 60, and make it permanent. Few pages turn past this point. Fewer still turn back. The ink here is darker than usual. A marginal note reads: bring help"
+type: COMBAT
+required_level: 14
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0665
+objectives:
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 100 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 100
+rewards:
+  items:
+    NETHERITE_INGOT: 13
+    SHULKER_SHELL: 6
+  experience: 54324
+  money: 97225
+  rare_items:
+    - material: DRAGON_HEAD
+      amount: 1
+      chance: 2

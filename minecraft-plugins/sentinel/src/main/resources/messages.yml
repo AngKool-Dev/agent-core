@@ -1,0 +1,40 @@
+# ============================================
+# Sentinel Audit - Messages
+# Uses Adventure MiniMessage format
+# ============================================
+
+prefix: "<dark_gray>[<gold>Sentinel</gold>]</dark_gray> "
+
+# General messages
+no-permission: "<red>You do not have permission to use this command.</red>"
+command-usage: "<yellow>Usage: <white>/sentinel <subcommand></white></yellow>"
+command-not-found: "<red>Unknown subcommand: <white>{subcommand}</white></red>"
+plugin-reloaded: "<green>Sentinel configuration reloaded successfully.</green>"
+invalid-argument: "<red>Invalid argument: <white>{argument}</white></red>"
+
+# Status messages
+status-header: "<gold>=== Sentinel Status ===</gold>"
+status-database: "<gray>Database: <white>{type}</white></gray>"
+status-cache-size: "<gray>Cache size: <white>{size}</white></gray>"
+status-record-count: "<gray>Total records: <white>{count}</white></gray>"
+status-uptime: "<gray>Uptime: <white>{uptime}</white></gray>"
+
+# Inspect messages
+inspect-empty: "<gray>No audit history found for this block.</gray>"
+inspect-header: "<gold>=== Block History: <white>{location}</white> ===</gold>"
+inspect-entry: "<gray>{time} <dark_gray>-</dark_gray> <white>{action}</white> <dark_gray>by</dark_gray> <white>{actor}</white></gray>"
+inspect-detail: "<dark_gray>  {detail}</dark_gray>"
+
+# Rollback messages
+rollback-started: "<yellow>Rollback started. Operation ID: <white>{operationId}</white></yellow>"
+rollback-completed: "<green>Rollback completed. Restored <white>{blocks}</white> blocks.</green>"
+rollback-failed: "<red>Rollback failed: <white>{reason}</white></red>"
+rollback-no-changes: "<gray>No changes found to roll back.</gray>"
+
+# Purge messages
+purge-completed: "<green>Purged <white>{count}</white> audit records.</green>"
+purge-no-records: "<gray>No audit records to purge.</gray>"
+
+# Command block messages
+inspect-target: "<gray>Right-click a block to inspect it.</gray>"
+rollback-target: "<gray>Left-click two corners to define the rollback region.</gray>"

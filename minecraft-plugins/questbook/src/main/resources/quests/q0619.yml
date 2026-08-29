@@ -1,0 +1,31 @@
+id: q0619
+title: "Void Cornerstone 619"
+description: "The frontier grows one wall at a time. Lay 188 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0618
+objectives:
+  - description: "Place 188 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 188
+  - description: "Place 191 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 191
+  - description: "Place 194 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 194
+  - description: "Place 197 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 197
+rewards:
+  items:
+    NETHERITE_INGOT: 12
+    NETHERITE_SCRAP: 6
+  experience: 49838
+  money: 88079

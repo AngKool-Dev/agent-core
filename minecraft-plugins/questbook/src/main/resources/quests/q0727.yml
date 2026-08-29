@@ -1,0 +1,31 @@
+id: q0727
+title: "Verdant Masonry 727"
+description: "Blueprints call for 220 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0726
+objectives:
+  - description: "Place 220 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 220
+  - description: "Place 223 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 223
+  - description: "Place 226 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 226
+  - description: "Place 229 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 229
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 14
+    NAUTILUS_SHELL: 7
+  experience: 60231
+  money: 109436

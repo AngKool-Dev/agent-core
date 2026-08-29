@@ -1,0 +1,27 @@
+id: q0358
+title: "Frost Crusade 358"
+description: "The watchtower logs name Guardians as this month's threat. Answer with 120 confirmed kills. The road steepens; so do the rewards"
+type: COMBAT
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0357
+objectives:
+  - description: "Slay 120 Guardians"
+    type: KILL_MOB
+    target: GUARDIAN
+    amount: 120
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 124 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 124
+rewards:
+  items:
+    RAW_GOLD: 7
+    DIAMOND: 3
+  experience: 26152
+  money: 42056

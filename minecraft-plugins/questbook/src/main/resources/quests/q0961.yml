@@ -1,0 +1,32 @@
+id: q0961
+title: "Void Expedition 961"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Cartographers pay for certainty. Set eyes on the Old Growth Taiga and return to draw it true"
+type: EXPLORATION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0960
+requires_dragon_killed: true
+objectives:
+  - description: "Travel to the Old Growth Taiga biome"
+    type: VISIT_BIOME
+    target: OLD_GROWTH_TAIGA
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Bamboo Jungle biome"
+    type: VISIT_BIOME
+    target: BAMBOO_JUNGLE
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    SHULKER_SHELL: 18
+    SHULKER_SHELL: 9
+  experience: 83670
+  money: 159502

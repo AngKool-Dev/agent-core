@@ -1,0 +1,31 @@
+id: q0520
+title: "Shattered Harvest 520"
+description: "Diamond never sits idle in capable hands. Deliver 169 and the ledger stays balanced. This is where the story stops being kind"
+type: COLLECTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0519
+objectives:
+  - description: "Collect 169 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 169
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 181 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 181
+rewards:
+  items:
+    ECHO_SHARD: 10
+    NETHERITE_INGOT: 5
+  experience: 40590
+  money: 69613

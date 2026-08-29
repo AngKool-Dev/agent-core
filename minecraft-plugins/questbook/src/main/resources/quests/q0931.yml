@@ -1,0 +1,31 @@
+id: q0931
+title: "Mirage Edifice 931"
+description: "The frontier grows one wall at a time. Lay 290 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0930
+objectives:
+  - description: "Place 290 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 290
+  - description: "Place 293 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 293
+  - description: "Place 296 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 296
+  - description: "Place 299 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 299
+rewards:
+  items:
+    GLOWSTONE_DUST: 17
+    GLOWSTONE_DUST: 8
+  experience: 80602
+  money: 152817

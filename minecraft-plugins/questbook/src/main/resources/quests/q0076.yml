@@ -1,0 +1,23 @@
+id: q0076
+title: "Gilded Ledger 076"
+description: "The smiths trade favours for Tuff. 243 units buys goodwill and coin alike. Do it well; someone is always watching the newcomers"
+type: COLLECTION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0075
+objectives:
+  - description: "Collect 243 tuff"
+    type: COLLECT_ITEM
+    target: TUFF
+    amount: 243
+  - description: "Collect 247 wheat"
+    type: COLLECT_ITEM
+    target: WHEAT
+    amount: 247
+rewards:
+  items:
+    ROTTEN_FLESH: 3
+    CALCITE: 1
+  experience: 4218
+  money: 5190

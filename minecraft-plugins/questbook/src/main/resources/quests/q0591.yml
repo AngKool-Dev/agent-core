@@ -1,0 +1,31 @@
+id: q0591
+title: "Mirage Edifice 591"
+description: "Blueprints call for 180 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0590
+objectives:
+  - description: "Place 180 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 180
+  - description: "Place 183 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 183
+  - description: "Place 186 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 186
+  - description: "Place 189 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 189
+rewards:
+  items:
+    NETHERITE_SCRAP: 11
+    PHANTOM_MEMBRANE: 5
+  experience: 47193
+  money: 82743

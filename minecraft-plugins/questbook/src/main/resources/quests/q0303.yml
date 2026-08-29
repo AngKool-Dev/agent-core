@@ -1,0 +1,27 @@
+id: q0303
+title: "Solar Foundation 303"
+description: "Blueprints call for 205 waxed copper block. The rest is sweat and stubbornness. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0302
+objectives:
+  - description: "Place 205 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 205
+  - description: "Place 208 polished deepslate"
+    type: PLACE_BLOCK
+    target: POLISHED_DEEPSLATE
+    amount: 208
+  - description: "Place 211 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 211
+rewards:
+  items:
+    DIAMOND: 7
+    BLAZE_ROD: 3
+  experience: 21488
+  money: 33576

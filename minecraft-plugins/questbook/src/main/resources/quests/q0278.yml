@@ -1,0 +1,27 @@
+id: q0278
+title: "Void Crusade 278"
+description: "The watchtower logs name Guardians as this month's threat. Answer with 84 confirmed kills. By now, quitting would cost more than continuing"
+type: COMBAT
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0277
+objectives:
+  - description: "Slay 84 Guardians"
+    type: KILL_MOB
+    target: GUARDIAN
+    amount: 84
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 88 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 88
+rewards:
+  items:
+    BLAZE_ROD: 6
+    MAGMA_CREAM: 3
+  experience: 19416
+  money: 29891

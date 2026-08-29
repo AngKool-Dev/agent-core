@@ -1,0 +1,31 @@
+id: q0497
+title: "Radiant Compass 497"
+description: "Cartographers pay for certainty. Set eyes on the Deep Dark and return to draw it true. The book keeps score, and it is watching closely now"
+type: EXPLORATION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0496
+objectives:
+  - description: "Travel to the Deep Dark biome"
+    type: VISIT_BIOME
+    target: DEEP_DARK
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Snowy Taiga biome"
+    type: VISIT_BIOME
+    target: SNOWY_TAIGA
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    DIAMOND: 10
+    ECHO_SHARD: 5
+  experience: 38484
+  money: 65489

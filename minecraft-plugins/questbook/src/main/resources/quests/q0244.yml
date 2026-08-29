@@ -1,0 +1,27 @@
+id: q0244
+title: "Mirage Harvest 244"
+description: "Someone upstream wants Amethyst shard by the crate. See that 156 reach the counting table. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0243
+objectives:
+  - description: "Collect 156 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 156
+  - description: "Collect 160 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 160
+  - description: "Collect 164 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 164
+rewards:
+  items:
+    AMETHYST_SHARD: 6
+    LAPIS_LAZULI: 3
+  experience: 16652
+  money: 25064

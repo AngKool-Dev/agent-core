@@ -1,0 +1,27 @@
+id: q0268
+title: "Iron Tribute 268"
+description: "Quartermasters have shortlisted Amethyst shard. Fulfil 181 before the season turns. The road steepens; so do the rewards"
+type: COLLECTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0267
+objectives:
+  - description: "Collect 181 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 181
+  - description: "Collect 185 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 185
+  - description: "Collect 189 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 189
+rewards:
+  items:
+    MAGMA_CREAM: 6
+    OBSIDIAN: 3
+  experience: 18597
+  money: 28449

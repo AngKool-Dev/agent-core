@@ -1,0 +1,32 @@
+# ============================================
+# Sentinel Audit - SQLite Configuration
+# ============================================
+#
+# This file provides the recommended SQLite configuration.
+# To use SQLite, set database.type to SQLITE in config.yml.
+#
+# SQLite settings are derived automatically:
+#   - Database file: plugins/Sentinel/sentinel.db
+#   - JDBC Driver: org.sqlite.JDBC
+#
+# Recommended PRAGMA settings for optimal performance:
+#   - journal_mode: WAL (Write-Ahead Logging)
+#   - synchronous: NORMAL
+#   - busy_timeout: 30000
+#   - cache_size: -20000 (20MB)
+
+database:
+  type: SQLITE
+
+  # Connection pool settings tuned for SQLite
+  pool-size: 5
+  connection-timeout-ms: 30000
+  max-lifetime-ms: 1800000
+
+  # SQLite-specific JDBC properties
+  properties:
+    journal_mode: WAL
+    synchronous: NORMAL
+    busy_timeout: "30000"
+    cache_size: "-20000"
+    foreign_keys: "true"

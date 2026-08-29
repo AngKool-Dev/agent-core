@@ -1,0 +1,35 @@
+id: q0915
+title: "Torrent Cornerstone 915"
+description: "The frontier grows one wall at a time. Lay 281 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0914
+objectives:
+  - description: "Place 281 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 281
+  - description: "Place 284 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 284
+  - description: "Place 287 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 287
+  - description: "Place 290 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 290
+rewards:
+  items:
+    ENDER_EYE: 17
+    ENDER_EYE: 8
+  experience: 78972
+  money: 149282
+  rare_items:
+    - material: NETHER_STAR
+      amount: 1
+      chance: 10

@@ -1,0 +1,23 @@
+id: q0049
+title: "Verdant Horizon 049"
+description: "Cartographers pay for certainty. Set eyes on the Forest and return to draw it true. Small steps still count on this road"
+type: EXPLORATION
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0048
+objectives:
+  - description: "Travel to the Forest biome"
+    type: VISIT_BIOME
+    target: FOREST
+    amount: 1
+  - description: "Locate a mineshaft"
+    type: FIND_STRUCTURE
+    target: mineshaft
+    amount: 1
+rewards:
+  items:
+    STRING: 2
+    RAW_IRON: 1
+  experience: 2517
+  money: 2869

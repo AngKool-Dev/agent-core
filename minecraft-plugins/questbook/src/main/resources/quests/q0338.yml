@@ -1,0 +1,27 @@
+id: q0338
+title: "Thorn Crusade 338"
+description: "The watchtower logs name Guardians as this month's threat. Answer with 111 confirmed kills. Names that matter are earned at this depth of the book"
+type: COMBAT
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0337
+objectives:
+  - description: "Slay 111 Guardians"
+    type: KILL_MOB
+    target: GUARDIAN
+    amount: 111
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 115 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 115
+rewards:
+  items:
+    RAW_GOLD: 7
+    DIAMOND: 3
+  experience: 24440
+  money: 38916

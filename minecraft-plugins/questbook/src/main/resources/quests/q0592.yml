@@ -1,0 +1,31 @@
+id: q0592
+title: "Mirage Provision 592"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. The book keeps score, and it is watching closely now. The book files this one carefully"
+type: COLLECTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0591
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 199 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 199
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    ECHO_SHARD: 11
+    NETHERITE_INGOT: 5
+  experience: 47287
+  money: 82932

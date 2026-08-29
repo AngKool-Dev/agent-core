@@ -1,0 +1,27 @@
+id: q0395
+title: "Obsidian Cornerstone 395"
+description: "The frontier grows one wall at a time. Lay 295 quartz block and be part of it. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0394
+objectives:
+  - description: "Place 295 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 295
+  - description: "Place 298 deepslate"
+    type: PLACE_BLOCK
+    target: DEEPSLATE
+    amount: 298
+  - description: "Place 301 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 301
+rewards:
+  items:
+    BLAZE_ROD: 8
+    BLAZE_ROD: 4
+  experience: 29363
+  money: 48028

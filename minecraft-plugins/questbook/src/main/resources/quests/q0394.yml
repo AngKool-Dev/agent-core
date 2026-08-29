@@ -1,0 +1,27 @@
+id: q0394
+title: "Obsidian Reckoning 394"
+description: "There is a price on Hoglins this season. Collect on 137 of them; nobody asks how. Careful - the world pushes back harder the further you go"
+type: COMBAT
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0393
+objectives:
+  - description: "Slay 137 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 137
+  - description: "Slay 139 Witches"
+    type: KILL_MOB
+    target: WITCH
+    amount: 139
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+rewards:
+  items:
+    RAW_GOLD: 8
+    RAW_GOLD: 4
+  experience: 29275
+  money: 47864

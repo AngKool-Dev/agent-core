@@ -1,0 +1,27 @@
+id: q0140
+title: "Hollow Harvest 140"
+description: "Magma cream never sits idle in capable hands. Deliver 49 and the ledger stays balanced. The road steepens; so do the rewards"
+type: COLLECTION
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0139
+objectives:
+  - description: "Collect 49 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 49
+  - description: "Collect 53 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 53
+  - description: "Collect 57 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 57
+rewards:
+  items:
+    GOLD_INGOT: 4
+    IRON_INGOT: 2
+  experience: 8658
+  money: 11840

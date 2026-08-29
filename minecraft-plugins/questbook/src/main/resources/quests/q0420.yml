@@ -1,0 +1,31 @@
+id: q0420
+title: "Gilded Harvest 420"
+description: "Diamond never sits idle in capable hands. Deliver 137 and the ledger stays balanced. What waits ahead has ended better adventurers than most"
+type: COLLECTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0419
+objectives:
+  - description: "Collect 137 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 137
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 149 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 149
+rewards:
+  items:
+    NETHERITE_SCRAP: 9
+    NETHERITE_SCRAP: 4
+  experience: 31563
+  money: 52176

@@ -1,0 +1,31 @@
+id: q0631
+title: "Solar Edifice 631"
+description: "Blueprints call for 192 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0630
+objectives:
+  - description: "Place 192 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 192
+  - description: "Place 195 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 195
+  - description: "Place 198 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 198
+  - description: "Place 201 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 201
+rewards:
+  items:
+    NETHERITE_INGOT: 12
+    SHULKER_SHELL: 6
+  experience: 50978
+  money: 90392

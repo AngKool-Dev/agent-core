@@ -1,0 +1,31 @@
+id: q0614
+title: "Void Reckoning 614"
+description: "There is a price on Breezes this season. Collect on 60 of them; nobody asks how. This is where the story stops being kind. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0613
+objectives:
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 89 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 89
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+rewards:
+  items:
+    NETHERITE_INGOT: 12
+    NETHERITE_SCRAP: 6
+  experience: 49364
+  money: 87120

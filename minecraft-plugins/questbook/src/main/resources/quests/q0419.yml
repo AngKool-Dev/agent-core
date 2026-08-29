@@ -1,0 +1,31 @@
+id: q0419
+title: "Gilded Cornerstone 419"
+description: "The frontier grows one wall at a time. Lay 130 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0418
+objectives:
+  - description: "Place 130 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 130
+  - description: "Place 133 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 133
+  - description: "Place 136 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 136
+  - description: "Place 139 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 139
+rewards:
+  items:
+    DIAMOND: 8
+    DIAMOND: 4
+  experience: 31475
+  money: 52009

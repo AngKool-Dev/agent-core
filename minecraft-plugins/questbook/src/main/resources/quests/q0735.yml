@@ -1,0 +1,35 @@
+id: q0735
+title: "Obsidian Cornerstone 735"
+description: "Blueprints call for 222 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0734
+objectives:
+  - description: "Place 222 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 222
+  - description: "Place 225 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 225
+  - description: "Place 228 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 228
+  - description: "Place 231 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 231
+rewards:
+  items:
+    ENDER_PEARL: 14
+    SHULKER_SHELL: 7
+  experience: 61013
+  money: 111065
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 10

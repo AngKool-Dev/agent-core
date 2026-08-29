@@ -1,0 +1,35 @@
+id: q0903
+title: "Torrent Foundation 903"
+description: "Blueprints call for 275 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0902
+objectives:
+  - description: "Place 275 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 275
+  - description: "Place 278 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 278
+  - description: "Place 281 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 281
+  - description: "Place 284 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 284
+rewards:
+  items:
+    ENDER_EYE: 17
+    ENDER_EYE: 8
+  experience: 77754
+  money: 146645
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 5

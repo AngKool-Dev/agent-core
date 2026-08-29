@@ -1,0 +1,27 @@
+id: q0324
+title: "Thorn Harvest 324"
+description: "Someone upstream wants Iron ingot by the crate. See that 240 reach the counting table. By now, quitting would cost more than continuing"
+type: COLLECTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0323
+objectives:
+  - description: "Collect 240 iron ingot"
+    type: COLLECT_ITEM
+    target: IRON_INGOT
+    amount: 240
+  - description: "Collect 244 gold ingot"
+    type: COLLECT_ITEM
+    target: GOLD_INGOT
+    amount: 244
+  - description: "Collect 248 redstone"
+    type: COLLECT_ITEM
+    target: REDSTONE
+    amount: 248
+rewards:
+  items:
+    OBSIDIAN: 7
+    QUARTZ: 3
+  experience: 23252
+  money: 36755

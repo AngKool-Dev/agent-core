@@ -1,0 +1,27 @@
+id: q0364
+title: "Frost Harvest 364"
+description: "Someone upstream wants Amethyst shard by the crate. See that 282 reach the counting table. By now, quitting would cost more than continuing"
+type: COLLECTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0363
+objectives:
+  - description: "Collect 282 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 282
+  - description: "Collect 286 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 286
+  - description: "Collect 290 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 290
+rewards:
+  items:
+    BLAZE_ROD: 8
+    MAGMA_CREAM: 4
+  experience: 26669
+  money: 43010

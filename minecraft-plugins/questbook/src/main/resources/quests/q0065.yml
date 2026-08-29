@@ -1,0 +1,23 @@
+id: q0065
+title: "Obsidian Horizon 065"
+description: "Cartographers pay for certainty. Set eyes on the Swamp and return to draw it true. Every legend starts with errands like this one. Someone crossed out a name at the bottom"
+type: EXPLORATION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0064
+objectives:
+  - description: "Travel to the Swamp biome"
+    type: VISIT_BIOME
+    target: SWAMP
+    amount: 1
+  - description: "Locate a mineshaft"
+    type: FIND_STRUCTURE
+    target: mineshaft
+    amount: 1
+rewards:
+  items:
+    COPPER_INGOT: 3
+    GUNPOWDER: 1
+  experience: 3509
+  money: 4202

@@ -1,0 +1,35 @@
+id: q0738
+title: "Obsidian Crusade 738"
+description: "The watchtower logs name Shulkers as this month's threat. Answer with 104 confirmed kills. This is where the story stops being kind"
+type: COMBAT
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0737
+objectives:
+  - description: "Slay 104 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 104
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+rewards:
+  items:
+    ENDER_EYE: 14
+    ENDER_PEARL: 7
+  experience: 61306
+  money: 111677
+  rare_items:
+    - material: DRAGON_HEAD
+      amount: 1
+      chance: 2

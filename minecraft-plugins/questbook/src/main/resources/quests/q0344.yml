@@ -1,0 +1,27 @@
+id: q0344
+title: "Ember Harvest 344"
+description: "Someone upstream wants Magma cream by the crate. See that 261 reach the counting table. Careful - the world pushes back harder the further you go"
+type: COLLECTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0343
+objectives:
+  - description: "Collect 261 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 261
+  - description: "Collect 265 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 265
+  - description: "Collect 269 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 269
+rewards:
+  items:
+    MAGMA_CREAM: 7
+    OBSIDIAN: 3
+  experience: 24952
+  money: 39851

@@ -1,0 +1,35 @@
+id: q0852
+title: "Shattered Provision 852"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. The book keeps score, and it is watching closely now. The paper smells faintly of ozone. Someone crossed out a name at the bottom. The spine creaks as if the book itself hesitates"
+type: COLLECTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0851
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 281 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 281
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    ENDER_PEARL: 16
+    SHULKER_SHELL: 8
+  experience: 72608
+  money: 135576
+  rare_items:
+    - material: HEART_OF_THE_SEA
+      amount: 1
+      chance: 10

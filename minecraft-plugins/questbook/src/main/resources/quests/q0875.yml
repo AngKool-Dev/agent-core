@@ -1,0 +1,31 @@
+id: q0875
+title: "Eternal Cornerstone 875"
+description: "The frontier grows one wall at a time. Lay 263 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0874
+objectives:
+  - description: "Place 263 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 263
+  - description: "Place 266 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 266
+  - description: "Place 269 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 269
+  - description: "Place 272 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 272
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 74922
+  money: 140540

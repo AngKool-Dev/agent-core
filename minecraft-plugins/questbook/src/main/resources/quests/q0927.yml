@@ -1,0 +1,35 @@
+id: q0927
+title: "Mirage Masonry 927"
+description: "Blueprints call for 288 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0926
+objectives:
+  - description: "Place 288 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 288
+  - description: "Place 291 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 291
+  - description: "Place 294 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 294
+  - description: "Place 297 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 297
+rewards:
+  items:
+    ENDER_EYE: 17
+    ENDER_EYE: 8
+  experience: 80194
+  money: 151931
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 2

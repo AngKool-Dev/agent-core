@@ -1,0 +1,31 @@
+id: q0503
+title: "Radiant Foundation 503"
+description: "Blueprints call for 154 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0502
+objectives:
+  - description: "Place 154 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 154
+  - description: "Place 157 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 157
+  - description: "Place 160 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 160
+  - description: "Place 163 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 163
+rewards:
+  items:
+    NETHERITE_INGOT: 10
+    NETHERITE_SCRAP: 5
+  experience: 39032
+  money: 66559

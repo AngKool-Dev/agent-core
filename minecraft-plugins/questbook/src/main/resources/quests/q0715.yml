@@ -1,0 +1,31 @@
+id: q0715
+title: "Verdant Cornerstone 715"
+description: "The frontier grows one wall at a time. Lay 216 blackstone and be part of it. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0714
+objectives:
+  - description: "Place 216 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 216
+  - description: "Place 219 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 219
+  - description: "Place 222 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 222
+  - description: "Place 225 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 225
+rewards:
+  items:
+    SHULKER_SHELL: 13
+    PHANTOM_MEMBRANE: 6
+  experience: 59062
+  money: 107005

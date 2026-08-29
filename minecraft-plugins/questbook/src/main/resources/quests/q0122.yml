@@ -1,0 +1,27 @@
+id: q0122
+title: "Crimson Vigil 122"
+description: "Scouts report Evokers denning too close to the roads. Cull 20 and the caravans will breathe easier. Careful - the world pushes back harder the further you go"
+type: COMBAT
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0121
+objectives:
+  - description: "Slay 20 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 20
+  - description: "Slay 22 Blazes"
+    type: KILL_MOB
+    target: BLAZE
+    amount: 22
+  - description: "Slay 24 Endermen"
+    type: KILL_MOB
+    target: ENDERMAN
+    amount: 24
+rewards:
+  items:
+    IRON_INGOT: 4
+    IRON_INGOT: 2
+  experience: 7363
+  money: 9832

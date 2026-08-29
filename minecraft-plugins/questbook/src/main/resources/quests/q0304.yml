@@ -1,0 +1,27 @@
+id: q0304
+title: "Solar Harvest 304"
+description: "Someone upstream wants Amethyst shard by the crate. See that 219 reach the counting table. Careful - the world pushes back harder the further you go"
+type: COLLECTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0303
+objectives:
+  - description: "Collect 219 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 219
+  - description: "Collect 223 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 223
+  - description: "Collect 227 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 227
+rewards:
+  items:
+    OBSIDIAN: 7
+    QUARTZ: 3
+  experience: 21572
+  money: 33726

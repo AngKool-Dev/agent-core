@@ -1,0 +1,32 @@
+id: q0958
+title: "Void Crusade 958"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Old maps mark its ground with a single word: run. Prove them wrong 4 times over"
+type: COMBAT
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0957
+requires_dragon_killed: true
+objectives:
+  - description: "Slay 4 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 4
+  - description: "Slay 4 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 4
+  - description: "Slay 4 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 4
+  - description: "Slay 4 Withers"
+    type: KILL_MOB
+    target: WITHER
+    amount: 4
+rewards:
+  items:
+    SHULKER_SHELL: 17
+    SHULKER_SHELL: 8
+  experience: 83362
+  money: 158830

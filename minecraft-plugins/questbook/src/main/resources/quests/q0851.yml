@@ -1,0 +1,31 @@
+id: q0851
+title: "Shattered Edifice 851"
+description: "The frontier grows one wall at a time. Lay 256 blackstone and be part of it. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0850
+objectives:
+  - description: "Place 256 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 256
+  - description: "Place 259 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 259
+  - description: "Place 262 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 262
+  - description: "Place 265 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 265
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 72507
+  money: 135361

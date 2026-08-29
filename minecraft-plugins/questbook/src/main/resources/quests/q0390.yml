@@ -1,0 +1,27 @@
+id: q0390
+title: "Verdant Reckoning 390"
+description: "Endermen have been pushing past the borders after dark. Thin their ranks by 135 before the trails go cold. Careful - the world pushes back harder the further you go"
+type: COMBAT
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0389
+objectives:
+  - description: "Slay 135 Endermen"
+    type: KILL_MOB
+    target: ENDERMAN
+    amount: 135
+  - description: "Slay 137 Vindicators"
+    type: KILL_MOB
+    target: VINDICATOR
+    amount: 137
+  - description: "Slay 139 Guardians"
+    type: KILL_MOB
+    target: GUARDIAN
+    amount: 139
+rewards:
+  items:
+    DIAMOND: 8
+    DIAMOND: 4
+  experience: 28926
+  money: 47209

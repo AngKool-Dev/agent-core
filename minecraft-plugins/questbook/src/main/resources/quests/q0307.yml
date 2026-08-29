@@ -1,0 +1,27 @@
+id: q0307
+title: "Lunar Masonry 307"
+description: "The frontier grows one wall at a time. Lay 209 bricks and be part of it. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0306
+objectives:
+  - description: "Place 209 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 209
+  - description: "Place 212 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 212
+  - description: "Place 215 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 215
+rewards:
+  items:
+    MAGMA_CREAM: 7
+    OBSIDIAN: 3
+  experience: 21823
+  money: 34176

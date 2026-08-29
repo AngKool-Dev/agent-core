@@ -1,0 +1,31 @@
+id: q0448
+title: "Abyssal Tribute 448"
+description: "Quartermasters have shortlisted Shulker shell. Fulfil 48 before the season turns. Few pages turn past this point. Fewer still turn back"
+type: COLLECTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0447
+objectives:
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 150 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 150
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 128 phantom membrane"
+    type: COLLECT_ITEM
+    target: PHANTOM_MEMBRANE
+    amount: 128
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_INGOT: 4
+  experience: 34056
+  money: 56926

@@ -1,0 +1,36 @@
+id: q0987
+title: "Lunar Masonry 987"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. The frontier grows one wall at a time. Lay 296 blackstone and be part of it"
+type: CONSTRUCTION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0986
+requires_dragon_killed: true
+objectives:
+  - description: "Place 296 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 296
+  - description: "Place 299 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 299
+  - description: "Place 302 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 302
+  - description: "Place 305 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 305
+rewards:
+  items:
+    SHULKER_SHELL: 18
+    NETHER_STAR: 9
+  experience: 86343
+  money: 165355
+  rare_items:
+    - material: NETHER_STAR
+      amount: 1
+      chance: 10

@@ -1,0 +1,31 @@
+id: q0519
+title: "Shattered Cornerstone 519"
+description: "Blueprints call for 159 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0518
+objectives:
+  - description: "Place 159 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 159
+  - description: "Place 162 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 162
+  - description: "Place 165 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 165
+  - description: "Place 168 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 168
+rewards:
+  items:
+    NETHERITE_SCRAP: 10
+    DIAMOND: 5
+  experience: 40498
+  money: 69433

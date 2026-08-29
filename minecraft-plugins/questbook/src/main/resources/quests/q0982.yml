@@ -1,0 +1,32 @@
+id: q0982
+title: "Solar Vigil 982"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Old maps mark its ground with a single word: run. Prove them wrong 4 times over. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0981
+requires_dragon_killed: true
+objectives:
+  - description: "Slay 4 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 4
+  - description: "Slay 4 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 4
+  - description: "Slay 4 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 4
+  - description: "Slay 4 Withers"
+    type: KILL_MOB
+    target: WITHER
+    amount: 4
+rewards:
+  items:
+    ENDER_EYE: 18
+    SHULKER_SHELL: 9
+  experience: 85828
+  money: 164225

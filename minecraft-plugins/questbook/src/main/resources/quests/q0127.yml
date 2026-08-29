@@ -1,0 +1,27 @@
+id: q0127
+title: "Crimson Masonry 127"
+description: "Blueprints call for 44 bricks. The rest is sweat and stubbornness. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0126
+objectives:
+  - description: "Place 44 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 44
+  - description: "Place 47 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 47
+  - description: "Place 50 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 50
+rewards:
+  items:
+    REDSTONE: 4
+    GOLD_INGOT: 2
+  experience: 7720
+  money: 10380

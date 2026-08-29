@@ -1,0 +1,31 @@
+id: q0509
+title: "Radiant Horizon 509"
+description: "Trade routes bend around the Deep Dark for want of a map. Be the one who fixes that. What waits ahead has ended better adventurers than most"
+type: EXPLORATION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0508
+objectives:
+  - description: "Travel to the Deep Dark biome"
+    type: VISIT_BIOME
+    target: DEEP_DARK
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Snowy Taiga biome"
+    type: VISIT_BIOME
+    target: SNOWY_TAIGA
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    DIAMOND: 10
+    ECHO_SHARD: 5
+  experience: 39581
+  money: 67633

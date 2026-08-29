@@ -1,0 +1,27 @@
+id: q0124
+title: "Crimson Harvest 124"
+description: "Someone upstream wants Amethyst shard by the crate. See that 44 reach the counting table. Careful - the world pushes back harder the further you go"
+type: COLLECTION
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0123
+objectives:
+  - description: "Collect 44 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 44
+  - description: "Collect 48 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 48
+  - description: "Collect 52 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 52
+rewards:
+  items:
+    REDSTONE: 4
+    REDSTONE: 2
+  experience: 7506
+  money: 10051

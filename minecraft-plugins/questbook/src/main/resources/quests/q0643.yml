@@ -1,0 +1,31 @@
+id: q0643
+title: "Solar Foundation 643"
+description: "The frontier grows one wall at a time. Lay 195 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0642
+objectives:
+  - description: "Place 195 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 195
+  - description: "Place 198 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 198
+  - description: "Place 201 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 201
+  - description: "Place 204 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 204
+rewards:
+  items:
+    SHULKER_SHELL: 12
+    PHANTOM_MEMBRANE: 6
+  experience: 52121
+  money: 92720

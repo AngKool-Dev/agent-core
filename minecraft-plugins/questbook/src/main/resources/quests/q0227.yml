@@ -1,0 +1,27 @@
+id: q0227
+title: "Torrent Masonry 227"
+description: "The frontier grows one wall at a time. Lay 131 quartz block and be part of it. The road steepens; so do the rewards"
+type: CONSTRUCTION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0226
+objectives:
+  - description: "Place 131 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 131
+  - description: "Place 134 deepslate"
+    type: PLACE_BLOCK
+    target: DEEPSLATE
+    amount: 134
+  - description: "Place 137 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 137
+rewards:
+  items:
+    PRISMARINE_SHARD: 5
+    AMETHYST_SHARD: 2
+  experience: 15294
+  money: 22736

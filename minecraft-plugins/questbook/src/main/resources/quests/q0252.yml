@@ -1,0 +1,27 @@
+id: q0252
+title: "Mirage Provision 252"
+description: "Stores run thin and patience thinner. 164 Iron ingot, weighed honest, closes this entry. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0251
+objectives:
+  - description: "Collect 164 iron ingot"
+    type: COLLECT_ITEM
+    target: IRON_INGOT
+    amount: 164
+  - description: "Collect 168 gold ingot"
+    type: COLLECT_ITEM
+    target: GOLD_INGOT
+    amount: 168
+  - description: "Collect 172 redstone"
+    type: COLLECT_ITEM
+    target: REDSTONE
+    amount: 172
+rewards:
+  items:
+    QUARTZ: 6
+    PRISMARINE_SHARD: 3
+  experience: 17296
+  money: 26180

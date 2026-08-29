@@ -1,0 +1,27 @@
+id: q0367
+title: "Frost Masonry 367"
+description: "Blueprints call for 267 bricks. The rest is sweat and stubbornness. By now, quitting would cost more than continuing"
+type: CONSTRUCTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0366
+objectives:
+  - description: "Place 267 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 267
+  - description: "Place 270 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 270
+  - description: "Place 273 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 273
+rewards:
+  items:
+    DIAMOND: 8
+    BLAZE_ROD: 4
+  experience: 26928
+  money: 43490

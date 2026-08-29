@@ -1,0 +1,27 @@
+id: q0148
+title: "Hollow Tribute 148"
+description: "Quartermasters have shortlisted Amethyst shard. Fulfil 55 before the season turns. By now, quitting would cost more than continuing"
+type: COLLECTION
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0147
+objectives:
+  - description: "Collect 55 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 55
+  - description: "Collect 59 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 59
+  - description: "Collect 63 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 63
+rewards:
+  items:
+    GOLD_INGOT: 4
+    IRON_INGOT: 2
+  experience: 9243
+  money: 12762

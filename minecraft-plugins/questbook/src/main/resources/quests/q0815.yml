@@ -1,0 +1,31 @@
+id: q0815
+title: "Crimson Cornerstone 815"
+description: "Blueprints call for 245 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0814
+objectives:
+  - description: "Place 245 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 245
+  - description: "Place 248 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 248
+  - description: "Place 251 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 251
+  - description: "Place 254 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 254
+rewards:
+  items:
+    ENDER_EYE: 15
+    ENDER_PEARL: 7
+  experience: 68908
+  money: 127689

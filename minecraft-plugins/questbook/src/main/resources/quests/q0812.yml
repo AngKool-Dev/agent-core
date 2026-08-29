@@ -1,0 +1,31 @@
+id: q0812
+title: "Crimson Provision 812"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. The book keeps score, and it is watching closely now. The paper smells faintly of ozone. Someone crossed out a name at the bottom"
+type: COLLECTION
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0811
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 268 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 268
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    ENDER_PEARL: 15
+    SHULKER_SHELL: 7
+  experience: 68609
+  money: 127055

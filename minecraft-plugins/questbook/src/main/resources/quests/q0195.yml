@@ -1,0 +1,27 @@
+id: q0195
+title: "Eternal Cornerstone 195"
+description: "The frontier grows one wall at a time. Lay 99 waxed copper block and be part of it. By now, quitting would cost more than continuing"
+type: CONSTRUCTION
+required_level: 4
+repeatable: false
+difficulty: HARD
+required_quest: q0194
+objectives:
+  - description: "Place 99 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 99
+  - description: "Place 102 polished deepslate"
+    type: PLACE_BLOCK
+    target: POLISHED_DEEPSLATE
+    amount: 102
+  - description: "Place 105 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 105
+rewards:
+  items:
+    AMETHYST_SHARD: 5
+    LAPIS_LAZULI: 2
+  experience: 12789
+  money: 18519

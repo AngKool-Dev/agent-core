@@ -1,0 +1,31 @@
+id: q0850
+title: "Shattered Reckoning 850"
+description: "Ghasts have been pushing past the borders after dark. Thin their ranks by 119 before the trails go cold. The book keeps score, and it is watching closely now"
+type: COMBAT
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0849
+objectives:
+  - description: "Slay 119 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 119
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 123 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 123
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+rewards:
+  items:
+    GLOWSTONE_DUST: 16
+    ENDER_EYE: 8
+  experience: 72407
+  money: 135147

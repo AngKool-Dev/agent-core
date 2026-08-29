@@ -1,0 +1,27 @@
+id: q0133
+title: "Crimson Pilgrimage 133"
+description: "Trade routes bend around the Savanna for want of a map. Be the one who fixes that. The road steepens; so do the rewards"
+type: EXPLORATION
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0132
+objectives:
+  - description: "Travel to the Savanna biome"
+    type: VISIT_BIOME
+    target: SAVANNA
+    amount: 1
+  - description: "Locate a jungle pyramid"
+    type: FIND_STRUCTURE
+    target: jungle_pyramid
+    amount: 1
+  - description: "Travel to the Cherry Grove biome"
+    type: VISIT_BIOME
+    target: CHERRY_GROVE
+    amount: 1
+rewards:
+  items:
+    IRON_INGOT: 4
+    LAPIS_LAZULI: 2
+  experience: 8151
+  money: 11048

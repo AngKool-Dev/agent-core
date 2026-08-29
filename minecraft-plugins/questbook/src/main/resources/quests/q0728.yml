@@ -1,0 +1,31 @@
+id: q0728
+title: "Verdant Tribute 728"
+description: "Quartermasters have shortlisted Shulker shell. Fulfil 48 before the season turns. What waits ahead has ended better adventurers than most. The book files this one carefully. Few have signed this page; fewer still twice. The ink here is darker than usual"
+type: COLLECTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0727
+objectives:
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 238 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 238
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 128 phantom membrane"
+    type: COLLECT_ITEM
+    target: PHANTOM_MEMBRANE
+    amount: 128
+rewards:
+  items:
+    ENDER_PEARL: 14
+    SHULKER_SHELL: 7
+  experience: 60329
+  money: 109639

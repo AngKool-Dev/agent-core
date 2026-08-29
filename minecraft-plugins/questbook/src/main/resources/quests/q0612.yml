@@ -1,0 +1,35 @@
+id: q0612
+title: "Void Provision 612"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. This is where the story stops being kind. The paper smells faintly of ozone"
+type: COLLECTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0611
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 206 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 206
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    ECHO_SHARD: 12
+    NETHERITE_INGOT: 6
+  experience: 49175
+  money: 86737
+  rare_items:
+    - material: HEART_OF_THE_SEA
+      amount: 1
+      chance: 2

@@ -1,0 +1,35 @@
+id: q0807
+title: "Crimson Masonry 807"
+description: "Blueprints call for 243 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0806
+objectives:
+  - description: "Place 243 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 243
+  - description: "Place 246 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 246
+  - description: "Place 249 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 249
+  - description: "Place 252 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 252
+rewards:
+  items:
+    ENDER_PEARL: 15
+    SHULKER_SHELL: 7
+  experience: 68112
+  money: 125999
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 10

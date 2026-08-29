@@ -1,0 +1,23 @@
+id: q0014
+title: "Ember Reckoning 014"
+description: "There is a price on Zombified_Piglins this season. Collect on 21 of them; nobody asks how. Every legend starts with errands like this one"
+type: COMBAT
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0013
+objectives:
+  - description: "Slay 21 Zombified_Piglins"
+    type: KILL_MOB
+    target: ZOMBIFIED_PIGLIN
+    amount: 21
+  - description: "Slay 23 Skeletons"
+    type: KILL_MOB
+    target: SKELETON
+    amount: 23
+rewards:
+  items:
+    RAW_COPPER: 2
+    COAL: 1
+  experience: 576
+  money: 528

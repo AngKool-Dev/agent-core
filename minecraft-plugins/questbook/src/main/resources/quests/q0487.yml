@@ -1,0 +1,31 @@
+id: q0487
+title: "Hollow Masonry 487"
+description: "Blueprints call for 150 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0486
+objectives:
+  - description: "Place 150 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 150
+  - description: "Place 153 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 153
+  - description: "Place 156 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 156
+  - description: "Place 159 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 159
+rewards:
+  items:
+    NETHERITE_INGOT: 10
+    NETHERITE_SCRAP: 5
+  experience: 37574
+  money: 63717

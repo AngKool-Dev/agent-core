@@ -1,0 +1,23 @@
+id: q0018
+title: "Frost Crusade 018"
+description: "The watchtower logs name Strays as this month's threat. Answer with 27 confirmed kills. Every legend starts with errands like this one"
+type: COMBAT
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0017
+objectives:
+  - description: "Slay 27 Strays"
+    type: KILL_MOB
+    target: STRAY
+    amount: 27
+  - description: "Slay 29 Witches"
+    type: KILL_MOB
+    target: WITCH
+    amount: 29
+rewards:
+  items:
+    RAW_IRON: 2
+    RAW_COPPER: 1
+  experience: 775
+  money: 742

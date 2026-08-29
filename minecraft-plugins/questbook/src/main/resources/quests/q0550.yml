@@ -1,0 +1,31 @@
+id: q0550
+title: "Ashen Reckoning 550"
+description: "Ghasts have been pushing past the borders after dark. Thin their ranks by 78 before the trails go cold. What waits ahead has ended better adventurers than most"
+type: COMBAT
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0549
+objectives:
+  - description: "Slay 78 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 78
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 82 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 82
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+rewards:
+  items:
+    ECHO_SHARD: 11
+    NETHERITE_INGOT: 5
+  experience: 43362
+  money: 75089

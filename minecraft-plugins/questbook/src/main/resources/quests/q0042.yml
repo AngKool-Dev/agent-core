@@ -1,0 +1,23 @@
+id: q0042
+title: "Verdant Vigil 042"
+description: "Scouts report Drowned denning too close to the roads. Cull 60 and the caravans will breathe easier. Steady hands today, steady name tomorrow"
+type: COMBAT
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0041
+objectives:
+  - description: "Slay 60 Drowned"
+    type: KILL_MOB
+    target: DROWNED
+    amount: 60
+  - description: "Slay 62 Pillagers"
+    type: KILL_MOB
+    target: PILLAGER
+    amount: 62
+rewards:
+  items:
+    STRING: 2
+    RAW_IRON: 1
+  experience: 2099
+  money: 2330

@@ -1,0 +1,31 @@
+id: q0435
+title: "Storm Cornerstone 435"
+description: "The frontier grows one wall at a time. Lay 134 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0434
+objectives:
+  - description: "Place 134 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 134
+  - description: "Place 137 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 137
+  - description: "Place 140 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 140
+  - description: "Place 143 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 143
+rewards:
+  items:
+    NETHERITE_SCRAP: 9
+    NETHERITE_SCRAP: 4
+  experience: 32895
+  money: 54708

@@ -1,0 +1,31 @@
+id: q0799
+title: "Crimson Cornerstone 799"
+description: "Blueprints call for 241 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0798
+objectives:
+  - description: "Place 241 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 241
+  - description: "Place 244 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 244
+  - description: "Place 247 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 247
+  - description: "Place 250 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 250
+rewards:
+  items:
+    SHULKER_SHELL: 15
+    PHANTOM_MEMBRANE: 7
+  experience: 67317
+  money: 124316

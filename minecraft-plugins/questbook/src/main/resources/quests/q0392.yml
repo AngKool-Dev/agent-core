@@ -1,0 +1,27 @@
+id: q0392
+title: "Obsidian Provision 392"
+description: "Stores run thin and patience thinner. 311 Magma cream, weighed honest, closes this entry. Careful - the world pushes back harder the further you go"
+type: COLLECTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0391
+objectives:
+  - description: "Collect 311 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 311
+  - description: "Collect 315 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 315
+  - description: "Collect 319 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 319
+rewards:
+  items:
+    BLAZE_ROD: 8
+    BLAZE_ROD: 4
+  experience: 29100
+  money: 47536

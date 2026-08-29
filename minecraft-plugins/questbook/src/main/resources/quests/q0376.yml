@@ -1,0 +1,27 @@
+id: q0376
+title: "Verdant Ledger 376"
+description: "The smiths trade favours for Amethyst shard. 294 units buys goodwill and coin alike. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0375
+objectives:
+  - description: "Collect 294 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 294
+  - description: "Collect 298 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 298
+  - description: "Collect 302 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 302
+rewards:
+  items:
+    RAW_GOLD: 8
+    RAW_GOLD: 4
+  experience: 27707
+  money: 44936

@@ -1,0 +1,31 @@
+id: q0739
+title: "Obsidian Cornerstone 739"
+description: "The frontier grows one wall at a time. Lay 223 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0738
+objectives:
+  - description: "Place 223 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 223
+  - description: "Place 226 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 226
+  - description: "Place 229 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 229
+  - description: "Place 232 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 232
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 14
+    NAUTILUS_SHELL: 7
+  experience: 61404
+  money: 111882

@@ -1,0 +1,31 @@
+id: q0800
+title: "Crimson Harvest 800"
+description: "Half legend, half paperwork - such is progress. Diamond never sits idle in capable hands. Deliver 257 and the ledger stays balanced. Few pages turn past this point. Fewer still turn back"
+type: COLLECTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0799
+objectives:
+  - description: "Collect 257 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 257
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 269 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 269
+rewards:
+  items:
+    ENDER_EYE: 15
+    ENDER_PEARL: 7
+  experience: 67417
+  money: 124526

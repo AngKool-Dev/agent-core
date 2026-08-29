@@ -1,0 +1,27 @@
+id: q0164
+title: "Radiant Harvest 164"
+description: "Someone upstream wants Magma cream by the crate. See that 72 reach the counting table. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 4
+repeatable: false
+difficulty: HARD
+required_quest: q0163
+objectives:
+  - description: "Collect 72 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 72
+  - description: "Collect 76 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 76
+  - description: "Collect 80 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 80
+rewards:
+  items:
+    GOLD_INGOT: 4
+    IRON_INGOT: 2
+  experience: 10431
+  money: 14659

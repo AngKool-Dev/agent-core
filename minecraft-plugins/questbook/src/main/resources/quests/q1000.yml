@@ -1,0 +1,32 @@
+id: q1000
+title: "Lunar Harvest 1000"
+description: "The last page. The Dragon knows your name now, and it is afraid. Netherite ingot never sits idle in capable hands. Deliver 32 and the ledger stays balanced"
+type: COLLECTION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0999
+requires_dragon_killed: true
+objectives:
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 6 nether star"
+    type: COLLECT_ITEM
+    target: NETHER_STAR
+    amount: 6
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 64 ender eye"
+    type: COLLECT_ITEM
+    target: ENDER_EYE
+    amount: 64
+rewards:
+  items:
+    ENDER_EYE: 18
+    ENDER_EYE: 9
+  experience: 87684
+  money: 168302

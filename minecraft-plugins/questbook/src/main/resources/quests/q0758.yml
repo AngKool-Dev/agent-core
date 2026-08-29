@@ -1,0 +1,31 @@
+id: q0758
+title: "Gilded Crusade 758"
+description: "The watchtower logs name Shulkers as this month's threat. Answer with 107 confirmed kills. Few pages turn past this point. Fewer still turn back"
+type: COMBAT
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0757
+objectives:
+  - description: "Slay 107 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 107
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+rewards:
+  items:
+    ENDER_EYE: 14
+    ENDER_PEARL: 7
+  experience: 63268
+  money: 115782

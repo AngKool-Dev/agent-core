@@ -1,0 +1,27 @@
+id: q0265
+title: "Iron Horizon 265"
+description: "Cartographers pay for certainty. Set eyes on the Meadow and return to draw it true. The road steepens; so do the rewards. Someone crossed out a name at the bottom. The spine creaks as if the book itself hesitates"
+type: EXPLORATION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0264
+objectives:
+  - description: "Travel to the Meadow biome"
+    type: VISIT_BIOME
+    target: MEADOW
+    amount: 1
+  - description: "Locate a trial chambers"
+    type: FIND_STRUCTURE
+    target: trial_chambers
+    amount: 1
+  - description: "Travel to the Windswept Hills biome"
+    type: VISIT_BIOME
+    target: WINDSWEPT_HILLS
+    amount: 1
+rewards:
+  items:
+    OBSIDIAN: 6
+    QUARTZ: 3
+  experience: 18352
+  money: 28020

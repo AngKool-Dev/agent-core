@@ -1,0 +1,27 @@
+id: q0288
+title: "Void Tribute 288"
+description: "Quartermasters have shortlisted Iron ingot. Fulfil 202 before the season turns. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0287
+objectives:
+  - description: "Collect 202 iron ingot"
+    type: COLLECT_ITEM
+    target: IRON_INGOT
+    amount: 202
+  - description: "Collect 206 gold ingot"
+    type: COLLECT_ITEM
+    target: GOLD_INGOT
+    amount: 206
+  - description: "Collect 210 redstone"
+    type: COLLECT_ITEM
+    target: REDSTONE
+    amount: 210
+rewards:
+  items:
+    BLAZE_ROD: 6
+    MAGMA_CREAM: 3
+  experience: 20241
+  money: 31352

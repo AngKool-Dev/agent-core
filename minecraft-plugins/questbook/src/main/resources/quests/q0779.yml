@@ -1,0 +1,31 @@
+id: q0779
+title: "Storm Cornerstone 779"
+description: "The frontier grows one wall at a time. Lay 235 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0778
+objectives:
+  - description: "Place 235 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 235
+  - description: "Place 238 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 238
+  - description: "Place 241 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 241
+  - description: "Place 244 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 244
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 14
+    NAUTILUS_SHELL: 7
+  experience: 65337
+  money: 120134

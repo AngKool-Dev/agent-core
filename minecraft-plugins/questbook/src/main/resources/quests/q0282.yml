@@ -1,0 +1,27 @@
+id: q0282
+title: "Void Vigil 282"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. By now, quitting would cost more than continuing"
+type: COMBAT
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0281
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 88 Blazes"
+    type: KILL_MOB
+    target: BLAZE
+    amount: 88
+  - description: "Slay 90 Endermen"
+    type: KILL_MOB
+    target: ENDERMAN
+    amount: 90
+rewards:
+  items:
+    OBSIDIAN: 6
+    QUARTZ: 3
+  experience: 19746
+  money: 30473

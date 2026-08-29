@@ -1,0 +1,27 @@
+id: q0106
+title: "Abyssal Hunt 106"
+description: "Every Phantom taken is a traveller spared. Make it 18, and make it permanent. By now, quitting would cost more than continuing"
+type: COMBAT
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0105
+objectives:
+  - description: "Slay 18 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 18
+  - description: "Slay 20 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 20
+  - description: "Slay 22 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 22
+rewards:
+  items:
+    REDSTONE: 3
+    REDSTONE: 1
+  experience: 6240
+  money: 8133

@@ -1,0 +1,27 @@
+id: q0292
+title: "Solar Provision 292"
+description: "Stores run thin and patience thinner. 206 Amethyst shard, weighed honest, closes this entry. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0291
+objectives:
+  - description: "Collect 206 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 206
+  - description: "Collect 210 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 210
+  - description: "Collect 214 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 214
+rewards:
+  items:
+    OBSIDIAN: 6
+    QUARTZ: 3
+  experience: 20573
+  money: 31941

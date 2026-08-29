@@ -1,0 +1,35 @@
+id: q0843
+title: "Radiant Foundation 843"
+description: "The frontier grows one wall at a time. Lay 254 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0842
+objectives:
+  - description: "Place 254 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 254
+  - description: "Place 257 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 257
+  - description: "Place 260 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 260
+  - description: "Place 263 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 263
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 71705
+  money: 133646
+  rare_items:
+    - material: NETHER_STAR
+      amount: 1
+      chance: 10

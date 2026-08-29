@@ -1,0 +1,32 @@
+id: q0994
+title: "Lunar Reckoning 994"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Old maps mark its ground with a single word: run. Prove them wrong 4 times over. The ink here is darker than usual. A marginal note reads: bring help"
+type: COMBAT
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0993
+requires_dragon_killed: true
+objectives:
+  - description: "Slay 4 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 4
+  - description: "Slay 4 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 4
+  - description: "Slay 4 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 4
+  - description: "Slay 4 Withers"
+    type: KILL_MOB
+    target: WITHER
+    amount: 4
+rewards:
+  items:
+    ENDER_EYE: 18
+    ENDER_EYE: 9
+  experience: 87064
+  money: 166940

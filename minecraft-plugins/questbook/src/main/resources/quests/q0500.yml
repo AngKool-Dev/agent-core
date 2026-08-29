@@ -1,0 +1,31 @@
+id: q0500
+title: "Radiant Harvest 500"
+description: "Half legend, half paperwork - such is progress. Diamond never sits idle in capable hands. Deliver 162 and the ledger stays balanced. The book keeps score, and it is watching closely now"
+type: COLLECTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0499
+objectives:
+  - description: "Collect 162 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 162
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 174 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 174
+rewards:
+  items:
+    NETHERITE_SCRAP: 10
+    DIAMOND: 5
+  experience: 38758
+  money: 66023

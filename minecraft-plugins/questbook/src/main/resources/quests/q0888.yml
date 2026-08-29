@@ -1,0 +1,35 @@
+id: q0888
+title: "Ashen Tribute 888"
+description: "Quartermasters have shortlisted Shulker shell. Fulfil 48 before the season turns. Few pages turn past this point. Fewer still turn back. The book files this one carefully. Few have signed this page; fewer still twice. The ink here is darker than usual"
+type: COLLECTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0887
+objectives:
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 289 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 289
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 128 phantom membrane"
+    type: COLLECT_ITEM
+    target: PHANTOM_MEMBRANE
+    amount: 128
+rewards:
+  items:
+    ENDER_PEARL: 16
+    SHULKER_SHELL: 8
+  experience: 76235
+  money: 143366
+  rare_items:
+    - material: ELYTRA
+      amount: 1
+      chance: 10

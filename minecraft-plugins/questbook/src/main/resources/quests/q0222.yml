@@ -1,0 +1,27 @@
+id: q0222
+title: "Torrent Vigil 222"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. The road steepens; so do the rewards. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0221
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 61 Blazes"
+    type: KILL_MOB
+    target: BLAZE
+    amount: 61
+  - description: "Slay 63 Endermen"
+    type: KILL_MOB
+    target: ENDERMAN
+    amount: 63
+rewards:
+  items:
+    AMETHYST_SHARD: 5
+    LAPIS_LAZULI: 2
+  experience: 14898
+  money: 22063

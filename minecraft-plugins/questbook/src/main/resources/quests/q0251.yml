@@ -1,0 +1,27 @@
+id: q0251
+title: "Mirage Edifice 251"
+description: "The frontier grows one wall at a time. Lay 154 quartz block and be part of it. Names that matter are earned at this depth of the book"
+type: CONSTRUCTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0250
+objectives:
+  - description: "Place 154 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 154
+  - description: "Place 157 deepslate"
+    type: PLACE_BLOCK
+    target: DEEPSLATE
+    amount: 157
+  - description: "Place 160 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 160
+rewards:
+  items:
+    AMETHYST_SHARD: 6
+    MAGMA_CREAM: 3
+  experience: 17216
+  money: 26040

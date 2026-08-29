@@ -1,0 +1,27 @@
+id: q0160
+title: "Radiant Harvest 160"
+description: "Amethyst shard never sits idle in capable hands. Deliver 67 and the ledger stays balanced. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 4
+repeatable: false
+difficulty: HARD
+required_quest: q0159
+objectives:
+  - description: "Collect 67 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 67
+  - description: "Collect 71 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 71
+  - description: "Collect 75 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 75
+rewards:
+  items:
+    LAPIS_LAZULI: 4
+    REDSTONE: 2
+  experience: 10132
+  money: 14179

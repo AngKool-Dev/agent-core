@@ -1,0 +1,31 @@
+id: q0467
+title: "Crimson Masonry 467"
+description: "The frontier grows one wall at a time. Lay 144 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0466
+objectives:
+  - description: "Place 144 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 144
+  - description: "Place 147 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 147
+  - description: "Place 150 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 150
+  - description: "Place 153 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 153
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_SCRAP: 4
+  experience: 35763
+  money: 60210

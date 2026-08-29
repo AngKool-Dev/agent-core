@@ -1,0 +1,23 @@
+id: q0012
+title: "Ember Provision 012"
+description: "Stores run thin and patience thinner. 40 Bone, weighed honest, closes this entry. Every legend starts with errands like this one"
+type: COLLECTION
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0011
+objectives:
+  - description: "Collect 40 bone"
+    type: COLLECT_ITEM
+    target: BONE
+    amount: 40
+  - description: "Collect 44 rotten flesh"
+    type: COLLECT_ITEM
+    target: ROTTEN_FLESH
+    amount: 44
+rewards:
+  items:
+    WHEAT_SEEDS: 2
+    WHEAT: 1
+  experience: 481
+  money: 429

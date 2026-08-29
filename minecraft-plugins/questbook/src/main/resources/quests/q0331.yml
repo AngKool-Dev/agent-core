@@ -1,0 +1,27 @@
+id: q0331
+title: "Thorn Edifice 331"
+description: "The frontier grows one wall at a time. Lay 232 bricks and be part of it. Names that matter are earned at this depth of the book"
+type: CONSTRUCTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0330
+objectives:
+  - description: "Place 232 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 232
+  - description: "Place 235 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 235
+  - description: "Place 238 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 238
+rewards:
+  items:
+    OBSIDIAN: 7
+    RAW_GOLD: 3
+  experience: 23845
+  money: 37831

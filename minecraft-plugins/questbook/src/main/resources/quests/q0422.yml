@@ -1,0 +1,31 @@
+id: q0422
+title: "Gilded Vigil 422"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. What waits ahead has ended better adventurers than most"
+type: COMBAT
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0421
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 63 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 63
+  - description: "Slay 65 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 65
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    DIAMOND: 9
+    DIAMOND: 4
+  experience: 31741
+  money: 52512

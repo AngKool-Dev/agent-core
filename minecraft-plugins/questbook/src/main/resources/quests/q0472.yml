@@ -1,0 +1,31 @@
+id: q0472
+title: "Crimson Provision 472"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. What waits ahead has ended better adventurers than most"
+type: COLLECTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0471
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 162 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 162
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    NETHERITE_SCRAP: 9
+    DIAMOND: 4
+  experience: 36215
+  money: 61081

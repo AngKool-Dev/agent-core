@@ -1,0 +1,23 @@
+id: q0006
+title: "Ember Hunt 006"
+description: "Every Spider taken is a traveller spared. Make it 10, and make it permanent. Small steps still count on this road"
+type: COMBAT
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0005
+objectives:
+  - description: "Slay 10 Spiders"
+    type: KILL_MOB
+    target: SPIDER
+    amount: 10
+  - description: "Slay 12 Husks"
+    type: KILL_MOB
+    target: HUSK
+    amount: 12
+rewards:
+  items:
+    WHEAT_SEEDS: 2
+    WHEAT_SEEDS: 1
+  experience: 213
+  money: 168

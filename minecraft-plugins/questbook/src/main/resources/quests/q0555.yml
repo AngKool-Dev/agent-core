@@ -1,0 +1,31 @@
+id: q0555
+title: "Ashen Cornerstone 555"
+description: "The frontier grows one wall at a time. Lay 169 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0554
+objectives:
+  - description: "Place 169 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 169
+  - description: "Place 172 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 172
+  - description: "Place 175 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 175
+  - description: "Place 178 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 178
+rewards:
+  items:
+    ECHO_SHARD: 11
+    NETHERITE_INGOT: 5
+  experience: 43826
+  money: 76012

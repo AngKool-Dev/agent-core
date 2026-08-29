@@ -1,0 +1,31 @@
+id: q0734
+title: "Obsidian Reckoning 734"
+description: "There is a price on Breezes this season. Collect on 60 of them; nobody asks how. What waits ahead has ended better adventurers than most. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0733
+objectives:
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 105 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 105
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 14
+    NAUTILUS_SHELL: 7
+  experience: 60915
+  money: 110861

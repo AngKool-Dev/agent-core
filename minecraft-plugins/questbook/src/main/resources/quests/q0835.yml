@@ -1,0 +1,31 @@
+id: q0835
+title: "Radiant Cornerstone 835"
+description: "The frontier grows one wall at a time. Lay 251 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0834
+objectives:
+  - description: "Place 251 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 251
+  - description: "Place 254 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 254
+  - description: "Place 257 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 257
+  - description: "Place 260 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 260
+rewards:
+  items:
+    ENDER_EYE: 15
+    ENDER_PEARL: 7
+  experience: 70904
+  money: 131937

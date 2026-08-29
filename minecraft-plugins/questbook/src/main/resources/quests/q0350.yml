@@ -1,0 +1,27 @@
+id: q0350
+title: "Ember Reckoning 350"
+description: "Endermen have been pushing past the borders after dark. Thin their ranks by 117 before the trails go cold. Careful - the world pushes back harder the further you go"
+type: COMBAT
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0349
+objectives:
+  - description: "Slay 117 Endermen"
+    type: KILL_MOB
+    target: ENDERMAN
+    amount: 117
+  - description: "Slay 119 Vindicators"
+    type: KILL_MOB
+    target: VINDICATOR
+    amount: 119
+  - description: "Slay 121 Guardians"
+    type: KILL_MOB
+    target: GUARDIAN
+    amount: 121
+rewards:
+  items:
+    DIAMOND: 7
+    BLAZE_ROD: 3
+  experience: 25465
+  money: 40792

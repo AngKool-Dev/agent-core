@@ -1,0 +1,27 @@
+id: q0391
+title: "Obsidian Edifice 391"
+description: "Blueprints call for 291 bricks. The rest is sweat and stubbornness. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0390
+objectives:
+  - description: "Place 291 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 291
+  - description: "Place 294 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 294
+  - description: "Place 297 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 297
+rewards:
+  items:
+    RAW_GOLD: 8
+    RAW_GOLD: 4
+  experience: 29013
+  money: 47372

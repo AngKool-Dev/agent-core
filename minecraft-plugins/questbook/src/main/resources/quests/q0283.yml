@@ -1,0 +1,27 @@
+id: q0283
+title: "Void Foundation 283"
+description: "The frontier grows one wall at a time. Lay 185 bricks and be part of it. By now, quitting would cost more than continuing"
+type: CONSTRUCTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0282
+objectives:
+  - description: "Place 185 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 185
+  - description: "Place 188 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 188
+  - description: "Place 191 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 191
+rewards:
+  items:
+    BLAZE_ROD: 6
+    MAGMA_CREAM: 3
+  experience: 19828
+  money: 30619

@@ -1,0 +1,95 @@
+# ============================================
+# Sentinel Audit - Configuration
+# ============================================
+
+# Enable debug logging
+debug: false
+
+# Worlds where auditing is disabled
+disabled-worlds:
+  - "world_nether"
+  - "world_the_end"
+
+# Audit action types that are disabled (see AuditAction enum)
+disabled-actions: []
+
+# ============================================
+# License Settings
+# ============================================
+# Paste the license key you received at purchase. The license is verified
+# against the seller's server and bound to this server's IP on first use.
+# In release builds (Maven profile "release") the plugin refuses to start
+# without a valid license; the server URL and public key are compiled in
+# and cannot be changed from config.
+license:
+  key: ""
+  # How often (minutes) the license is re-verified so a revoked or
+  # IP-mismatched license is deactivated quickly.
+  check-interval-minutes: 60
+
+# ============================================
+# Database Settings
+# ============================================
+database:
+  # Supported types: SQLITE, POSTGRESQL
+  type: SQLITE
+
+  # PostgreSQL connection settings (ignored for SQLITE)
+  host: localhost
+  port: 5432
+  database: sentinel
+  username: sentinel
+  password: ""
+
+  # Connection pool settings
+  pool-size: 10
+  connection-timeout-ms: 30000
+  max-lifetime-ms: 1800000
+
+# ============================================
+# Audit Logging Settings
+# ============================================
+audit:
+  enabled: true
+  # Number of events to batch per database write
+  batch-size: 100
+  # How often to flush queued events to the database (ms)
+  flush-interval-ms: 5000
+  # Maximum number of queued events before dropping
+  max-queue-size: 10000
+
+  # Event categories
+  log-inventory: true
+  log-chat: true
+  log-commands: true
+
+# ============================================
+# Cache Settings
+# ============================================
+cache:
+  max-entries: 10000
+  expire-after-write-minutes: 30
+  expire-after-access-minutes: 15
+  async-persistence: true
+
+# ============================================
+# Scheduler Settings
+# ============================================
+scheduler:
+  purge:
+    enabled: true
+    interval-hours: 24
+    older-than-days: 30
+  snapshot:
+    enabled: false
+    interval-hours: 24
+
+# ============================================
+# Rollback Settings
+# ============================================
+rollback:
+  enabled: true
+  max-blocks-per-operation: 50000
+  restore-inventories: true
+  restore-tile-entities: true
+  notify-players: true

@@ -1,0 +1,23 @@
+id: q0052
+title: "Obsidian Provision 052"
+description: "Stores run thin and patience thinner. 167 Wheat, weighed honest, closes this entry. Small steps still count on this road"
+type: COLLECTION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0051
+objectives:
+  - description: "Collect 167 wheat"
+    type: COLLECT_ITEM
+    target: WHEAT
+    amount: 167
+  - description: "Collect 171 wheat seeds"
+    type: COLLECT_ITEM
+    target: WHEAT_SEEDS
+    amount: 171
+rewards:
+  items:
+    BONE: 2
+    STRING: 1
+  experience: 2699
+  money: 3109

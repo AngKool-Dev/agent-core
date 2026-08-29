@@ -1,0 +1,27 @@
+id: q0382
+title: "Verdant Vigil 382"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. Names that matter are earned at this depth of the book. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0381
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 133 Blazes"
+    type: KILL_MOB
+    target: BLAZE
+    amount: 133
+  - description: "Slay 135 Endermen"
+    type: KILL_MOB
+    target: ENDERMAN
+    amount: 135
+rewards:
+  items:
+    RAW_GOLD: 8
+    RAW_GOLD: 4
+  experience: 28228
+  money: 45906

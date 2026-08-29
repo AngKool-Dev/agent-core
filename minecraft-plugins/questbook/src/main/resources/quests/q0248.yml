@@ -1,0 +1,27 @@
+id: q0248
+title: "Mirage Tribute 248"
+description: "Quartermasters have shortlisted Magma cream. Fulfil 160 before the season turns. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0247
+objectives:
+  - description: "Collect 160 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 160
+  - description: "Collect 164 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 164
+  - description: "Collect 168 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 168
+rewards:
+  items:
+    OBSIDIAN: 6
+    QUARTZ: 3
+  experience: 16974
+  money: 25621

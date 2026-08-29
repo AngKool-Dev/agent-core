@@ -1,0 +1,31 @@
+id: q0407
+title: "Obsidian Masonry 407"
+description: "Blueprints call for 126 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0406
+objectives:
+  - description: "Place 126 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 126
+  - description: "Place 129 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 129
+  - description: "Place 132 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 132
+  - description: "Place 135 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 135
+rewards:
+  items:
+    DIAMOND: 8
+    DIAMOND: 4
+  experience: 30416
+  money: 50008

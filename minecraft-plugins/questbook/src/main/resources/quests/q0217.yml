@@ -1,0 +1,27 @@
+id: q0217
+title: "Ashen Compass 217"
+description: "Cartographers pay for certainty. Set eyes on the Grove and return to draw it true. Careful - the world pushes back harder the further you go"
+type: EXPLORATION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0216
+objectives:
+  - description: "Travel to the Grove biome"
+    type: VISIT_BIOME
+    target: GROVE
+    amount: 1
+  - description: "Locate a swamp hut"
+    type: FIND_STRUCTURE
+    target: swamp_hut
+    amount: 1
+  - description: "Travel to the Jungle biome"
+    type: VISIT_BIOME
+    target: JUNGLE
+    amount: 1
+rewards:
+  items:
+    AMETHYST_SHARD: 5
+    LAPIS_LAZULI: 2
+  experience: 14504
+  money: 21394

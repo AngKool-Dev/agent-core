@@ -1,0 +1,31 @@
+id: q0510
+title: "Shattered Reckoning 510"
+description: "Ghasts have been pushing past the borders after dark. Thin their ranks by 73 before the trails go cold. What waits ahead has ended better adventurers than most"
+type: COMBAT
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0509
+objectives:
+  - description: "Slay 73 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 73
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 77 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 77
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+rewards:
+  items:
+    ECHO_SHARD: 10
+    NETHERITE_INGOT: 5
+  experience: 39672
+  money: 67812

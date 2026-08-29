@@ -1,0 +1,31 @@
+id: q0608
+title: "Iron Tribute 608"
+description: "Quartermasters have shortlisted Shulker shell. Fulfil 48 before the season turns. This is where the story stops being kind. The book files this one carefully"
+type: COLLECTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0607
+objectives:
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 200 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 200
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 128 phantom membrane"
+    type: COLLECT_ITEM
+    target: PHANTOM_MEMBRANE
+    amount: 128
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 12
+    NAUTILUS_SHELL: 6
+  experience: 48796
+  money: 85972

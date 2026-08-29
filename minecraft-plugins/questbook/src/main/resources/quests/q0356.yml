@@ -1,0 +1,27 @@
+id: q0356
+title: "Ember Ledger 356"
+description: "The smiths trade favours for Magma cream. 273 units buys goodwill and coin alike. The road steepens; so do the rewards"
+type: COLLECTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0355
+objectives:
+  - description: "Collect 273 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 273
+  - description: "Collect 277 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 277
+  - description: "Collect 281 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 281
+rewards:
+  items:
+    BLAZE_ROD: 7
+    MAGMA_CREAM: 3
+  experience: 25980
+  money: 41739

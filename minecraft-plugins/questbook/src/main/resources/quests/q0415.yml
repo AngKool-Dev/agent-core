@@ -1,0 +1,31 @@
+id: q0415
+title: "Gilded Cornerstone 415"
+description: "Blueprints call for 129 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0414
+objectives:
+  - description: "Place 129 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 129
+  - description: "Place 132 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 132
+  - description: "Place 135 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 135
+  - description: "Place 138 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 138
+rewards:
+  items:
+    NETHERITE_INGOT: 8
+    NETHERITE_INGOT: 4
+  experience: 31121
+  money: 51340

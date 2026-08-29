@@ -1,0 +1,31 @@
+id: q0571
+title: "Torrent Edifice 571"
+description: "The frontier grows one wall at a time. Lay 174 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0570
+objectives:
+  - description: "Place 174 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 174
+  - description: "Place 177 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 177
+  - description: "Place 180 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 180
+  - description: "Place 183 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 183
+rewards:
+  items:
+    NETHERITE_SCRAP: 11
+    PHANTOM_MEMBRANE: 5
+  experience: 45318
+  money: 78985

@@ -1,0 +1,10 @@
+name = "license"
+main = "license-server/cloudflare/worker.js"
+compatibility_date = "2024-11-01"
+
+[observability]
+enabled = true
+
+[[kv_namespaces]]
+binding = "LICENSE"
+id = "fc50360dfad7490f961e13ce177ac94e"

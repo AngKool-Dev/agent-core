@@ -1,0 +1,35 @@
+id: q0879
+title: "Eternal Cornerstone 879"
+description: "Blueprints call for 264 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0878
+objectives:
+  - description: "Place 264 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 264
+  - description: "Place 267 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 267
+  - description: "Place 270 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 270
+  - description: "Place 273 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 273
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 75325
+  money: 141408
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 10

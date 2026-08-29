@@ -1,0 +1,35 @@
+id: q0891
+title: "Ashen Edifice 891"
+description: "The frontier grows one wall at a time. Lay 269 blackstone and be part of it. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0890
+objectives:
+  - description: "Place 269 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 269
+  - description: "Place 272 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 272
+  - description: "Place 275 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 275
+  - description: "Place 278 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 278
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 76538
+  money: 144021
+  rare_items:
+    - material: NETHER_STAR
+      amount: 1
+      chance: 2

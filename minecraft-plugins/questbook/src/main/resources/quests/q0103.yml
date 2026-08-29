@@ -1,0 +1,27 @@
+id: q0103
+title: "Abyssal Foundation 103"
+description: "Blueprints call for 37 bricks. The rest is sweat and stubbornness. By now, quitting would cost more than continuing"
+type: CONSTRUCTION
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0102
+objectives:
+  - description: "Place 37 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 37
+  - description: "Place 40 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 40
+  - description: "Place 43 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 43
+rewards:
+  items:
+    REDSTONE: 3
+    REDSTONE: 1
+  experience: 6033
+  money: 7823

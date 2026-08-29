@@ -1,0 +1,31 @@
+id: q0532
+title: "Eternal Provision 532"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. Few pages turn past this point. Fewer still turn back. The paper smells faintly of ozone"
+type: COLLECTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0531
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 180 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 180
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    NETHERITE_INGOT: 10
+    NETHERITE_SCRAP: 5
+  experience: 41695
+  money: 71791

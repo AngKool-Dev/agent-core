@@ -1,0 +1,31 @@
+id: q0479
+title: "Hollow Cornerstone 479"
+description: "Blueprints call for 147 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0478
+objectives:
+  - description: "Place 147 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 147
+  - description: "Place 150 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 150
+  - description: "Place 153 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 153
+  - description: "Place 156 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 156
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_SCRAP: 4
+  experience: 36848
+  money: 62308

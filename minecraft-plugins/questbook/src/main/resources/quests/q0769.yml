@@ -1,0 +1,31 @@
+id: q0769
+title: "Storm Horizon 769"
+description: "Cartographers pay for certainty. Set eyes on the Old Growth Taiga and return to draw it true. The book keeps score, and it is watching closely now. Someone crossed out a name at the bottom. The spine creaks as if the book itself hesitates. This entry is written in a hurried hand. The book files this one carefully. Few have signed this page; fewer still twice"
+type: EXPLORATION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0768
+objectives:
+  - description: "Travel to the Old Growth Taiga biome"
+    type: VISIT_BIOME
+    target: OLD_GROWTH_TAIGA
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Bamboo Jungle biome"
+    type: VISIT_BIOME
+    target: BAMBOO_JUNGLE
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 14
+    NAUTILUS_SHELL: 7
+  experience: 64350
+  money: 118057

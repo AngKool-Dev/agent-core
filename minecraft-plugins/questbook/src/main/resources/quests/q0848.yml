@@ -1,0 +1,31 @@
+id: q0848
+title: "Radiant Tribute 848"
+description: "Quartermasters have shortlisted Shulker shell. Fulfil 48 before the season turns. The book keeps score, and it is watching closely now. The book files this one carefully. Few have signed this page; fewer still twice. The ink here is darker than usual"
+type: COLLECTION
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0847
+objectives:
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 276 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 276
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 128 phantom membrane"
+    type: COLLECT_ITEM
+    target: PHANTOM_MEMBRANE
+    amount: 128
+rewards:
+  items:
+    ENDER_PEARL: 16
+    SHULKER_SHELL: 8
+  experience: 72206
+  money: 134718

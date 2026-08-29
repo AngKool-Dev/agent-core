@@ -1,0 +1,27 @@
+id: q0339
+title: "Thorn Cornerstone 339"
+description: "The frontier grows one wall at a time. Lay 240 waxed copper block and be part of it. Names that matter are earned at this depth of the book"
+type: CONSTRUCTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0338
+objectives:
+  - description: "Place 240 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 240
+  - description: "Place 243 polished deepslate"
+    type: PLACE_BLOCK
+    target: POLISHED_DEEPSLATE
+    amount: 243
+  - description: "Place 246 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 246
+rewards:
+  items:
+    MAGMA_CREAM: 7
+    OBSIDIAN: 3
+  experience: 24525
+  money: 39071

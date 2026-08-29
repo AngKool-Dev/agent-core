@@ -1,0 +1,27 @@
+id: q0284
+title: "Void Harvest 284"
+description: "Someone upstream wants Magma cream by the crate. See that 198 reach the counting table. By now, quitting would cost more than continuing"
+type: COLLECTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0283
+objectives:
+  - description: "Collect 198 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 198
+  - description: "Collect 202 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 202
+  - description: "Collect 206 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 206
+rewards:
+  items:
+    QUARTZ: 6
+    PRISMARINE_SHARD: 3
+  experience: 19911
+  money: 30765

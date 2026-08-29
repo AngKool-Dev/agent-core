@@ -1,0 +1,35 @@
+id: q0759
+title: "Gilded Cornerstone 759"
+description: "Blueprints call for 229 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0758
+objectives:
+  - description: "Place 229 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 229
+  - description: "Place 232 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 232
+  - description: "Place 235 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 235
+  - description: "Place 238 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 238
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 14
+    NAUTILUS_SHELL: 7
+  experience: 63366
+  money: 115989
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 5

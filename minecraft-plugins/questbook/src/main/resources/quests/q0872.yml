@@ -1,0 +1,31 @@
+id: q0872
+title: "Eternal Provision 872"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. This is where the story stops being kind. The book files this one carefully. Few have signed this page; fewer still twice"
+type: COLLECTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0871
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 287 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 287
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    ENDER_PEARL: 16
+    SHULKER_SHELL: 8
+  experience: 74619
+  money: 139890

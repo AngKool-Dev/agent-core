@@ -1,0 +1,27 @@
+id: q0308
+title: "Lunar Tribute 308"
+description: "Quartermasters have shortlisted Magma cream. Fulfil 223 before the season turns. The road steepens; so do the rewards"
+type: COLLECTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0307
+objectives:
+  - description: "Collect 223 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 223
+  - description: "Collect 227 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 227
+  - description: "Collect 231 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 231
+rewards:
+  items:
+    DIAMOND: 7
+    BLAZE_ROD: 3
+  experience: 21906
+  money: 34326

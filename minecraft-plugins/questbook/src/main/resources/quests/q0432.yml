@@ -1,0 +1,31 @@
+id: q0432
+title: "Storm Provision 432"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. This is where the story stops being kind"
+type: COLLECTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0431
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 149 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 149
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    NETHERITE_SCRAP: 9
+    NETHERITE_SCRAP: 4
+  experience: 32628
+  money: 54199

@@ -1,0 +1,31 @@
+id: q0950
+title: "Iron Reckoning 950"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Prophecy names the Ender_Dragon as a wall between you and the last pages. Bring 4 down"
+type: COMBAT
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0949
+objectives:
+  - description: "Slay 4 Ender_Dragons"
+    type: KILL_MOB
+    target: ENDER_DRAGON
+    amount: 4
+  - description: "Slay 4 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 4
+  - description: "Slay 4 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 4
+  - description: "Slay 4 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 4
+rewards:
+  items:
+    NETHERITE_INGOT: 17
+    NETHERITE_INGOT: 8
+  experience: 82543
+  money: 157042

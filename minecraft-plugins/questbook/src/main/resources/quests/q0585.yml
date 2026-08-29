@@ -1,0 +1,31 @@
+id: q0585
+title: "Mirage Horizon 585"
+description: "Cartographers pay for certainty. Set eyes on the Jagged Peaks and return to draw it true. The book keeps score, and it is watching closely now. Someone crossed out a name at the bottom"
+type: EXPLORATION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0584
+objectives:
+  - description: "Travel to the Jagged Peaks biome"
+    type: VISIT_BIOME
+    target: JAGGED_PEAKS
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Ice Spikes biome"
+    type: VISIT_BIOME
+    target: ICE_SPIKES
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    NAUTILUS_SHELL: 11
+    ECHO_SHARD: 5
+  experience: 46630
+  money: 81611

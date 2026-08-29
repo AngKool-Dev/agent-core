@@ -1,0 +1,31 @@
+id: q0869
+title: "Eternal Horizon 869"
+description: "Trade routes bend around the Deep Dark for want of a map. Be the one who fixes that. This is where the story stops being kind. Few have signed this page; fewer still twice. The ink here is darker than usual. A marginal note reads: bring help. The paper smells faintly of ozone"
+type: EXPLORATION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0868
+objectives:
+  - description: "Travel to the Deep Dark biome"
+    type: VISIT_BIOME
+    target: DEEP_DARK
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Snowy Taiga biome"
+    type: VISIT_BIOME
+    target: SNOWY_TAIGA
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    SHULKER_SHELL: 16
+    GLOWSTONE_DUST: 8
+  experience: 74317
+  money: 139241

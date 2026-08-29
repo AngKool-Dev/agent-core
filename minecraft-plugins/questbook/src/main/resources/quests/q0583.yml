@@ -1,0 +1,31 @@
+id: q0583
+title: "Mirage Foundation 583"
+description: "Blueprints call for 178 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0582
+objectives:
+  - description: "Place 178 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 178
+  - description: "Place 181 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 181
+  - description: "Place 184 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 184
+  - description: "Place 187 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 187
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 11
+    NAUTILUS_SHELL: 5
+  experience: 46442
+  money: 81235

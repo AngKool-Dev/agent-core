@@ -1,0 +1,23 @@
+id: q0063
+title: "Obsidian Foundation 063"
+description: "Blueprints call for 190 cobblestone. The rest is sweat and stubbornness. Every legend starts with errands like this one"
+type: CONSTRUCTION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0062
+objectives:
+  - description: "Place 190 cobblestone"
+    type: PLACE_BLOCK
+    target: COBBLESTONE
+    amount: 190
+  - description: "Place 193 smooth stone"
+    type: PLACE_BLOCK
+    target: SMOOTH_STONE
+    amount: 193
+rewards:
+  items:
+    IRON_INGOT: 3
+    COPPER_INGOT: 1
+  experience: 3383
+  money: 4029

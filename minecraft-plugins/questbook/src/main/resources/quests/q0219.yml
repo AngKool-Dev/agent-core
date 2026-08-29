@@ -1,0 +1,27 @@
+id: q0219
+title: "Ashen Cornerstone 219"
+description: "The frontier grows one wall at a time. Lay 123 waxed copper block and be part of it. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0218
+objectives:
+  - description: "Place 123 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 123
+  - description: "Place 126 polished deepslate"
+    type: PLACE_BLOCK
+    target: POLISHED_DEEPSLATE
+    amount: 126
+  - description: "Place 129 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 129
+rewards:
+  items:
+    LAPIS_LAZULI: 5
+    REDSTONE: 2
+  experience: 14662
+  money: 21661

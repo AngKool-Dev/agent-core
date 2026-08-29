@@ -1,0 +1,35 @@
+id: q0720
+title: "Verdant Harvest 720"
+description: "Diamond never sits idle in capable hands. Deliver 231 and the ledger stays balanced. The book keeps score, and it is watching closely now"
+type: COLLECTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0719
+objectives:
+  - description: "Collect 231 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 231
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 243 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 243
+rewards:
+  items:
+    SHULKER_SHELL: 14
+    PHANTOM_MEMBRANE: 7
+  experience: 59549
+  money: 108016
+  rare_items:
+    - material: ELYTRA
+      amount: 1
+      chance: 2

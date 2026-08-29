@@ -1,0 +1,31 @@
+id: q0559
+title: "Ashen Cornerstone 559"
+description: "Blueprints call for 171 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0558
+objectives:
+  - description: "Place 171 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 171
+  - description: "Place 174 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 174
+  - description: "Place 177 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 177
+  - description: "Place 180 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 180
+rewards:
+  items:
+    NETHERITE_SCRAP: 11
+    DIAMOND: 5
+  experience: 44199
+  money: 76753

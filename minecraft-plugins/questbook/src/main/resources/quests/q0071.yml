@@ -1,0 +1,23 @@
+id: q0071
+title: "Gilded Edifice 071"
+description: "Blueprints call for 214 stone. The rest is sweat and stubbornness. Do it well; someone is always watching the newcomers"
+type: CONSTRUCTION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0070
+objectives:
+  - description: "Place 214 stone"
+    type: PLACE_BLOCK
+    target: STONE
+    amount: 214
+  - description: "Place 217 oak planks"
+    type: PLACE_BLOCK
+    target: OAK_PLANKS
+    amount: 217
+rewards:
+  items:
+    ROTTEN_FLESH: 3
+    CALCITE: 1
+  experience: 3894
+  money: 4734

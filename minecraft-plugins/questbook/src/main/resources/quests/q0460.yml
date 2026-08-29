@@ -1,0 +1,31 @@
+id: q0460
+title: "Crimson Harvest 460"
+description: "Diamond never sits idle in capable hands. Deliver 150 and the ledger stays balanced. The book keeps score, and it is watching closely now"
+type: COLLECTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0459
+objectives:
+  - description: "Collect 150 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 150
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 162 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 162
+rewards:
+  items:
+    NETHERITE_SCRAP: 9
+    DIAMOND: 4
+  experience: 35133
+  money: 58994

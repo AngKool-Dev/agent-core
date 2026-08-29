@@ -1,0 +1,31 @@
+id: q0482
+title: "Hollow Vigil 482"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. This is where the story stops being kind"
+type: COMBAT
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0481
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 71 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 71
+  - description: "Slay 73 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 73
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    ECHO_SHARD: 10
+    NETHERITE_INGOT: 5
+  experience: 37120
+  money: 62835

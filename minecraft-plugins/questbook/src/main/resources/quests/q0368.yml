@@ -1,0 +1,27 @@
+id: q0368
+title: "Frost Tribute 368"
+description: "Quartermasters have shortlisted Magma cream. Fulfil 286 before the season turns. By now, quitting would cost more than continuing"
+type: COLLECTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0367
+objectives:
+  - description: "Collect 286 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 286
+  - description: "Collect 290 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 290
+  - description: "Collect 294 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 294
+rewards:
+  items:
+    BLAZE_ROD: 8
+    MAGMA_CREAM: 4
+  experience: 27014
+  money: 43650

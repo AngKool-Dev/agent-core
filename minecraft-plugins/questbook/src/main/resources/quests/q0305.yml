@@ -1,0 +1,27 @@
+id: q0305
+title: "Solar Horizon 305"
+description: "Cartographers pay for certainty. Set eyes on the Meadow and return to draw it true. Careful - the world pushes back harder the further you go"
+type: EXPLORATION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0304
+objectives:
+  - description: "Travel to the Meadow biome"
+    type: VISIT_BIOME
+    target: MEADOW
+    amount: 1
+  - description: "Locate a trial chambers"
+    type: FIND_STRUCTURE
+    target: trial_chambers
+    amount: 1
+  - description: "Travel to the Windswept Hills biome"
+    type: VISIT_BIOME
+    target: WINDSWEPT_HILLS
+    amount: 1
+rewards:
+  items:
+    BLAZE_ROD: 7
+    MAGMA_CREAM: 3
+  experience: 21655
+  money: 33876

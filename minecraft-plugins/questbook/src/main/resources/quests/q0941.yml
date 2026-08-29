@@ -1,0 +1,31 @@
+id: q0941
+title: "Iron Expedition 941"
+description: "Trade routes bend around the Deep Dark for want of a map. Be the one who fixes that. The book keeps score, and it is watching closely now. Few have signed this page; fewer still twice. The ink here is darker than usual. A marginal note reads: bring help. The paper smells faintly of ozone. Someone crossed out a name at the bottom. The spine creaks as if the book itself hesitates"
+type: EXPLORATION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0940
+objectives:
+  - description: "Travel to the Deep Dark biome"
+    type: VISIT_BIOME
+    target: DEEP_DARK
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Snowy Taiga biome"
+    type: VISIT_BIOME
+    target: SNOWY_TAIGA
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    ENDER_PEARL: 17
+    ENDER_PEARL: 8
+  experience: 81622
+  money: 155037

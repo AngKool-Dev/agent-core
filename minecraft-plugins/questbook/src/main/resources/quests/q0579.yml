@@ -1,0 +1,31 @@
+id: q0579
+title: "Mirage Cornerstone 579"
+description: "The frontier grows one wall at a time. Lay 176 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0578
+objectives:
+  - description: "Place 176 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 176
+  - description: "Place 179 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 179
+  - description: "Place 182 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 182
+  - description: "Place 185 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 185
+rewards:
+  items:
+    NETHERITE_INGOT: 11
+    NETHERITE_SCRAP: 5
+  experience: 46067
+  money: 80483

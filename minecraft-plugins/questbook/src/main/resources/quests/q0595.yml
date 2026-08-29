@@ -1,0 +1,31 @@
+id: q0595
+title: "Iron Cornerstone 595"
+description: "The frontier grows one wall at a time. Lay 181 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0594
+objectives:
+  - description: "Place 181 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 181
+  - description: "Place 184 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 184
+  - description: "Place 187 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 187
+  - description: "Place 190 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 190
+rewards:
+  items:
+    NAUTILUS_SHELL: 11
+    ECHO_SHARD: 5
+  experience: 47570
+  money: 83500

@@ -1,0 +1,31 @@
+id: q0540
+title: "Eternal Harvest 540"
+description: "Diamond never sits idle in capable hands. Deliver 175 and the ledger stays balanced. The book keeps score, and it is watching closely now"
+type: COLLECTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0539
+objectives:
+  - description: "Collect 175 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 175
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 187 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 187
+rewards:
+  items:
+    ECHO_SHARD: 11
+    NETHERITE_INGOT: 5
+  experience: 42435
+  money: 73252

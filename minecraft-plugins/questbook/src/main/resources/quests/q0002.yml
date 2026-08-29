@@ -1,0 +1,23 @@
+id: q0002
+title: "Ember Vigil 002"
+description: "Scouts report Drowned denning too close to the roads. Cull 5 and the caravans will breathe easier. Small steps still count on this road"
+type: COMBAT
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0001
+objectives:
+  - description: "Slay 5 Drowned"
+    type: KILL_MOB
+    target: DROWNED
+    amount: 5
+  - description: "Slay 7 Pillagers"
+    type: KILL_MOB
+    target: PILLAGER
+    amount: 7
+rewards:
+  items:
+    WHEAT: 2
+    WHEAT: 1
+  experience: 58
+  money: 38

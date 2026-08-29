@@ -1,0 +1,31 @@
+id: q0862
+title: "Shattered Vigil 862"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. What waits ahead has ended better adventurers than most. The spine creaks as if the book itself hesitates. This entry is written in a hurried hand. The book files this one carefully"
+type: COMBAT
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0861
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+  - description: "Slay 125 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 125
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    GLOWSTONE_DUST: 16
+    ENDER_EYE: 8
+  experience: 73612
+  money: 137729

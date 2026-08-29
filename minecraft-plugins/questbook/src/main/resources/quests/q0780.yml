@@ -1,0 +1,35 @@
+id: q0780
+title: "Storm Harvest 780"
+description: "Diamond never sits idle in capable hands. Deliver 250 and the ledger stays balanced. What waits ahead has ended better adventurers than most"
+type: COLLECTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0779
+objectives:
+  - description: "Collect 250 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 250
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 262 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 262
+rewards:
+  items:
+    ENDER_PEARL: 15
+    SHULKER_SHELL: 7
+  experience: 65436
+  money: 120342
+  rare_items:
+    - material: HEART_OF_THE_SEA
+      amount: 1
+      chance: 10

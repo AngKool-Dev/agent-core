@@ -1,0 +1,27 @@
+id: q0136
+title: "Hollow Ledger 136"
+description: "The smiths trade favours for Amethyst shard. 48 units buys goodwill and coin alike. The road steepens; so do the rewards"
+type: COLLECTION
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0135
+objectives:
+  - description: "Collect 48 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 48
+  - description: "Collect 52 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 52
+  - description: "Collect 56 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 56
+rewards:
+  items:
+    GOLD_INGOT: 4
+    IRON_INGOT: 2
+  experience: 8368
+  money: 11385

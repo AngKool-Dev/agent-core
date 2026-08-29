@@ -1,0 +1,31 @@
+id: q0682
+title: "Ember Vigil 682"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. What waits ahead has ended better adventurers than most. The ink here is darker than usual. A marginal note reads: bring help. The paper smells faintly of ozone"
+type: COMBAT
+required_level: 14
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0681
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+  - description: "Slay 100 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 100
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 13
+    NAUTILUS_SHELL: 6
+  experience: 55865
+  money: 100392

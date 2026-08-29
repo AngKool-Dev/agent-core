@@ -1,0 +1,27 @@
+id: q0238
+title: "Mirage Crusade 238"
+description: "The watchtower logs name Guardians as this month's threat. Answer with 66 confirmed kills. By now, quitting would cost more than continuing"
+type: COMBAT
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0237
+objectives:
+  - description: "Slay 66 Guardians"
+    type: KILL_MOB
+    target: GUARDIAN
+    amount: 66
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 70 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 70
+rewards:
+  items:
+    OBSIDIAN: 5
+    QUARTZ: 2
+  experience: 16171
+  money: 24236

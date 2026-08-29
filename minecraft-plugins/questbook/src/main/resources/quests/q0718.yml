@@ -1,0 +1,31 @@
+id: q0718
+title: "Verdant Crusade 718"
+description: "The watchtower logs name Shulkers as this month's threat. Answer with 101 confirmed kills. The book keeps score, and it is watching closely now"
+type: COMBAT
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0717
+objectives:
+  - description: "Slay 101 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 101
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+rewards:
+  items:
+    ENDER_PEARL: 13
+    SHULKER_SHELL: 6
+  experience: 59354
+  money: 107611

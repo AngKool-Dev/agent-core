@@ -1,0 +1,27 @@
+id: q0249
+title: "Mirage Horizon 249"
+description: "Cartographers pay for certainty. Set eyes on the Badlands and return to draw it true. Names that matter are earned at this depth of the book"
+type: EXPLORATION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0248
+objectives:
+  - description: "Travel to the Badlands biome"
+    type: VISIT_BIOME
+    target: BADLANDS
+    amount: 1
+  - description: "Locate a mansion"
+    type: FIND_STRUCTURE
+    target: mansion
+    amount: 1
+  - description: "Travel to the Mangrove Swamp biome"
+    type: VISIT_BIOME
+    target: MANGROVE_SWAMP
+    amount: 1
+rewards:
+  items:
+    AMETHYST_SHARD: 6
+    LAPIS_LAZULI: 3
+  experience: 17054
+  money: 25760

@@ -1,0 +1,31 @@
+id: q0542
+title: "Eternal Vigil 542"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. The book keeps score, and it is watching closely now. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0541
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 79 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 79
+  - description: "Slay 81 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 81
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    NETHERITE_INGOT: 11
+    NETHERITE_SCRAP: 5
+  experience: 42620
+  money: 73619

@@ -1,0 +1,31 @@
+id: q0775
+title: "Storm Cornerstone 775"
+description: "Blueprints call for 234 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0774
+objectives:
+  - description: "Place 234 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 234
+  - description: "Place 237 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 237
+  - description: "Place 240 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 240
+  - description: "Place 243 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 243
+rewards:
+  items:
+    ENDER_PEARL: 14
+    SHULKER_SHELL: 7
+  experience: 64942
+  money: 119302

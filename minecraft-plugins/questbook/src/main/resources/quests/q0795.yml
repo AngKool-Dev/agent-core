@@ -1,0 +1,35 @@
+id: q0795
+title: "Abyssal Cornerstone 795"
+description: "The frontier grows one wall at a time. Lay 240 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0794
+objectives:
+  - description: "Place 240 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 240
+  - description: "Place 243 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 243
+  - description: "Place 246 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 246
+  - description: "Place 249 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 249
+rewards:
+  items:
+    ENDER_EYE: 15
+    ENDER_PEARL: 7
+  experience: 66921
+  money: 123477
+  rare_items:
+    - material: NETHER_STAR
+      amount: 1
+      chance: 5

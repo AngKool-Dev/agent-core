@@ -1,0 +1,27 @@
+id: q0362
+title: "Frost Vigil 362"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. The road steepens; so do the rewards. The ink here is darker than usual"
+type: COMBAT
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0361
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 124 Blazes"
+    type: KILL_MOB
+    target: BLAZE
+    amount: 124
+  - description: "Slay 126 Endermen"
+    type: KILL_MOB
+    target: ENDERMAN
+    amount: 126
+rewards:
+  items:
+    RAW_GOLD: 8
+    DIAMOND: 4
+  experience: 26496
+  money: 42692

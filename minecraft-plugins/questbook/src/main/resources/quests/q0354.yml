@@ -1,0 +1,27 @@
+id: q0354
+title: "Ember Reckoning 354"
+description: "There is a price on Hoglins this season. Collect on 119 of them; nobody asks how. The road steepens; so do the rewards"
+type: COMBAT
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0353
+objectives:
+  - description: "Slay 119 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 119
+  - description: "Slay 121 Witches"
+    type: KILL_MOB
+    target: WITCH
+    amount: 121
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+rewards:
+  items:
+    RAW_GOLD: 7
+    DIAMOND: 3
+  experience: 25808
+  money: 41423

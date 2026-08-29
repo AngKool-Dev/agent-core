@@ -1,0 +1,31 @@
+id: q0466
+title: "Crimson Hunt 466"
+description: "Every Piglin_Brute taken is a traveller spared. Make it 60, and make it permanent. What waits ahead has ended better adventurers than most. The ink here is darker than usual"
+type: COMBAT
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0465
+objectives:
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 73 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 73
+rewards:
+  items:
+    ECHO_SHARD: 9
+    NETHERITE_INGOT: 4
+  experience: 35673
+  money: 60036

@@ -1,0 +1,31 @@
+id: q0860
+title: "Shattered Harvest 860"
+description: "Diamond never sits idle in capable hands. Deliver 275 and the ledger stays balanced. What waits ahead has ended better adventurers than most"
+type: COLLECTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0859
+objectives:
+  - description: "Collect 275 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 275
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 287 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 287
+rewards:
+  items:
+    ENDER_PEARL: 16
+    SHULKER_SHELL: 8
+  experience: 73411
+  money: 137297

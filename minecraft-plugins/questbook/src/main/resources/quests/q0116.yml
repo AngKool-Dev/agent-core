@@ -1,0 +1,27 @@
+id: q0116
+title: "Abyssal Ledger 116"
+description: "The smiths trade favours for Magma cream. 42 units buys goodwill and coin alike. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0115
+objectives:
+  - description: "Collect 42 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 42
+  - description: "Collect 46 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 46
+  - description: "Collect 50 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 50
+rewards:
+  items:
+    IRON_INGOT: 3
+    IRON_INGOT: 1
+  experience: 6939
+  money: 9185

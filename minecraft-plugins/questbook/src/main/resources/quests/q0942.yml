@@ -1,0 +1,35 @@
+id: q0942
+title: "Iron Vigil 942"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. The book keeps score, and it is watching closely now. The spine creaks as if the book itself hesitates. This entry is written in a hurried hand"
+type: COMBAT
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0941
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+  - description: "Slay 142 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 142
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    ENDER_EYE: 17
+    ENDER_EYE: 8
+  experience: 81725
+  money: 155260
+  rare_items:
+    - material: NETHERITE_INGOT
+      amount: 1
+      chance: 10

@@ -1,0 +1,27 @@
+id: q0380
+title: "Verdant Harvest 380"
+description: "Magma cream never sits idle in capable hands. Deliver 298 and the ledger stays balanced. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0379
+objectives:
+  - description: "Collect 298 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 298
+  - description: "Collect 302 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 302
+  - description: "Collect 306 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 306
+rewards:
+  items:
+    BLAZE_ROD: 8
+    BLAZE_ROD: 4
+  experience: 28054
+  money: 45582

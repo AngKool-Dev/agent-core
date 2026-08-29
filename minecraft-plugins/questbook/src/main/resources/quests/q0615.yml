@@ -1,0 +1,35 @@
+id: q0615
+title: "Void Cornerstone 615"
+description: "Blueprints call for 187 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0614
+objectives:
+  - description: "Place 187 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 187
+  - description: "Place 190 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 190
+  - description: "Place 193 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 193
+  - description: "Place 196 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 196
+rewards:
+  items:
+    NAUTILUS_SHELL: 12
+    ECHO_SHARD: 6
+  experience: 49459
+  money: 87311
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 5

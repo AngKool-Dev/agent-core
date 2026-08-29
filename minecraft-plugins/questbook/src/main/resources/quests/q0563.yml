@@ -1,0 +1,31 @@
+id: q0563
+title: "Torrent Foundation 563"
+description: "The frontier grows one wall at a time. Lay 172 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0562
+objectives:
+  - description: "Place 172 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 172
+  - description: "Place 175 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 175
+  - description: "Place 178 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 178
+  - description: "Place 181 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 181
+rewards:
+  items:
+    NAUTILUS_SHELL: 11
+    ECHO_SHARD: 5
+  experience: 44571
+  money: 77495

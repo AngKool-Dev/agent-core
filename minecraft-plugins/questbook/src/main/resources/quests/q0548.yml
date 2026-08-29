@@ -1,0 +1,31 @@
+id: q0548
+title: "Ashen Tribute 548"
+description: "Quartermasters have shortlisted Shulker shell. Fulfil 48 before the season turns. The book keeps score, and it is watching closely now. The paper smells faintly of ozone"
+type: COLLECTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0547
+objectives:
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 181 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 181
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 128 phantom membrane"
+    type: COLLECT_ITEM
+    target: PHANTOM_MEMBRANE
+    amount: 128
+rewards:
+  items:
+    NAUTILUS_SHELL: 11
+    ECHO_SHARD: 5
+  experience: 43176
+  money: 74721

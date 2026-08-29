@@ -1,0 +1,27 @@
+id: q0138
+title: "Hollow Crusade 138"
+description: "The watchtower logs name Guardians as this month's threat. Answer with 22 confirmed kills. The road steepens; so do the rewards"
+type: COMBAT
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0137
+objectives:
+  - description: "Slay 22 Guardians"
+    type: KILL_MOB
+    target: GUARDIAN
+    amount: 22
+  - description: "Slay 24 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 24
+  - description: "Slay 26 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 26
+rewards:
+  items:
+    LAPIS_LAZULI: 4
+    REDSTONE: 2
+  experience: 8513
+  money: 11612

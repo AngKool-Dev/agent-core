@@ -1,0 +1,36 @@
+id: q0969
+title: "Solar Horizon 969"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Cartographers pay for certainty. Set eyes on the Jagged Peaks and return to draw it true"
+type: EXPLORATION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0968
+requires_dragon_killed: true
+objectives:
+  - description: "Travel to the Jagged Peaks biome"
+    type: VISIT_BIOME
+    target: JAGGED_PEAKS
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Ice Spikes biome"
+    type: VISIT_BIOME
+    target: ICE_SPIKES
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    NETHERITE_INGOT: 18
+    ENDER_EYE: 9
+  experience: 84491
+  money: 161297
+  rare_items:
+    - material: TOTEM_OF_UNDYING
+      amount: 1
+      chance: 10

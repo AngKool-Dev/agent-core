@@ -1,0 +1,31 @@
+id: q0403
+title: "Obsidian Foundation 403"
+description: "The frontier grows one wall at a time. Lay 125 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0402
+objectives:
+  - description: "Place 125 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 125
+  - description: "Place 128 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 128
+  - description: "Place 131 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 131
+  - description: "Place 134 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 134
+rewards:
+  items:
+    NETHERITE_INGOT: 8
+    NETHERITE_INGOT: 4
+  experience: 30064
+  money: 49346

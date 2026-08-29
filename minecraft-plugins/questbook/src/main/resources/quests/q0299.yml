@@ -1,0 +1,27 @@
+id: q0299
+title: "Solar Cornerstone 299"
+description: "The frontier grows one wall at a time. Lay 201 quartz block and be part of it. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0298
+objectives:
+  - description: "Place 201 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 201
+  - description: "Place 204 deepslate"
+    type: PLACE_BLOCK
+    target: DEEPSLATE
+    amount: 204
+  - description: "Place 207 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 207
+rewards:
+  items:
+    QUARTZ: 6
+    PRISMARINE_SHARD: 3
+  experience: 21155
+  money: 32979

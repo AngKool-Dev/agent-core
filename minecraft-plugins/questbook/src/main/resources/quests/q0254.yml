@@ -1,0 +1,27 @@
+id: q0254
+title: "Mirage Reckoning 254"
+description: "There is a price on Hoglins this season. Collect on 73 of them; nobody asks how. Careful - the world pushes back harder the further you go"
+type: COMBAT
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0253
+objectives:
+  - description: "Slay 73 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 73
+  - description: "Slay 75 Witches"
+    type: KILL_MOB
+    target: WITCH
+    amount: 75
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+rewards:
+  items:
+    PRISMARINE_SHARD: 6
+    AMETHYST_SHARD: 3
+  experience: 17458
+  money: 26461

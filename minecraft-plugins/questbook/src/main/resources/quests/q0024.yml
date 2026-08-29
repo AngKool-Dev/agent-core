@@ -1,0 +1,23 @@
+id: q0024
+title: "Frost Harvest 024"
+description: "Someone upstream wants Tuff by the crate. See that 78 reach the counting table. Do it well; someone is always watching the newcomers"
+type: COLLECTION
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0023
+objectives:
+  - description: "Collect 78 tuff"
+    type: COLLECT_ITEM
+    target: TUFF
+    amount: 78
+  - description: "Collect 82 wheat"
+    type: COLLECT_ITEM
+    target: WHEAT
+    amount: 82
+rewards:
+  items:
+    COAL: 2
+    WHEAT_SEEDS: 1
+  experience: 1087
+  money: 1094

@@ -1,0 +1,27 @@
+id: q0232
+title: "Torrent Provision 232"
+description: "Stores run thin and patience thinner. 143 Amethyst shard, weighed honest, closes this entry. By now, quitting would cost more than continuing"
+type: COLLECTION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0231
+objectives:
+  - description: "Collect 143 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 143
+  - description: "Collect 147 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 147
+  - description: "Collect 151 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 151
+rewards:
+  items:
+    PRISMARINE_SHARD: 5
+    AMETHYST_SHARD: 2
+  experience: 15692
+  money: 23415

@@ -1,0 +1,31 @@
+id: q0932
+title: "Mirage Provision 932"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. Few pages turn past this point. Fewer still turn back. The paper smells faintly of ozone. Someone crossed out a name at the bottom. The spine creaks as if the book itself hesitates"
+type: COLLECTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0931
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 318 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 318
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    ENDER_PEARL: 17
+    ENDER_PEARL: 8
+  experience: 80704
+  money: 153039

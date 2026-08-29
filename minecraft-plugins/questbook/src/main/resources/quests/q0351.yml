@@ -1,0 +1,27 @@
+id: q0351
+title: "Ember Edifice 351"
+description: "Blueprints call for 252 waxed copper block. The rest is sweat and stubbornness. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0350
+objectives:
+  - description: "Place 252 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 252
+  - description: "Place 255 polished deepslate"
+    type: PLACE_BLOCK
+    target: POLISHED_DEEPSLATE
+    amount: 255
+  - description: "Place 258 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 258
+rewards:
+  items:
+    DIAMOND: 7
+    BLAZE_ROD: 3
+  experience: 25551
+  money: 40950

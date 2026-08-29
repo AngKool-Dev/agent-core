@@ -1,0 +1,31 @@
+id: q0817
+title: "Hollow Compass 817"
+description: "Cartographers pay for certainty. Set eyes on the Old Growth Taiga and return to draw it true. What waits ahead has ended better adventurers than most. Someone crossed out a name at the bottom. The spine creaks as if the book itself hesitates"
+type: EXPLORATION
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0816
+objectives:
+  - description: "Travel to the Old Growth Taiga biome"
+    type: VISIT_BIOME
+    target: OLD_GROWTH_TAIGA
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Bamboo Jungle biome"
+    type: VISIT_BIOME
+    target: BAMBOO_JUNGLE
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    ENDER_PEARL: 15
+    SHULKER_SHELL: 7
+  experience: 69107
+  money: 128112

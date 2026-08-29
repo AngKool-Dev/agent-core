@@ -1,0 +1,27 @@
+id: q0346
+title: "Ember Hunt 346"
+description: "Every Phantom taken is a traveller spared. Make it 115, and make it permanent. Careful - the world pushes back harder the further you go"
+type: COMBAT
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0345
+objectives:
+  - description: "Slay 115 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 115
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 119 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 119
+rewards:
+  items:
+    OBSIDIAN: 7
+    RAW_GOLD: 3
+  experience: 25123
+  money: 40164

@@ -1,0 +1,35 @@
+id: q0600
+title: "Iron Harvest 600"
+description: "The ranks whisper your name a little louder today. Diamond never sits idle in capable hands. Deliver 194 and the ledger stays balanced. What waits ahead has ended better adventurers than most"
+type: COLLECTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0599
+objectives:
+  - description: "Collect 194 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 194
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 206 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 206
+rewards:
+  items:
+    NAUTILUS_SHELL: 12
+    ECHO_SHARD: 6
+  experience: 48041
+  money: 84449
+  rare_items:
+    - material: ELYTRA
+      amount: 1
+      chance: 10

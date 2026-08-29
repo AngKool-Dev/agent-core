@@ -1,0 +1,31 @@
+id: q0560
+title: "Ashen Harvest 560"
+description: "Diamond never sits idle in capable hands. Deliver 181 and the ledger stays balanced. What waits ahead has ended better adventurers than most"
+type: COLLECTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0559
+objectives:
+  - description: "Collect 181 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 181
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 193 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 193
+rewards:
+  items:
+    ECHO_SHARD: 11
+    NETHERITE_INGOT: 5
+  experience: 44292
+  money: 76938

@@ -1,0 +1,31 @@
+id: q0878
+title: "Eternal Crusade 878"
+description: "The watchtower logs name Shulkers as this month's threat. Answer with 123 confirmed kills. This is where the story stops being kind"
+type: COMBAT
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0877
+objectives:
+  - description: "Slay 123 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 123
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+rewards:
+  items:
+    GLOWSTONE_DUST: 16
+    ENDER_EYE: 8
+  experience: 75225
+  money: 141191

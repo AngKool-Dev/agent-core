@@ -1,0 +1,35 @@
+id: q0771
+title: "Storm Edifice 771"
+description: "The frontier grows one wall at a time. Lay 233 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0770
+objectives:
+  - description: "Place 233 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 233
+  - description: "Place 236 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 236
+  - description: "Place 239 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 239
+  - description: "Place 242 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 242
+rewards:
+  items:
+    NAUTILUS_SHELL: 14
+    ENDER_EYE: 7
+  experience: 64548
+  money: 118471
+  rare_items:
+    - material: NETHER_STAR
+      amount: 1
+      chance: 10

@@ -1,0 +1,31 @@
+id: q0481
+title: "Hollow Expedition 481"
+description: "Cartographers pay for certainty. Set eyes on the Old Growth Taiga and return to draw it true. This is where the story stops being kind. Someone crossed out a name at the bottom"
+type: EXPLORATION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0480
+objectives:
+  - description: "Travel to the Old Growth Taiga biome"
+    type: VISIT_BIOME
+    target: OLD_GROWTH_TAIGA
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Bamboo Jungle biome"
+    type: VISIT_BIOME
+    target: BAMBOO_JUNGLE
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    DIAMOND: 10
+    ECHO_SHARD: 5
+  experience: 37029
+  money: 62659

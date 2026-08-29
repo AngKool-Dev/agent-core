@@ -1,0 +1,31 @@
+id: q0695
+title: "Ember Cornerstone 695"
+description: "Blueprints call for 210 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 14
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0694
+objectives:
+  - description: "Place 210 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 210
+  - description: "Place 213 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 213
+  - description: "Place 216 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 216
+  - description: "Place 219 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 219
+rewards:
+  items:
+    SHULKER_SHELL: 13
+    PHANTOM_MEMBRANE: 6
+  experience: 57121
+  money: 102984

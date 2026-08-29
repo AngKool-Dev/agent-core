@@ -1,0 +1,23 @@
+id: q0011
+title: "Ember Edifice 011"
+description: "The frontier grows one wall at a time. Lay 37 stone and be part of it. Every legend starts with errands like this one"
+type: CONSTRUCTION
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0010
+objectives:
+  - description: "Place 37 stone"
+    type: PLACE_BLOCK
+    target: STONE
+    amount: 37
+  - description: "Place 40 oak planks"
+    type: PLACE_BLOCK
+    target: OAK_PLANKS
+    amount: 40
+rewards:
+  items:
+    COAL: 2
+    WHEAT_SEEDS: 1
+  experience: 434
+  money: 381

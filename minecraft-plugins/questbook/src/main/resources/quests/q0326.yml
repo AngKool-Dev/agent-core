@@ -1,0 +1,27 @@
+id: q0326
+title: "Thorn Hunt 326"
+description: "Every Phantom taken is a traveller spared. Make it 106, and make it permanent. By now, quitting would cost more than continuing"
+type: COMBAT
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0325
+objectives:
+  - description: "Slay 106 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 106
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 110 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 110
+rewards:
+  items:
+    OBSIDIAN: 7
+    RAW_GOLD: 3
+  experience: 23422
+  money: 37062

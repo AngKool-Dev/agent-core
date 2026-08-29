@@ -1,0 +1,35 @@
+id: q0750
+title: "Gilded Reckoning 750"
+description: "Ghasts have been pushing past the borders after dark. Thin their ranks by 105 before the trails go cold. Few pages turn past this point. Fewer still turn back"
+type: COMBAT
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0749
+objectives:
+  - description: "Slay 105 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 105
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 109 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 109
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+rewards:
+  items:
+    ENDER_PEARL: 14
+    SHULKER_SHELL: 7
+  experience: 62482
+  money: 114136
+  rare_items:
+    - material: NETHERITE_INGOT
+      amount: 1
+      chance: 5

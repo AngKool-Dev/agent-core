@@ -1,0 +1,23 @@
+id: q0060
+title: "Obsidian Harvest 060"
+description: "Raw iron never sits idle in capable hands. Deliver 193 and the ledger stays balanced. Every legend starts with errands like this one"
+type: COLLECTION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0059
+objectives:
+  - description: "Collect 193 raw iron"
+    type: COLLECT_ITEM
+    target: RAW_IRON
+    amount: 193
+  - description: "Collect 197 string"
+    type: COLLECT_ITEM
+    target: STRING
+    amount: 197
+rewards:
+  items:
+    GUNPOWDER: 3
+    ROTTEN_FLESH: 1
+  experience: 3194
+  money: 3772

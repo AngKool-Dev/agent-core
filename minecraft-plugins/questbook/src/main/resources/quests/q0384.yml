@@ -1,0 +1,27 @@
+id: q0384
+title: "Verdant Harvest 384"
+description: "Someone upstream wants Iron ingot by the crate. See that 303 reach the counting table. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0383
+objectives:
+  - description: "Collect 303 iron ingot"
+    type: COLLECT_ITEM
+    target: IRON_INGOT
+    amount: 303
+  - description: "Collect 307 gold ingot"
+    type: COLLECT_ITEM
+    target: GOLD_INGOT
+    amount: 307
+  - description: "Collect 311 redstone"
+    type: COLLECT_ITEM
+    target: REDSTONE
+    amount: 311
+rewards:
+  items:
+    DIAMOND: 8
+    DIAMOND: 4
+  experience: 28402
+  money: 46231

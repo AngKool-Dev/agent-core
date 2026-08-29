@@ -1,0 +1,31 @@
+id: q0426
+title: "Storm Hunt 426"
+description: "Every Piglin_Brute taken is a traveller spared. Make it 60, and make it permanent. What waits ahead has ended better adventurers than most"
+type: COMBAT
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0425
+objectives:
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 67 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 67
+rewards:
+  items:
+    NETHERITE_SCRAP: 9
+    NETHERITE_SCRAP: 4
+  experience: 32095
+  money: 53185

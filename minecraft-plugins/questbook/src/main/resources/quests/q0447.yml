@@ -1,0 +1,31 @@
+id: q0447
+title: "Abyssal Masonry 447"
+description: "Blueprints call for 138 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0446
+objectives:
+  - description: "Place 138 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 138
+  - description: "Place 141 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 141
+  - description: "Place 144 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 144
+  - description: "Place 147 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 147
+rewards:
+  items:
+    NETHERITE_SCRAP: 9
+    NETHERITE_SCRAP: 4
+  experience: 33966
+  money: 56755

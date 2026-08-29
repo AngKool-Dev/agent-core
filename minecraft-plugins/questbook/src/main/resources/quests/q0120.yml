@@ -1,0 +1,27 @@
+id: q0120
+title: "Crimson Harvest 120"
+description: "Iron ingot never sits idle in capable hands. Deliver 43 and the ledger stays balanced. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0119
+objectives:
+  - description: "Collect 43 iron ingot"
+    type: COLLECT_ITEM
+    target: IRON_INGOT
+    amount: 43
+  - description: "Collect 47 gold ingot"
+    type: COLLECT_ITEM
+    target: GOLD_INGOT
+    amount: 47
+  - description: "Collect 51 redstone"
+    type: COLLECT_ITEM
+    target: REDSTONE
+    amount: 51
+rewards:
+  items:
+    GOLD_INGOT: 4
+    GOLD_INGOT: 2
+  experience: 7221
+  money: 9615

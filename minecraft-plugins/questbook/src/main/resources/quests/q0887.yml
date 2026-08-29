@@ -1,0 +1,31 @@
+id: q0887
+title: "Ashen Masonry 887"
+description: "Blueprints call for 266 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0886
+objectives:
+  - description: "Place 266 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 266
+  - description: "Place 269 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 269
+  - description: "Place 272 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 272
+  - description: "Place 275 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 275
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 76134
+  money: 143148

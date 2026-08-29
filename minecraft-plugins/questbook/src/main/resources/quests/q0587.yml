@@ -1,0 +1,31 @@
+id: q0587
+title: "Mirage Masonry 587"
+description: "The frontier grows one wall at a time. Lay 179 blackstone and be part of it. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0586
+objectives:
+  - description: "Place 179 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 179
+  - description: "Place 182 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 182
+  - description: "Place 185 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 185
+  - description: "Place 188 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 188
+rewards:
+  items:
+    ECHO_SHARD: 11
+    NETHERITE_INGOT: 5
+  experience: 46817
+  money: 81988

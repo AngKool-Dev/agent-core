@@ -1,0 +1,31 @@
+id: q0791
+title: "Abyssal Edifice 791"
+description: "Blueprints call for 238 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0790
+objectives:
+  - description: "Place 238 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 238
+  - description: "Place 241 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 241
+  - description: "Place 244 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 244
+  - description: "Place 247 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 247
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 15
+    GLOWSTONE_DUST: 7
+  experience: 66524
+  money: 122639

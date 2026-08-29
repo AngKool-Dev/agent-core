@@ -1,0 +1,31 @@
+id: q0911
+title: "Torrent Edifice 911"
+description: "Blueprints call for 279 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0910
+objectives:
+  - description: "Place 279 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 279
+  - description: "Place 282 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 282
+  - description: "Place 285 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 285
+  - description: "Place 288 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 288
+rewards:
+  items:
+    ENDER_PEARL: 17
+    ENDER_PEARL: 8
+  experience: 78566
+  money: 148402

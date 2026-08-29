@@ -1,0 +1,27 @@
+id: q0104
+title: "Abyssal Harvest 104"
+description: "Someone upstream wants Magma cream by the crate. See that 38 reach the counting table. By now, quitting would cost more than continuing"
+type: COLLECTION
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0103
+objectives:
+  - description: "Collect 38 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 38
+  - description: "Collect 42 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 42
+  - description: "Collect 46 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 46
+rewards:
+  items:
+    IRON_INGOT: 3
+    IRON_INGOT: 1
+  experience: 6102
+  money: 7926

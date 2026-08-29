@@ -1,0 +1,23 @@
+id: q0026
+title: "Frost Hunt 026"
+description: "Every Spider taken is a traveller spared. Make it 38, and make it permanent. Do it well; someone is always watching the newcomers"
+type: COMBAT
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0025
+objectives:
+  - description: "Slay 38 Spiders"
+    type: KILL_MOB
+    target: SPIDER
+    amount: 38
+  - description: "Slay 40 Husks"
+    type: KILL_MOB
+    target: HUSK
+    amount: 40
+rewards:
+  items:
+    WHEAT_SEEDS: 2
+    STRING: 1
+  experience: 1194
+  money: 1219

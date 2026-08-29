@@ -1,0 +1,35 @@
+id: q0621
+title: "Void Expedition 621"
+description: "Trade routes bend around the Jagged Peaks for want of a map. Be the one who fixes that. Few pages turn past this point. Fewer still turn back. Few have signed this page; fewer still twice. The ink here is darker than usual"
+type: EXPLORATION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0620
+objectives:
+  - description: "Travel to the Jagged Peaks biome"
+    type: VISIT_BIOME
+    target: JAGGED_PEAKS
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Ice Spikes biome"
+    type: VISIT_BIOME
+    target: ICE_SPIKES
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    NETHERITE_INGOT: 12
+    SHULKER_SHELL: 6
+  experience: 50027
+  money: 88463
+  rare_items:
+    - material: ENCHANTED_GOLDEN_APPLE
+      amount: 1
+      chance: 2

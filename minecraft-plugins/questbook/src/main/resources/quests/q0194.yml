@@ -1,0 +1,27 @@
+id: q0194
+title: "Eternal Reckoning 194"
+description: "There is a price on Hoglins this season. Collect on 46 of them; nobody asks how. By now, quitting would cost more than continuing"
+type: COMBAT
+required_level: 4
+repeatable: false
+difficulty: HARD
+required_quest: q0193
+objectives:
+  - description: "Slay 46 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 46
+  - description: "Slay 48 Witches"
+    type: KILL_MOB
+    target: WITCH
+    amount: 48
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+rewards:
+  items:
+    REDSTONE: 5
+    GOLD_INGOT: 2
+  experience: 12712
+  money: 18391

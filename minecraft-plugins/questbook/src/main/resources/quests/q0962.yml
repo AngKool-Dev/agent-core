@@ -1,0 +1,32 @@
+id: q0962
+title: "Void Vigil 962"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Prophecy names the Ender_Dragon as a wall between you and the last pages. Bring 4 down. The ink here is darker than usual"
+type: COMBAT
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0961
+requires_dragon_killed: true
+objectives:
+  - description: "Slay 4 Ender_Dragons"
+    type: KILL_MOB
+    target: ENDER_DRAGON
+    amount: 4
+  - description: "Slay 4 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 4
+  - description: "Slay 4 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 4
+  - description: "Slay 4 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 4
+rewards:
+  items:
+    NETHERITE_INGOT: 18
+    NETHERITE_INGOT: 9
+  experience: 83772
+  money: 159726

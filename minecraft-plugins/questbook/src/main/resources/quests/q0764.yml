@@ -1,0 +1,31 @@
+id: q0764
+title: "Gilded Harvest 764"
+description: "Someone upstream wants Ender eye by the crate. See that 64 reach the counting table. The book keeps score, and it is watching closely now. The paper smells faintly of ozone. Someone crossed out a name at the bottom"
+type: COLLECTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0763
+objectives:
+  - description: "Collect 64 ender eye"
+    type: COLLECT_ITEM
+    target: ENDER_EYE
+    amount: 64
+  - description: "Collect 64 netherite scrap"
+    type: COLLECT_ITEM
+    target: NETHERITE_SCRAP
+    amount: 64
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 14
+    NAUTILUS_SHELL: 7
+  experience: 63858
+  money: 117021

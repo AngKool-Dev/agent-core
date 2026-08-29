@@ -1,0 +1,31 @@
+id: q0442
+title: "Abyssal Vigil 442"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. Few pages turn past this point. Fewer still turn back. The ink here is darker than usual"
+type: COMBAT
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0441
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 66 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 66
+  - description: "Slay 68 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 68
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_INGOT: 4
+  experience: 33519
+  money: 55899

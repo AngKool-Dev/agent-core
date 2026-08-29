@@ -1,0 +1,31 @@
+id: q0886
+title: "Ashen Hunt 886"
+description: "Every Piglin_Brute taken is a traveller spared. Make it 60, and make it permanent. Few pages turn past this point. Fewer still turn back. The spine creaks as if the book itself hesitates. This entry is written in a hurried hand. The book files this one carefully"
+type: COMBAT
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0885
+objectives:
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 130 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 130
+rewards:
+  items:
+    GLOWSTONE_DUST: 16
+    ENDER_EYE: 8
+  experience: 76033
+  money: 142931

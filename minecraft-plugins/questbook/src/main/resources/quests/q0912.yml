@@ -1,0 +1,35 @@
+id: q0912
+title: "Torrent Provision 912"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. What waits ahead has ended better adventurers than most. The book files this one carefully. Few have signed this page; fewer still twice. The ink here is darker than usual"
+type: COLLECTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0911
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 306 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 306
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    ENDER_EYE: 17
+    ENDER_EYE: 8
+  experience: 78668
+  money: 148622
+  rare_items:
+    - material: ELYTRA
+      amount: 1
+      chance: 5

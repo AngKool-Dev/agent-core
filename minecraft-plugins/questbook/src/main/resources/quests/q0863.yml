@@ -1,0 +1,31 @@
+id: q0863
+title: "Shattered Foundation 863"
+description: "Blueprints call for 259 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0862
+objectives:
+  - description: "Place 259 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 259
+  - description: "Place 262 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 262
+  - description: "Place 265 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 265
+  - description: "Place 268 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 268
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 73713
+  money: 137944

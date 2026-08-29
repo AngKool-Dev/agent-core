@@ -1,0 +1,31 @@
+id: q0511
+title: "Shattered Edifice 511"
+description: "Blueprints call for 157 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0510
+objectives:
+  - description: "Place 157 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 157
+  - description: "Place 160 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 160
+  - description: "Place 163 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 163
+  - description: "Place 166 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 166
+rewards:
+  items:
+    DIAMOND: 10
+    NAUTILUS_SHELL: 5
+  experience: 39764
+  money: 67992

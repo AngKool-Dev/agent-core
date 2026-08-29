@@ -1,0 +1,31 @@
+id: q0440
+title: "Storm Harvest 440"
+description: "Diamond never sits idle in capable hands. Deliver 143 and the ledger stays balanced. Few pages turn past this point. Fewer still turn back"
+type: COLLECTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0439
+objectives:
+  - description: "Collect 143 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 143
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 155 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 155
+rewards:
+  items:
+    DIAMOND: 9
+    DIAMOND: 4
+  experience: 33341
+  money: 55558

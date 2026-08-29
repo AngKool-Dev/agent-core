@@ -1,0 +1,31 @@
+id: q0418
+title: "Gilded Crusade 418"
+description: "The watchtower logs name Shulkers as this month's threat. Answer with 60 confirmed kills. What waits ahead has ended better adventurers than most"
+type: COMBAT
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0417
+objectives:
+  - description: "Slay 60 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 60
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+rewards:
+  items:
+    NETHERITE_INGOT: 8
+    NETHERITE_INGOT: 4
+  experience: 31387
+  money: 51841

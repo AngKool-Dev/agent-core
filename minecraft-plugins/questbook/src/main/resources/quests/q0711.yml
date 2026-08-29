@@ -1,0 +1,35 @@
+id: q0711
+title: "Frost Edifice 711"
+description: "Blueprints call for 215 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0710
+objectives:
+  - description: "Place 215 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 215
+  - description: "Place 218 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 218
+  - description: "Place 221 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 221
+  - description: "Place 224 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 224
+rewards:
+  items:
+    ECHO_SHARD: 13
+    ENDER_PEARL: 6
+  experience: 58673
+  money: 106197
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 2

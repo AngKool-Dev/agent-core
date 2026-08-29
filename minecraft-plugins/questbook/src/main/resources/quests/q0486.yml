@@ -1,0 +1,31 @@
+id: q0486
+title: "Hollow Hunt 486"
+description: "Every Piglin_Brute taken is a traveller spared. Make it 60, and make it permanent. Few pages turn past this point. Fewer still turn back. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0485
+objectives:
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 76 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 76
+rewards:
+  items:
+    ECHO_SHARD: 10
+    NETHERITE_INGOT: 5
+  experience: 37483
+  money: 63540

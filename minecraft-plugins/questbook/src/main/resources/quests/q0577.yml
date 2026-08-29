@@ -1,0 +1,31 @@
+id: q0577
+title: "Torrent Compass 577"
+description: "Cartographers pay for certainty. Set eyes on the Old Growth Taiga and return to draw it true. Few pages turn past this point. Fewer still turn back. Someone crossed out a name at the bottom"
+type: EXPLORATION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0576
+objectives:
+  - description: "Travel to the Old Growth Taiga biome"
+    type: VISIT_BIOME
+    target: OLD_GROWTH_TAIGA
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Bamboo Jungle biome"
+    type: VISIT_BIOME
+    target: BAMBOO_JUNGLE
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    ECHO_SHARD: 11
+    NETHERITE_INGOT: 5
+  experience: 45880
+  money: 80108

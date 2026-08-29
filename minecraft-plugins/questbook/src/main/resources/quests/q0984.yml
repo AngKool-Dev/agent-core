@@ -1,0 +1,36 @@
+id: q0984
+title: "Solar Harvest 984"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Someone upstream wants Netherite ingot by the crate. See that 32 reach the counting table. The book files this one carefully"
+type: COLLECTION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0983
+requires_dragon_killed: true
+objectives:
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 6 nether star"
+    type: COLLECT_ITEM
+    target: NETHER_STAR
+    amount: 6
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 64 ender eye"
+    type: COLLECT_ITEM
+    target: ENDER_EYE
+    amount: 64
+rewards:
+  items:
+    NETHER_STAR: 18
+    NETHERITE_INGOT: 9
+  experience: 86033
+  money: 164677
+  rare_items:
+    - material: ELYTRA
+      amount: 1
+      chance: 5

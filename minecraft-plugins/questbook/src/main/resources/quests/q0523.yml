@@ -1,0 +1,31 @@
+id: q0523
+title: "Shattered Foundation 523"
+description: "The frontier grows one wall at a time. Lay 160 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0522
+objectives:
+  - description: "Place 160 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 160
+  - description: "Place 163 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 163
+  - description: "Place 166 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 166
+  - description: "Place 169 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 169
+rewards:
+  items:
+    NAUTILUS_SHELL: 10
+    ECHO_SHARD: 5
+  experience: 40866
+  money: 70156

@@ -1,0 +1,27 @@
+id: q0156
+title: "Radiant Ledger 156"
+description: "The smiths trade favours for Iron ingot. 63 units buys goodwill and coin alike. Names that matter are earned at this depth of the book"
+type: COLLECTION
+required_level: 4
+repeatable: false
+difficulty: HARD
+required_quest: q0155
+objectives:
+  - description: "Collect 63 iron ingot"
+    type: COLLECT_ITEM
+    target: IRON_INGOT
+    amount: 63
+  - description: "Collect 67 gold ingot"
+    type: COLLECT_ITEM
+    target: GOLD_INGOT
+    amount: 67
+  - description: "Collect 71 redstone"
+    type: COLLECT_ITEM
+    target: REDSTONE
+    amount: 71
+rewards:
+  items:
+    IRON_INGOT: 4
+    AMETHYST_SHARD: 2
+  experience: 9834
+  money: 13702

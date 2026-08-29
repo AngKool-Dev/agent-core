@@ -1,0 +1,31 @@
+id: q0632
+title: "Solar Provision 632"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. The book keeps score, and it is watching closely now. The book files this one carefully. Few have signed this page; fewer still twice"
+type: COLLECTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0631
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 212 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 212
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    NAUTILUS_SHELL: 12
+    ECHO_SHARD: 6
+  experience: 51073
+  money: 90585

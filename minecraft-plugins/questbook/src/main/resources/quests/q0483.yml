@@ -1,0 +1,31 @@
+id: q0483
+title: "Hollow Foundation 483"
+description: "The frontier grows one wall at a time. Lay 148 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0482
+objectives:
+  - description: "Place 148 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 148
+  - description: "Place 151 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 151
+  - description: "Place 154 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 154
+  - description: "Place 157 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 157
+rewards:
+  items:
+    NETHERITE_INGOT: 10
+    NETHERITE_SCRAP: 5
+  experience: 37211
+  money: 63011

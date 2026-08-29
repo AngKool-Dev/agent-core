@@ -1,0 +1,31 @@
+id: q0443
+title: "Abyssal Foundation 443"
+description: "The frontier grows one wall at a time. Lay 137 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0442
+objectives:
+  - description: "Place 137 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 137
+  - description: "Place 140 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 140
+  - description: "Place 143 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 143
+  - description: "Place 146 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 146
+rewards:
+  items:
+    DIAMOND: 9
+    DIAMOND: 4
+  experience: 33609
+  money: 56070

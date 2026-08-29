@@ -1,0 +1,27 @@
+id: q0400
+title: "Obsidian Harvest 400"
+description: "A hundred-page marker in a very long book. Amethyst shard never sits idle in capable hands. Deliver 320 and the ledger stays balanced. The road steepens; so do the rewards"
+type: COLLECTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0399
+objectives:
+  - description: "Collect 320 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 320
+  - description: "Collect 324 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 324
+  - description: "Collect 328 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 328
+rewards:
+  items:
+    RAW_GOLD: 8
+    RAW_GOLD: 4
+  experience: 29801
+  money: 48850

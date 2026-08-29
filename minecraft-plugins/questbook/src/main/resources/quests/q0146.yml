@@ -1,0 +1,27 @@
+id: q0146
+title: "Hollow Hunt 146"
+description: "Every Phantom taken is a traveller spared. Make it 24, and make it permanent. By now, quitting would cost more than continuing"
+type: COMBAT
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0145
+objectives:
+  - description: "Slay 24 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 24
+  - description: "Slay 26 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 26
+  - description: "Slay 28 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 28
+rewards:
+  items:
+    LAPIS_LAZULI: 4
+    REDSTONE: 2
+  experience: 9097
+  money: 12530

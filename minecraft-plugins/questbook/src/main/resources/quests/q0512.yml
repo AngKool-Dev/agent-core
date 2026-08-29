@@ -1,0 +1,31 @@
+id: q0512
+title: "Shattered Provision 512"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. What waits ahead has ended better adventurers than most. The book files this one carefully"
+type: COLLECTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0511
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 174 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 174
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    NETHERITE_INGOT: 10
+    NETHERITE_SCRAP: 5
+  experience: 39856
+  money: 68171

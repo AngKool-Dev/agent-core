@@ -1,0 +1,27 @@
+id: q0311
+title: "Lunar Edifice 311"
+description: "Blueprints call for 213 quartz block. The rest is sweat and stubbornness. The road steepens; so do the rewards"
+type: CONSTRUCTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0310
+objectives:
+  - description: "Place 213 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 213
+  - description: "Place 216 deepslate"
+    type: PLACE_BLOCK
+    target: DEEPSLATE
+    amount: 216
+  - description: "Place 219 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 219
+rewards:
+  items:
+    QUARTZ: 7
+    DIAMOND: 3
+  experience: 22158
+  money: 34779

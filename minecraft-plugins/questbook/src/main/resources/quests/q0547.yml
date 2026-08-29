@@ -1,0 +1,31 @@
+id: q0547
+title: "Ashen Masonry 547"
+description: "The frontier grows one wall at a time. Lay 167 blackstone and be part of it. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0546
+objectives:
+  - description: "Place 167 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 167
+  - description: "Place 170 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 170
+  - description: "Place 173 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 173
+  - description: "Place 176 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 176
+rewards:
+  items:
+    NETHERITE_INGOT: 11
+    NETHERITE_SCRAP: 5
+  experience: 43083
+  money: 74537

@@ -1,0 +1,31 @@
+id: q0455
+title: "Abyssal Cornerstone 455"
+description: "Blueprints call for 140 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0454
+objectives:
+  - description: "Place 140 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 140
+  - description: "Place 143 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 143
+  - description: "Place 146 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 146
+  - description: "Place 149 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 149
+rewards:
+  items:
+    DIAMOND: 9
+    DIAMOND: 4
+  experience: 34683
+  money: 58130

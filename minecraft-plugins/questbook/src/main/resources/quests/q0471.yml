@@ -1,0 +1,31 @@
+id: q0471
+title: "Crimson Edifice 471"
+description: "Blueprints call for 145 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0470
+objectives:
+  - description: "Place 145 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 145
+  - description: "Place 148 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 148
+  - description: "Place 151 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 151
+  - description: "Place 154 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 154
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_SCRAP: 4
+  experience: 36124
+  money: 60907

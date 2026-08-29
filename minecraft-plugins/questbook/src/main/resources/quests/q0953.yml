@@ -1,0 +1,32 @@
+id: q0953
+title: "Void Pilgrimage 953"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Cartographers pay for certainty. Set eyes on the Deep Dark and return to draw it true"
+type: EXPLORATION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0952
+requires_dragon_killed: true
+objectives:
+  - description: "Travel to the Deep Dark biome"
+    type: VISIT_BIOME
+    target: DEEP_DARK
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Snowy Taiga biome"
+    type: VISIT_BIOME
+    target: SNOWY_TAIGA
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    NETHERITE_INGOT: 17
+    NETHERITE_INGOT: 8
+  experience: 82850
+  money: 157712

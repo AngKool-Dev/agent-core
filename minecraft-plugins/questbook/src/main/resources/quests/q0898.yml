@@ -1,0 +1,31 @@
+id: q0898
+title: "Ashen Crusade 898"
+description: "The watchtower logs name Shulkers as this month's threat. Answer with 127 confirmed kills. The book keeps score, and it is watching closely now"
+type: COMBAT
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0897
+objectives:
+  - description: "Slay 127 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 127
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+rewards:
+  items:
+    GLOWSTONE_DUST: 16
+    GLOWSTONE_DUST: 8
+  experience: 77247
+  money: 145550

@@ -1,0 +1,11 @@
+# QuestBook Configuration
+
+# Auto-save player data interval in ticks (6000 = 5 minutes)
+data-save-interval: 6000
+
+# Quest settings
+quest:
+  # Minimum level to start quests
+  min-level: 1
+  # Maximum active quests per player
+  max-active-quests: 3

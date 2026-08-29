@@ -1,0 +1,31 @@
+id: q0647
+title: "Lunar Masonry 647"
+description: "Blueprints call for 196 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0646
+objectives:
+  - description: "Place 196 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 196
+  - description: "Place 199 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 199
+  - description: "Place 202 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 202
+  - description: "Place 205 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 205
+rewards:
+  items:
+    NAUTILUS_SHELL: 12
+    ECHO_SHARD: 6
+  experience: 52503
+  money: 93500

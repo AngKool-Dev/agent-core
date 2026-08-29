@@ -1,0 +1,27 @@
+id: q0184
+title: "Shattered Harvest 184"
+description: "Someone upstream wants Amethyst shard by the crate. See that 93 reach the counting table. The road steepens; so do the rewards"
+type: COLLECTION
+required_level: 4
+repeatable: false
+difficulty: HARD
+required_quest: q0183
+objectives:
+  - description: "Collect 93 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 93
+  - description: "Collect 97 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 97
+  - description: "Collect 101 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 101
+rewards:
+  items:
+    REDSTONE: 5
+    GOLD_INGOT: 2
+  experience: 11944
+  money: 17123

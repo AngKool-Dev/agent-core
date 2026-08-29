@@ -1,0 +1,36 @@
+id: q0999
+title: "Lunar Cornerstone 999"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Blueprints call for 299 blackstone. The rest is sweat and stubbornness"
+type: CONSTRUCTION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0998
+requires_dragon_killed: true
+objectives:
+  - description: "Place 299 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 299
+  - description: "Place 302 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 302
+  - description: "Place 305 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 305
+  - description: "Place 308 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 308
+rewards:
+  items:
+    SHULKER_SHELL: 18
+    SHULKER_SHELL: 9
+  experience: 87580
+  money: 168075
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 2

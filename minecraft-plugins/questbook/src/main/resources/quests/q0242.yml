@@ -1,0 +1,27 @@
+id: q0242
+title: "Mirage Vigil 242"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. Names that matter are earned at this depth of the book. The ink here is darker than usual"
+type: COMBAT
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0241
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 70 Blazes"
+    type: KILL_MOB
+    target: BLAZE
+    amount: 70
+  - description: "Slay 72 Endermen"
+    type: KILL_MOB
+    target: ENDERMAN
+    amount: 72
+rewards:
+  items:
+    PRISMARINE_SHARD: 6
+    AMETHYST_SHARD: 3
+  experience: 16491
+  money: 24788

@@ -1,0 +1,27 @@
+id: q0187
+title: "Eternal Masonry 187"
+description: "The frontier grows one wall at a time. Lay 91 bricks and be part of it. By now, quitting would cost more than continuing"
+type: CONSTRUCTION
+required_level: 4
+repeatable: false
+difficulty: HARD
+required_quest: q0186
+objectives:
+  - description: "Place 91 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 91
+  - description: "Place 94 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 94
+  - description: "Place 97 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 97
+rewards:
+  items:
+    LAPIS_LAZULI: 5
+    REDSTONE: 2
+  experience: 12174
+  money: 17501

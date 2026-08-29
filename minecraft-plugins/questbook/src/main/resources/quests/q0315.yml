@@ -1,0 +1,27 @@
+id: q0315
+title: "Lunar Cornerstone 315"
+description: "The frontier grows one wall at a time. Lay 216 waxed copper block and be part of it. The road steepens; so do the rewards"
+type: CONSTRUCTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0314
+objectives:
+  - description: "Place 216 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 216
+  - description: "Place 219 polished deepslate"
+    type: PLACE_BLOCK
+    target: POLISHED_DEEPSLATE
+    amount: 219
+  - description: "Place 222 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 222
+rewards:
+  items:
+    BLAZE_ROD: 7
+    MAGMA_CREAM: 3
+  experience: 22494
+  money: 35384

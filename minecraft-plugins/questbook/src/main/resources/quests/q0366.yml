@@ -1,0 +1,27 @@
+id: q0366
+title: "Frost Hunt 366"
+description: "Every Phantom taken is a traveller spared. Make it 124, and make it permanent. By now, quitting would cost more than continuing"
+type: COMBAT
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0365
+objectives:
+  - description: "Slay 124 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 124
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 128 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 128
+rewards:
+  items:
+    RAW_GOLD: 8
+    DIAMOND: 4
+  experience: 26841
+  money: 43330

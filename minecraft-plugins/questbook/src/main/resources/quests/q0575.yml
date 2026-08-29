@@ -1,0 +1,31 @@
+id: q0575
+title: "Torrent Cornerstone 575"
+description: "Blueprints call for 175 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0574
+objectives:
+  - description: "Place 175 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 175
+  - description: "Place 178 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 178
+  - description: "Place 181 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 181
+  - description: "Place 184 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 184
+rewards:
+  items:
+    NAUTILUS_SHELL: 11
+    ECHO_SHARD: 5
+  experience: 45692
+  money: 79733

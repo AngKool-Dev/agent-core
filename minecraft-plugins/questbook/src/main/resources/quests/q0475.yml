@@ -1,0 +1,31 @@
+id: q0475
+title: "Crimson Cornerstone 475"
+description: "The frontier grows one wall at a time. Lay 146 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0474
+objectives:
+  - description: "Place 146 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 146
+  - description: "Place 149 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 149
+  - description: "Place 152 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 152
+  - description: "Place 155 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 155
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_SCRAP: 4
+  experience: 36486
+  money: 61606

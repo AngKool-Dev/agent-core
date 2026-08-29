@@ -1,0 +1,31 @@
+id: q0439
+title: "Storm Cornerstone 439"
+description: "Blueprints call for 136 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0438
+objectives:
+  - description: "Place 136 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 136
+  - description: "Place 139 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 139
+  - description: "Place 142 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 142
+  - description: "Place 145 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 145
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_INGOT: 4
+  experience: 33252
+  money: 55388

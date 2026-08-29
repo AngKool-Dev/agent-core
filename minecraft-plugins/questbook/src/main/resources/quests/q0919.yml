@@ -1,0 +1,31 @@
+id: q0919
+title: "Mirage Cornerstone 919"
+description: "Blueprints call for 284 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0918
+objectives:
+  - description: "Place 284 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 284
+  - description: "Place 287 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 287
+  - description: "Place 290 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 290
+  - description: "Place 293 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 293
+rewards:
+  items:
+    GLOWSTONE_DUST: 17
+    GLOWSTONE_DUST: 8
+  experience: 79379
+  money: 150164

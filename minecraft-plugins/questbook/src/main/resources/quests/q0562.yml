@@ -1,0 +1,31 @@
+id: q0562
+title: "Torrent Vigil 562"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. This is where the story stops being kind. The ink here is darker than usual. A marginal note reads: bring help"
+type: COMBAT
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0561
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 82 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 82
+  - description: "Slay 84 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 84
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    NETHERITE_INGOT: 11
+    NETHERITE_SCRAP: 5
+  experience: 44478
+  money: 77309

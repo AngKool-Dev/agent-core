@@ -1,0 +1,27 @@
+id: q0234
+title: "Torrent Reckoning 234"
+description: "There is a price on Hoglins this season. Collect on 64 of them; nobody asks how. By now, quitting would cost more than continuing"
+type: COMBAT
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0233
+objectives:
+  - description: "Slay 64 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 64
+  - description: "Slay 66 Witches"
+    type: KILL_MOB
+    target: WITCH
+    amount: 66
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+rewards:
+  items:
+    AMETHYST_SHARD: 5
+    LAPIS_LAZULI: 2
+  experience: 15851
+  money: 23688

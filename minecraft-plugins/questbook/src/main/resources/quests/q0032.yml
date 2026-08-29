@@ -1,0 +1,23 @@
+id: q0032
+title: "Frost Provision 032"
+description: "Stores run thin and patience thinner. 104 Raw copper, weighed honest, closes this entry. Do it well; someone is always watching the newcomers"
+type: COLLECTION
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+required_quest: q0031
+objectives:
+  - description: "Collect 104 raw copper"
+    type: COLLECT_ITEM
+    target: RAW_COPPER
+    amount: 104
+  - description: "Collect 108 raw iron"
+    type: COLLECT_ITEM
+    target: RAW_IRON
+    amount: 108
+rewards:
+  items:
+    RAW_IRON: 2
+    RAW_COPPER: 1
+  experience: 1524
+  money: 1614

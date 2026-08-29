@@ -1,0 +1,31 @@
+id: q0823
+title: "Hollow Foundation 823"
+description: "Blueprints call for 248 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0822
+objectives:
+  - description: "Place 248 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 248
+  - description: "Place 251 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 251
+  - description: "Place 254 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 254
+  - description: "Place 257 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 257
+rewards:
+  items:
+    GLOWSTONE_DUST: 15
+    ENDER_EYE: 7
+  experience: 69705
+  money: 129384

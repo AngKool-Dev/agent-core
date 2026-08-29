@@ -1,0 +1,27 @@
+id: q0186
+title: "Shattered Hunt 186"
+description: "Every Phantom taken is a traveller spared. Make it 42, and make it permanent. The road steepens; so do the rewards"
+type: COMBAT
+required_level: 4
+repeatable: false
+difficulty: HARD
+required_quest: q0185
+objectives:
+  - description: "Slay 42 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 42
+  - description: "Slay 44 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 44
+  - description: "Slay 46 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 46
+rewards:
+  items:
+    GOLD_INGOT: 5
+    PRISMARINE_SHARD: 2
+  experience: 12097
+  money: 17375

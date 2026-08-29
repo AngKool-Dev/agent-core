@@ -1,0 +1,31 @@
+id: q0623
+title: "Void Foundation 623"
+description: "Blueprints call for 189 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0622
+objectives:
+  - description: "Place 189 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 189
+  - description: "Place 192 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 192
+  - description: "Place 195 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 195
+  - description: "Place 198 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 198
+rewards:
+  items:
+    SHULKER_SHELL: 12
+    PHANTOM_MEMBRANE: 6
+  experience: 50217
+  money: 88848

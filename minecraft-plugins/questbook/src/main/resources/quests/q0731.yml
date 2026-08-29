@@ -1,0 +1,31 @@
+id: q0731
+title: "Obsidian Edifice 731"
+description: "The frontier grows one wall at a time. Lay 221 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0730
+objectives:
+  - description: "Place 221 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 221
+  - description: "Place 224 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 224
+  - description: "Place 227 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 227
+  - description: "Place 230 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 230
+rewards:
+  items:
+    NAUTILUS_SHELL: 14
+    ENDER_EYE: 7
+  experience: 60622
+  money: 110250

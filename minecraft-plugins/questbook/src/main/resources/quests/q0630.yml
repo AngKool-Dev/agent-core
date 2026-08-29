@@ -1,0 +1,35 @@
+id: q0630
+title: "Solar Reckoning 630"
+description: "Ghasts have been pushing past the borders after dark. Thin their ranks by 89 before the trails go cold. The book keeps score, and it is watching closely now"
+type: COMBAT
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0629
+objectives:
+  - description: "Slay 89 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 89
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 93 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 93
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 12
+    NAUTILUS_SHELL: 6
+  experience: 50882
+  money: 90198
+  rare_items:
+    - material: NETHERITE_INGOT
+      amount: 1
+      chance: 2

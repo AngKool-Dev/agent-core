@@ -1,0 +1,27 @@
+id: q0279
+title: "Void Cornerstone 279"
+description: "Blueprints call for 181 waxed copper block. The rest is sweat and stubbornness. By now, quitting would cost more than continuing"
+type: CONSTRUCTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0278
+objectives:
+  - description: "Place 181 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 181
+  - description: "Place 184 polished deepslate"
+    type: PLACE_BLOCK
+    target: POLISHED_DEEPSLATE
+    amount: 184
+  - description: "Place 187 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 187
+rewards:
+  items:
+    QUARTZ: 6
+    PRISMARINE_SHARD: 3
+  experience: 19498
+  money: 30037

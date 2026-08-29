@@ -1,0 +1,27 @@
+id: q0353
+title: "Ember Pilgrimage 353"
+description: "Cartographers pay for certainty. Set eyes on the Savanna and return to draw it true. The road steepens; so do the rewards. Someone crossed out a name at the bottom. The spine creaks as if the book itself hesitates"
+type: EXPLORATION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0352
+objectives:
+  - description: "Travel to the Savanna biome"
+    type: VISIT_BIOME
+    target: SAVANNA
+    amount: 1
+  - description: "Locate a jungle pyramid"
+    type: FIND_STRUCTURE
+    target: jungle_pyramid
+    amount: 1
+  - description: "Travel to the Cherry Grove biome"
+    type: VISIT_BIOME
+    target: CHERRY_GROVE
+    amount: 1
+rewards:
+  items:
+    MAGMA_CREAM: 7
+    RAW_GOLD: 3
+  experience: 25722
+  money: 41265

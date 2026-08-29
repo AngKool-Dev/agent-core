@@ -1,0 +1,31 @@
+id: q0495
+title: "Radiant Cornerstone 495"
+description: "Blueprints call for 152 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0494
+objectives:
+  - description: "Place 152 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 152
+  - description: "Place 155 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 155
+  - description: "Place 158 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 158
+  - description: "Place 161 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 161
+rewards:
+  items:
+    NETHERITE_INGOT: 10
+    NETHERITE_SCRAP: 5
+  experience: 38302
+  money: 65134

@@ -1,0 +1,35 @@
+id: q0648
+title: "Lunar Tribute 648"
+description: "Quartermasters have shortlisted Shulker shell. Fulfil 48 before the season turns. What waits ahead has ended better adventurers than most. The book files this one carefully"
+type: COLLECTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0647
+objectives:
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 213 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 213
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 128 phantom membrane"
+    type: COLLECT_ITEM
+    target: PHANTOM_MEMBRANE
+    amount: 128
+rewards:
+  items:
+    SHULKER_SHELL: 12
+    PHANTOM_MEMBRANE: 6
+  experience: 52599
+  money: 93695
+  rare_items:
+    - material: ELYTRA
+      amount: 1
+      chance: 2

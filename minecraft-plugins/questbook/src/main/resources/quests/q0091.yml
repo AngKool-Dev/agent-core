@@ -1,0 +1,23 @@
+id: q0091
+title: "Storm Edifice 091"
+description: "The frontier grows one wall at a time. Lay 273 stone and be part of it. Small steps still count on this road"
+type: CONSTRUCTION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0090
+objectives:
+  - description: "Place 273 stone"
+    type: PLACE_BLOCK
+    target: STONE
+    amount: 273
+  - description: "Place 276 oak planks"
+    type: PLACE_BLOCK
+    target: OAK_PLANKS
+    amount: 276
+rewards:
+  items:
+    CALCITE: 3
+    IRON_INGOT: 1
+  experience: 5214
+  money: 6619

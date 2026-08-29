@@ -1,0 +1,27 @@
+id: q0210
+title: "Ashen Reckoning 210"
+description: "Endermen have been pushing past the borders after dark. Thin their ranks by 53 before the trails go cold. Careful - the world pushes back harder the further you go"
+type: COMBAT
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0209
+objectives:
+  - description: "Slay 53 Endermen"
+    type: KILL_MOB
+    target: ENDERMAN
+    amount: 53
+  - description: "Slay 55 Vindicators"
+    type: KILL_MOB
+    target: VINDICATOR
+    amount: 55
+  - description: "Slay 57 Guardians"
+    type: KILL_MOB
+    target: GUARDIAN
+    amount: 57
+rewards:
+  items:
+    PRISMARINE_SHARD: 5
+    AMETHYST_SHARD: 2
+  experience: 13955
+  money: 20468

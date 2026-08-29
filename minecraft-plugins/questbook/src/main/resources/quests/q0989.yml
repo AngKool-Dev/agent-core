@@ -1,0 +1,32 @@
+id: q0989
+title: "Lunar Horizon 989"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. Trade routes bend around the Deep Dark for want of a map. Be the one who fixes that. Few have signed this page; fewer still twice"
+type: EXPLORATION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0988
+requires_dragon_killed: true
+objectives:
+  - description: "Travel to the Deep Dark biome"
+    type: VISIT_BIOME
+    target: DEEP_DARK
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Snowy Taiga biome"
+    type: VISIT_BIOME
+    target: SNOWY_TAIGA
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    NETHER_STAR: 18
+    NETHER_STAR: 9
+  experience: 86549
+  money: 165808

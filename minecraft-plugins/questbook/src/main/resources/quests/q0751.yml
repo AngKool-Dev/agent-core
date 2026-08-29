@@ -1,0 +1,31 @@
+id: q0751
+title: "Gilded Edifice 751"
+description: "Blueprints call for 227 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0750
+objectives:
+  - description: "Place 227 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 227
+  - description: "Place 230 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 230
+  - description: "Place 233 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 233
+  - description: "Place 236 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 236
+rewards:
+  items:
+    NAUTILUS_SHELL: 14
+    ENDER_EYE: 7
+  experience: 62580
+  money: 114341

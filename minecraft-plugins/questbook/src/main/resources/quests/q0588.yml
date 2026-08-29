@@ -1,0 +1,31 @@
+id: q0588
+title: "Mirage Tribute 588"
+description: "Quartermasters have shortlisted Shulker shell. Fulfil 48 before the season turns. The book keeps score, and it is watching closely now. The paper smells faintly of ozone. Someone crossed out a name at the bottom"
+type: COLLECTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0587
+objectives:
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 194 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 194
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 128 phantom membrane"
+    type: COLLECT_ITEM
+    target: PHANTOM_MEMBRANE
+    amount: 128
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 11
+    NAUTILUS_SHELL: 5
+  experience: 46911
+  money: 82177

@@ -1,0 +1,31 @@
+id: q0602
+title: "Iron Vigil 602"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. What waits ahead has ended better adventurers than most. The ink here is darker than usual"
+type: COMBAT
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0601
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 87 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 87
+  - description: "Slay 89 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 89
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    ECHO_SHARD: 12
+    NETHERITE_INGOT: 6
+  experience: 48230
+  money: 84829

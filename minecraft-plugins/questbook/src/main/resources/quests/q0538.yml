@@ -1,0 +1,31 @@
+id: q0538
+title: "Eternal Crusade 538"
+description: "The watchtower logs name Shulkers as this month's threat. Answer with 77 confirmed kills. Few pages turn past this point. Fewer still turn back"
+type: COMBAT
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0537
+objectives:
+  - description: "Slay 77 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 77
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+rewards:
+  items:
+    NAUTILUS_SHELL: 10
+    ECHO_SHARD: 5
+  experience: 42250
+  money: 72886

@@ -1,0 +1,31 @@
+id: q0755
+title: "Gilded Cornerstone 755"
+description: "The frontier grows one wall at a time. Lay 228 blackstone and be part of it. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0754
+objectives:
+  - description: "Place 228 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 228
+  - description: "Place 231 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 231
+  - description: "Place 234 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 234
+  - description: "Place 237 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 237
+rewards:
+  items:
+    ENDER_PEARL: 14
+    SHULKER_SHELL: 7
+  experience: 62973
+  money: 115164

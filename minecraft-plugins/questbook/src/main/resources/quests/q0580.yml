@@ -1,0 +1,31 @@
+id: q0580
+title: "Mirage Harvest 580"
+description: "Diamond never sits idle in capable hands. Deliver 187 and the ledger stays balanced. Few pages turn past this point. Fewer still turn back"
+type: COLLECTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0579
+objectives:
+  - description: "Collect 187 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 187
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 199 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 199
+rewards:
+  items:
+    NAUTILUS_SHELL: 11
+    ECHO_SHARD: 5
+  experience: 46161
+  money: 80671

@@ -1,0 +1,31 @@
+id: q0874
+title: "Eternal Reckoning 874"
+description: "There is a price on Breezes this season. Collect on 60 of them; nobody asks how. This is where the story stops being kind. The ink here is darker than usual. A marginal note reads: bring help. The paper smells faintly of ozone"
+type: COMBAT
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0873
+objectives:
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 124 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 124
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+rewards:
+  items:
+    GLOWSTONE_DUST: 16
+    ENDER_EYE: 8
+  experience: 74821
+  money: 140323

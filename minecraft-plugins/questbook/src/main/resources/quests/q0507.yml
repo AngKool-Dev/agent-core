@@ -1,0 +1,31 @@
+id: q0507
+title: "Radiant Masonry 507"
+description: "The frontier grows one wall at a time. Lay 155 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0506
+objectives:
+  - description: "Place 155 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 155
+  - description: "Place 158 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 158
+  - description: "Place 161 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 161
+  - description: "Place 164 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 164
+rewards:
+  items:
+    NETHERITE_INGOT: 10
+    NETHERITE_SCRAP: 5
+  experience: 39398
+  money: 67274

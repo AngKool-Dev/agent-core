@@ -1,0 +1,36 @@
+id: q0963
+title: "Void Foundation 963"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. The frontier grows one wall at a time. Lay 289 blackstone and be part of it"
+type: CONSTRUCTION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0962
+requires_dragon_killed: true
+objectives:
+  - description: "Place 289 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 289
+  - description: "Place 292 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 292
+  - description: "Place 295 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 295
+  - description: "Place 298 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 298
+rewards:
+  items:
+    SHULKER_SHELL: 18
+    NETHER_STAR: 9
+  experience: 83875
+  money: 159950
+  rare_items:
+    - material: NETHER_STAR
+      amount: 1
+      chance: 2

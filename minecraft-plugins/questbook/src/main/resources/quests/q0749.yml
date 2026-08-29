@@ -1,0 +1,31 @@
+id: q0749
+title: "Gilded Horizon 749"
+description: "Trade routes bend around the Deep Dark for want of a map. Be the one who fixes that. Few pages turn past this point. Fewer still turn back. Few have signed this page; fewer still twice. The ink here is darker than usual. A marginal note reads: bring help"
+type: EXPLORATION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0748
+objectives:
+  - description: "Travel to the Deep Dark biome"
+    type: VISIT_BIOME
+    target: DEEP_DARK
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Snowy Taiga biome"
+    type: VISIT_BIOME
+    target: SNOWY_TAIGA
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 14
+    NAUTILUS_SHELL: 7
+  experience: 62384
+  money: 113930

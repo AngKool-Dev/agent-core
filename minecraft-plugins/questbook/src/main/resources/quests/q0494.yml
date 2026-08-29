@@ -1,0 +1,31 @@
+id: q0494
+title: "Radiant Reckoning 494"
+description: "There is a price on Breezes this season. Collect on 60 of them; nobody asks how. Few pages turn past this point. Fewer still turn back"
+type: COMBAT
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0493
+objectives:
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 73 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 73
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 77 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 77
+rewards:
+  items:
+    ECHO_SHARD: 10
+    NETHERITE_INGOT: 5
+  experience: 38211
+  money: 64956

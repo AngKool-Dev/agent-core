@@ -1,0 +1,31 @@
+id: q0535
+title: "Eternal Cornerstone 535"
+description: "Blueprints call for 164 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0534
+objectives:
+  - description: "Place 164 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 164
+  - description: "Place 167 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 167
+  - description: "Place 170 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 170
+  - description: "Place 173 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 173
+rewards:
+  items:
+    ECHO_SHARD: 10
+    NETHERITE_INGOT: 5
+  experience: 41972
+  money: 72338

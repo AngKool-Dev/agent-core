@@ -1,0 +1,27 @@
+id: q0264
+title: "Iron Harvest 264"
+description: "Someone upstream wants Iron ingot by the crate. See that 177 reach the counting table. The road steepens; so do the rewards"
+type: COLLECTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0263
+objectives:
+  - description: "Collect 177 iron ingot"
+    type: COLLECT_ITEM
+    target: IRON_INGOT
+    amount: 177
+  - description: "Collect 181 gold ingot"
+    type: COLLECT_ITEM
+    target: GOLD_INGOT
+    amount: 181
+  - description: "Collect 185 redstone"
+    type: COLLECT_ITEM
+    target: REDSTONE
+    amount: 185
+rewards:
+  items:
+    PRISMARINE_SHARD: 6
+    AMETHYST_SHARD: 3
+  experience: 18270
+  money: 27877

@@ -1,0 +1,35 @@
+id: q0867
+title: "Eternal Masonry 867"
+description: "The frontier grows one wall at a time. Lay 261 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0866
+objectives:
+  - description: "Place 261 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 261
+  - description: "Place 264 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 264
+  - description: "Place 267 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 267
+  - description: "Place 270 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 270
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 74116
+  money: 138808
+  rare_items:
+    - material: NETHER_STAR
+      amount: 1
+      chance: 5

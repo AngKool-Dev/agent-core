@@ -1,0 +1,23 @@
+id: q0072
+title: "Gilded Provision 072"
+description: "Stores run thin and patience thinner. 231 Iron ingot, weighed honest, closes this entry. Do it well; someone is always watching the newcomers"
+type: COLLECTION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0071
+objectives:
+  - description: "Collect 231 iron ingot"
+    type: COLLECT_ITEM
+    target: IRON_INGOT
+    amount: 231
+  - description: "Collect 235 calcite"
+    type: COLLECT_ITEM
+    target: CALCITE
+    amount: 235
+rewards:
+  items:
+    COPPER_INGOT: 3
+    GUNPOWDER: 1
+  experience: 3958
+  money: 4824

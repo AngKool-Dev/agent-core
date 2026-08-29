@@ -1,0 +1,31 @@
+id: q0638
+title: "Solar Crusade 638"
+description: "The watchtower logs name Shulkers as this month's threat. Answer with 90 confirmed kills. What waits ahead has ended better adventurers than most"
+type: COMBAT
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0637
+objectives:
+  - description: "Slay 90 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 90
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+rewards:
+  items:
+    SHULKER_SHELL: 12
+    PHANTOM_MEMBRANE: 6
+  experience: 51644
+  money: 91748

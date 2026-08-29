@@ -1,0 +1,31 @@
+id: q0899
+title: "Ashen Cornerstone 899"
+description: "The frontier grows one wall at a time. Lay 273 blackstone and be part of it. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 18
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0898
+objectives:
+  - description: "Place 273 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 273
+  - description: "Place 276 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 276
+  - description: "Place 279 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 279
+  - description: "Place 282 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 282
+rewards:
+  items:
+    ENDER_PEARL: 16
+    ENDER_PEARL: 8
+  experience: 77348
+  money: 145769

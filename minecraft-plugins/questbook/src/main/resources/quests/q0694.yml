@@ -1,0 +1,31 @@
+id: q0694
+title: "Ember Reckoning 694"
+description: "There is a price on Breezes this season. Collect on 60 of them; nobody asks how. This is where the story stops being kind. The spine creaks as if the book itself hesitates. This entry is written in a hurried hand. The book files this one carefully"
+type: COMBAT
+required_level: 14
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0693
+objectives:
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 100 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 100
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+rewards:
+  items:
+    NAUTILUS_SHELL: 13
+    ECHO_SHARD: 6
+  experience: 57024
+  money: 102784

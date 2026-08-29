@@ -1,0 +1,27 @@
+id: q0302
+title: "Solar Vigil 302"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. Careful - the world pushes back harder the further you go. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0301
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 97 Blazes"
+    type: KILL_MOB
+    target: BLAZE
+    amount: 97
+  - description: "Slay 99 Endermen"
+    type: KILL_MOB
+    target: ENDERMAN
+    amount: 99
+rewards:
+  items:
+    MAGMA_CREAM: 7
+    OBSIDIAN: 3
+  experience: 21405
+  money: 33427

@@ -1,0 +1,27 @@
+id: q0235
+title: "Torrent Cornerstone 235"
+description: "The frontier grows one wall at a time. Lay 138 bricks and be part of it. By now, quitting would cost more than continuing"
+type: CONSTRUCTION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0234
+objectives:
+  - description: "Place 138 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 138
+  - description: "Place 141 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 141
+  - description: "Place 144 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 144
+rewards:
+  items:
+    QUARTZ: 5
+    PRISMARINE_SHARD: 2
+  experience: 15931
+  money: 23824

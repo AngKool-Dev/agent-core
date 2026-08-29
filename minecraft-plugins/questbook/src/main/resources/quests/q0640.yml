@@ -1,0 +1,31 @@
+id: q0640
+title: "Solar Harvest 640"
+description: "Diamond never sits idle in capable hands. Deliver 206 and the ledger stays balanced. What waits ahead has ended better adventurers than most"
+type: COLLECTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0639
+objectives:
+  - description: "Collect 206 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 206
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 218 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 218
+rewards:
+  items:
+    PHANTOM_MEMBRANE: 12
+    NAUTILUS_SHELL: 6
+  experience: 51835
+  money: 92137

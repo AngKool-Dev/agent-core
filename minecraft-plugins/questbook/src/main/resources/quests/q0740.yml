@@ -1,0 +1,31 @@
+id: q0740
+title: "Obsidian Harvest 740"
+description: "Diamond never sits idle in capable hands. Deliver 238 and the ledger stays balanced. This is where the story stops being kind"
+type: COLLECTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0739
+objectives:
+  - description: "Collect 238 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 238
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 250 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 250
+rewards:
+  items:
+    ENDER_PEARL: 14
+    SHULKER_SHELL: 7
+  experience: 61502
+  money: 112086

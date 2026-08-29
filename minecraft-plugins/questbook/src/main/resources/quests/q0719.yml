@@ -1,0 +1,31 @@
+id: q0719
+title: "Verdant Cornerstone 719"
+description: "Blueprints call for 217 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0718
+objectives:
+  - description: "Place 217 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 217
+  - description: "Place 220 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 220
+  - description: "Place 223 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 223
+  - description: "Place 226 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 226
+rewards:
+  items:
+    NAUTILUS_SHELL: 13
+    ECHO_SHARD: 6
+  experience: 59451
+  money: 107814

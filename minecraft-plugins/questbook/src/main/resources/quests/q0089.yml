@@ -1,0 +1,23 @@
+id: q0089
+title: "Storm Horizon 089"
+description: "Cartographers pay for certainty. Set eyes on the Swamp and return to draw it true. Small steps still count on this road"
+type: EXPLORATION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0088
+objectives:
+  - description: "Travel to the Swamp biome"
+    type: VISIT_BIOME
+    target: SWAMP
+    amount: 1
+  - description: "Locate a mineshaft"
+    type: FIND_STRUCTURE
+    target: mineshaft
+    amount: 1
+rewards:
+  items:
+    COPPER_INGOT: 3
+    TUFF: 1
+  experience: 5080
+  money: 6423

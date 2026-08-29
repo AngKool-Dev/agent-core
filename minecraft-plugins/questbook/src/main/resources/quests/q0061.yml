@@ -1,0 +1,23 @@
+id: q0061
+title: "Obsidian Expedition 061"
+description: "Trade routes bend around the Forest for want of a map. Be the one who fixes that. Every legend starts with errands like this one. Few have signed this page; fewer still twice"
+type: EXPLORATION
+required_level: 2
+repeatable: false
+difficulty: NORMAL
+required_quest: q0060
+objectives:
+  - description: "Travel to the Forest biome"
+    type: VISIT_BIOME
+    target: FOREST
+    amount: 1
+  - description: "Locate a mineshaft"
+    type: FIND_STRUCTURE
+    target: mineshaft
+    amount: 1
+rewards:
+  items:
+    STRING: 3
+    COPPER_INGOT: 1
+  experience: 3257
+  money: 3857

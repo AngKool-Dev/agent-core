@@ -1,0 +1,27 @@
+id: q0295
+title: "Solar Cornerstone 295"
+description: "Blueprints call for 197 bricks. The rest is sweat and stubbornness. Names that matter are earned at this depth of the book"
+type: CONSTRUCTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0294
+objectives:
+  - description: "Place 197 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 197
+  - description: "Place 200 cut copper"
+    type: PLACE_BLOCK
+    target: CUT_COPPER
+    amount: 200
+  - description: "Place 203 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 203
+rewards:
+  items:
+    MAGMA_CREAM: 6
+    OBSIDIAN: 3
+  experience: 20822
+  money: 32385

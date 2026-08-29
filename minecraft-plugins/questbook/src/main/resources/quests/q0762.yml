@@ -1,0 +1,35 @@
+id: q0762
+title: "Gilded Vigil 762"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. The book keeps score, and it is watching closely now. The ink here is darker than usual. A marginal note reads: bring help"
+type: COMBAT
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0761
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+  - description: "Slay 111 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 111
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    SHULKER_SHELL: 14
+    PHANTOM_MEMBRANE: 7
+  experience: 63661
+  money: 116608
+  rare_items:
+    - material: DRAGON_HEAD
+      amount: 1
+      chance: 10

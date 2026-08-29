@@ -1,0 +1,35 @@
+id: q0663
+title: "Thorn Foundation 663"
+description: "Blueprints call for 201 blackstone. The rest is sweat and stubbornness. Few pages turn past this point. Fewer still turn back"
+type: CONSTRUCTION
+required_level: 14
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0662
+objectives:
+  - description: "Place 201 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 201
+  - description: "Place 204 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 204
+  - description: "Place 207 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 207
+  - description: "Place 210 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 210
+rewards:
+  items:
+    SHULKER_SHELL: 13
+    PHANTOM_MEMBRANE: 6
+  experience: 54036
+  money: 96635
+  rare_items:
+    - material: ECHO_SHARD
+      amount: 1
+      chance: 10

@@ -1,0 +1,31 @@
+id: q0847
+title: "Radiant Masonry 847"
+description: "Blueprints call for 255 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0846
+objectives:
+  - description: "Place 255 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 255
+  - description: "Place 258 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 258
+  - description: "Place 261 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 261
+  - description: "Place 264 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 264
+rewards:
+  items:
+    ENDER_EYE: 16
+    ENDER_PEARL: 8
+  experience: 72106
+  money: 134503

@@ -1,0 +1,31 @@
+id: q0508
+title: "Radiant Tribute 508"
+description: "Quartermasters have shortlisted Shulker shell. Fulfil 48 before the season turns. What waits ahead has ended better adventurers than most. The paper smells faintly of ozone. Someone crossed out a name at the bottom"
+type: COLLECTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0507
+objectives:
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 169 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 169
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 128 phantom membrane"
+    type: COLLECT_ITEM
+    target: PHANTOM_MEMBRANE
+    amount: 128
+rewards:
+  items:
+    NETHERITE_SCRAP: 10
+    DIAMOND: 5
+  experience: 39489
+  money: 67453

@@ -1,0 +1,27 @@
+id: q0321
+title: "Lunar Expedition 321"
+description: "Cartographers pay for certainty. Set eyes on the Stony Shore and return to draw it true. By now, quitting would cost more than continuing. Someone crossed out a name at the bottom. The spine creaks as if the book itself hesitates"
+type: EXPLORATION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0320
+objectives:
+  - description: "Travel to the Stony Shore biome"
+    type: VISIT_BIOME
+    target: STONY_SHORE
+    amount: 1
+  - description: "Locate an ocean ruin"
+    type: FIND_STRUCTURE
+    target: ocean_ruin
+    amount: 1
+  - description: "Travel to the Desert biome"
+    type: VISIT_BIOME
+    target: DESERT
+    amount: 1
+rewards:
+  items:
+    QUARTZ: 7
+    DIAMOND: 3
+  experience: 22999
+  money: 36297

@@ -1,0 +1,31 @@
+id: q0611
+title: "Iron Edifice 611"
+description: "The frontier grows one wall at a time. Lay 186 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0610
+objectives:
+  - description: "Place 186 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 186
+  - description: "Place 189 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 189
+  - description: "Place 192 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 192
+  - description: "Place 195 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 195
+rewards:
+  items:
+    NETHERITE_SCRAP: 12
+    PHANTOM_MEMBRANE: 6
+  experience: 49080
+  money: 86545

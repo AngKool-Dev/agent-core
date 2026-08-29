@@ -1,0 +1,31 @@
+id: q0772
+title: "Storm Provision 772"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. What waits ahead has ended better adventurers than most. The paper smells faintly of ozone. Someone crossed out a name at the bottom. The spine creaks as if the book itself hesitates"
+type: COLLECTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0771
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 256 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 256
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    SHULKER_SHELL: 14
+    PHANTOM_MEMBRANE: 7
+  experience: 64646
+  money: 118679

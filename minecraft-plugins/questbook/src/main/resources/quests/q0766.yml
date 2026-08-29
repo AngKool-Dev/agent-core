@@ -1,0 +1,31 @@
+id: q0766
+title: "Storm Hunt 766"
+description: "Every Piglin_Brute taken is a traveller spared. Make it 60, and make it permanent. The book keeps score, and it is watching closely now. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0765
+objectives:
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 114 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 114
+rewards:
+  items:
+    NAUTILUS_SHELL: 14
+    ENDER_EYE: 7
+  experience: 64055
+  money: 117435

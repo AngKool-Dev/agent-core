@@ -1,0 +1,49 @@
+# Maven
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.h2.db
+
+# Test output
+test-output/
+surefire-reports/
+
+# Environment
+.env
+.env.local
+
+# Plugin output
+plugins/
+
+# License server secrets (never commit)
+license-server/*.key
+license-server/*.tsv
+license-server/*.class
+
+# License server compiled output
+license-server/.classes/

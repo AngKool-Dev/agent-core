@@ -1,0 +1,27 @@
+id: q0126
+title: "Crimson Hunt 126"
+description: "Every Phantom taken is a traveller spared. Make it 21, and make it permanent. Careful - the world pushes back harder the further you go"
+type: COMBAT
+required_level: 3
+repeatable: false
+difficulty: HARD
+required_quest: q0125
+objectives:
+  - description: "Slay 21 Phantoms"
+    type: KILL_MOB
+    target: PHANTOM
+    amount: 21
+  - description: "Slay 23 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 23
+  - description: "Slay 25 Hoglins"
+    type: KILL_MOB
+    target: HOGLIN
+    amount: 25
+rewards:
+  items:
+    LAPIS_LAZULI: 4
+    REDSTONE: 2
+  experience: 7648
+  money: 10270

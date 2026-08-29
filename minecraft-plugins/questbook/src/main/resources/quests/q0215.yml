@@ -1,0 +1,27 @@
+id: q0215
+title: "Ashen Cornerstone 215"
+description: "Blueprints call for 119 quartz block. The rest is sweat and stubbornness. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0214
+objectives:
+  - description: "Place 119 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 119
+  - description: "Place 122 deepslate"
+    type: PLACE_BLOCK
+    target: DEEPSLATE
+    amount: 122
+  - description: "Place 125 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 125
+rewards:
+  items:
+    PRISMARINE_SHARD: 5
+    AMETHYST_SHARD: 2
+  experience: 14347
+  money: 21129

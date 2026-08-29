@@ -1,0 +1,27 @@
+id: q0272
+title: "Void Provision 272"
+description: "Stores run thin and patience thinner. 185 Magma cream, weighed honest, closes this entry. The road steepens; so do the rewards"
+type: COLLECTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0271
+objectives:
+  - description: "Collect 185 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 185
+  - description: "Collect 189 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 189
+  - description: "Collect 193 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 193
+rewards:
+  items:
+    QUARTZ: 6
+    PRISMARINE_SHARD: 3
+  experience: 18924
+  money: 29024

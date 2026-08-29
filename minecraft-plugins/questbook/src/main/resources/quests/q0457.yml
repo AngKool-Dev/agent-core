@@ -1,0 +1,31 @@
+id: q0457
+title: "Abyssal Compass 457"
+description: "Cartographers pay for certainty. Set eyes on the Old Growth Taiga and return to draw it true. The book keeps score, and it is watching closely now. Someone crossed out a name at the bottom"
+type: EXPLORATION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0456
+objectives:
+  - description: "Travel to the Old Growth Taiga biome"
+    type: VISIT_BIOME
+    target: OLD_GROWTH_TAIGA
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Bamboo Jungle biome"
+    type: VISIT_BIOME
+    target: BAMBOO_JUNGLE
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    DIAMOND: 9
+    ECHO_SHARD: 4
+  experience: 34863
+  money: 58476

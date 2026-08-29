@@ -1,0 +1,36 @@
+id: q0996
+title: "Lunar Ledger 996"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. The smiths trade favours for Netherite ingot. 32 units buys goodwill and coin alike. The paper smells faintly of ozone"
+type: COLLECTION
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0995
+requires_dragon_killed: true
+objectives:
+  - description: "Collect 32 netherite ingot"
+    type: COLLECT_ITEM
+    target: NETHERITE_INGOT
+    amount: 32
+  - description: "Collect 6 nether star"
+    type: COLLECT_ITEM
+    target: NETHER_STAR
+    amount: 6
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 64 ender eye"
+    type: COLLECT_ITEM
+    target: ENDER_EYE
+    amount: 64
+rewards:
+  items:
+    SHULKER_SHELL: 18
+    SHULKER_SHELL: 9
+  experience: 87271
+  money: 167394
+  rare_items:
+    - material: HEART_OF_THE_SEA
+      amount: 1
+      chance: 10

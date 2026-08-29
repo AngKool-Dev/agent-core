@@ -1,0 +1,37 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "project": {
+    "name": "QuestBook",
+    "type": "java"
+  },
+  "build": {
+    "commands": {
+      "maven": "mvn clean package"
+    }
+  },
+  "test": {
+    "commands": {
+      "maven": "mvn test"
+    }
+  },
+  "lint": {
+    "commands": {
+      "maven": "mvn checkstyle:check"
+    }
+  },
+  "run": {
+    "commands": {
+      "server": "java -jar ../Minecraft/versions/26.2/purpur-26.2.jar"
+    }
+  },
+  "plugin": [
+    [
+      "${OPENVAR:?OPENVAR not set}/plugins/minecraft-dev/dist/index.js",
+      {
+        "serverType": "paper",
+        "version": "26.2",
+        "buildTool": "maven"
+      }
+    ]
+  ]
+}

@@ -1,0 +1,27 @@
+id: q0260
+title: "Iron Harvest 260"
+description: "Magma cream never sits idle in capable hands. Deliver 172 and the ledger stays balanced. Careful - the world pushes back harder the further you go"
+type: COLLECTION
+required_level: 6
+repeatable: false
+difficulty: HARD
+required_quest: q0259
+objectives:
+  - description: "Collect 172 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 172
+  - description: "Collect 176 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 176
+  - description: "Collect 180 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 180
+rewards:
+  items:
+    OBSIDIAN: 6
+    QUARTZ: 3
+  experience: 17945
+  money: 27308

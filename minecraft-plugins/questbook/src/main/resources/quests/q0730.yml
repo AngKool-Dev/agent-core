@@ -1,0 +1,31 @@
+id: q0730
+title: "Verdant Reckoning 730"
+description: "Ghasts have been pushing past the borders after dark. Thin their ranks by 103 before the trails go cold. What waits ahead has ended better adventurers than most"
+type: COMBAT
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0729
+objectives:
+  - description: "Slay 103 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 103
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 107 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 107
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+rewards:
+  items:
+    SHULKER_SHELL: 14
+    PHANTOM_MEMBRANE: 7
+  experience: 60524
+  money: 110046

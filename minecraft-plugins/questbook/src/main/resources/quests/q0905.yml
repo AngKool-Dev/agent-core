@@ -1,0 +1,31 @@
+id: q0905
+title: "Torrent Horizon 905"
+description: "Cartographers pay for certainty. Set eyes on the Deep Dark and return to draw it true. What waits ahead has ended better adventurers than most. Someone crossed out a name at the bottom. The spine creaks as if the book itself hesitates. This entry is written in a hurried hand"
+type: EXPLORATION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0904
+objectives:
+  - description: "Travel to the Deep Dark biome"
+    type: VISIT_BIOME
+    target: DEEP_DARK
+    amount: 1
+  - description: "Locate an end city"
+    type: FIND_STRUCTURE
+    target: end_city
+    amount: 1
+  - description: "Travel to the Snowy Taiga biome"
+    type: VISIT_BIOME
+    target: SNOWY_TAIGA
+    amount: 1
+  - description: "Locate a nether fortress"
+    type: FIND_STRUCTURE
+    target: nether_fortress
+    amount: 1
+rewards:
+  items:
+    ENDER_PEARL: 17
+    ENDER_PEARL: 8
+  experience: 77957
+  money: 147084

@@ -1,0 +1,27 @@
+id: q0328
+title: "Thorn Tribute 328"
+description: "Quartermasters have shortlisted Amethyst shard. Fulfil 244 before the season turns. By now, quitting would cost more than continuing"
+type: COLLECTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0327
+objectives:
+  - description: "Collect 244 amethyst shard"
+    type: COLLECT_ITEM
+    target: AMETHYST_SHARD
+    amount: 244
+  - description: "Collect 248 prismarine shard"
+    type: COLLECT_ITEM
+    target: PRISMARINE_SHARD
+    amount: 248
+  - description: "Collect 252 quartz"
+    type: COLLECT_ITEM
+    target: QUARTZ
+    amount: 252
+rewards:
+  items:
+    RAW_GOLD: 7
+    DIAMOND: 3
+  experience: 23591
+  money: 37369

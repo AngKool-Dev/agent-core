@@ -1,0 +1,31 @@
+id: q0567
+title: "Torrent Masonry 567"
+description: "Blueprints call for 173 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0566
+objectives:
+  - description: "Place 173 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 173
+  - description: "Place 176 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 176
+  - description: "Place 179 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 179
+  - description: "Place 182 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 182
+rewards:
+  items:
+    ECHO_SHARD: 11
+    NETHERITE_INGOT: 5
+  experience: 44945
+  money: 78239

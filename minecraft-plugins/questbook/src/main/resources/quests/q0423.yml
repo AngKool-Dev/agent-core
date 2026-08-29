@@ -1,0 +1,31 @@
+id: q0423
+title: "Gilded Foundation 423"
+description: "Blueprints call for 131 blackstone. The rest is sweat and stubbornness. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0422
+objectives:
+  - description: "Place 131 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 131
+  - description: "Place 134 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 134
+  - description: "Place 137 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 137
+  - description: "Place 140 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 140
+rewards:
+  items:
+    NETHERITE_SCRAP: 9
+    NETHERITE_SCRAP: 4
+  experience: 31829
+  money: 52680

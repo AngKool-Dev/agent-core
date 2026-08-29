@@ -1,0 +1,27 @@
+id: q0212
+title: "Ashen Provision 212"
+description: "Stores run thin and patience thinner. 122 Magma cream, weighed honest, closes this entry. Careful - the world pushes back harder the further you go"
+type: COLLECTION
+required_level: 5
+repeatable: false
+difficulty: HARD
+required_quest: q0211
+objectives:
+  - description: "Collect 122 magma cream"
+    type: COLLECT_ITEM
+    target: MAGMA_CREAM
+    amount: 122
+  - description: "Collect 126 blaze rod"
+    type: COLLECT_ITEM
+    target: BLAZE_ROD
+    amount: 126
+  - description: "Collect 130 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 130
+rewards:
+  items:
+    AMETHYST_SHARD: 5
+    LAPIS_LAZULI: 2
+  experience: 14112
+  money: 20732

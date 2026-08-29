@@ -1,0 +1,31 @@
+id: q0424
+title: "Gilded Harvest 424"
+description: "Someone upstream wants Ender eye by the crate. See that 64 reach the counting table. What waits ahead has ended better adventurers than most"
+type: COLLECTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0423
+objectives:
+  - description: "Collect 64 ender eye"
+    type: COLLECT_ITEM
+    target: ENDER_EYE
+    amount: 64
+  - description: "Collect 64 netherite scrap"
+    type: COLLECT_ITEM
+    target: NETHERITE_SCRAP
+    amount: 64
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_INGOT: 4
+  experience: 31918
+  money: 52848

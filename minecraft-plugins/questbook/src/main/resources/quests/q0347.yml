@@ -1,0 +1,27 @@
+id: q0347
+title: "Ember Masonry 347"
+description: "The frontier grows one wall at a time. Lay 248 quartz block and be part of it. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 7
+repeatable: false
+difficulty: HARD
+required_quest: q0346
+objectives:
+  - description: "Place 248 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 248
+  - description: "Place 251 deepslate"
+    type: PLACE_BLOCK
+    target: DEEPSLATE
+    amount: 251
+  - description: "Place 254 bricks"
+    type: PLACE_BLOCK
+    target: BRICKS
+    amount: 254
+rewards:
+  items:
+    BLAZE_ROD: 7
+    MAGMA_CREAM: 3
+  experience: 25208
+  money: 40321

@@ -1,0 +1,31 @@
+id: q0543
+title: "Eternal Foundation 543"
+description: "Blueprints call for 166 blackstone. The rest is sweat and stubbornness. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0542
+objectives:
+  - description: "Place 166 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 166
+  - description: "Place 169 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 169
+  - description: "Place 172 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 172
+  - description: "Place 175 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 175
+rewards:
+  items:
+    NAUTILUS_SHELL: 11
+    ECHO_SHARD: 5
+  experience: 42713
+  money: 73802

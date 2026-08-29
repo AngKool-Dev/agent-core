@@ -1,0 +1,31 @@
+id: q0607
+title: "Iron Masonry 607"
+description: "Blueprints call for 185 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 13
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0606
+objectives:
+  - description: "Place 185 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 185
+  - description: "Place 188 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 188
+  - description: "Place 191 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 191
+  - description: "Place 194 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 194
+rewards:
+  items:
+    ECHO_SHARD: 12
+    NETHERITE_INGOT: 6
+  experience: 48702
+  money: 85781

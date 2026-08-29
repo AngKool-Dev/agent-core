@@ -1,0 +1,18 @@
+name: QuestBook
+main: com.questbook.QuestBookPlugin
+version: 1.2.0
+api-version: 26.2
+author: Era
+description: A custom quest book plugin for Minecraft
+commands:
+  quest:
+    description: Manage and view quests
+    usage: /quest [list|info|accept|abandon]
+    aliases:
+      - q
+permissions:
+  questbook.admin:
+    description: Allows administration of quests
+    default: op
+softdepend:
+  - Vault

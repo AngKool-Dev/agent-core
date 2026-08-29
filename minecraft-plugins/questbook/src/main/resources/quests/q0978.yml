@@ -1,0 +1,36 @@
+id: q0978
+title: "Solar Crusade 978"
+description: "The End stirs beneath the void. This is a summons, not a suggestion. The Warden waits where light forgets to reach. End 4 of the breed and let the deep stay silent. The ink here is darker than usual"
+type: COMBAT
+required_level: 20
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0977
+requires_dragon_killed: true
+objectives:
+  - description: "Slay 4 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 4
+  - description: "Slay 4 Withers"
+    type: KILL_MOB
+    target: WITHER
+    amount: 4
+  - description: "Slay 4 Ender_Dragons"
+    type: KILL_MOB
+    target: ENDER_DRAGON
+    amount: 4
+  - description: "Slay 4 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 4
+rewards:
+  items:
+    ENDER_EYE: 18
+    SHULKER_SHELL: 9
+  experience: 85416
+  money: 163323
+  rare_items:
+    - material: DRAGON_HEAD
+      amount: 1
+      chance: 10

@@ -1,0 +1,31 @@
+id: q0706
+title: "Frost Hunt 706"
+description: "Every Piglin_Brute taken is a traveller spared. Make it 60, and make it permanent. Few pages turn past this point. Fewer still turn back. The ink here is darker than usual. A marginal note reads: bring help. The paper smells faintly of ozone"
+type: COMBAT
+required_level: 15
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0705
+objectives:
+  - description: "Slay 60 Piglin_Brutes"
+    type: KILL_MOB
+    target: PIGLIN_BRUTE
+    amount: 60
+  - description: "Slay 30 Elder_Guardians"
+    type: KILL_MOB
+    target: ELDER_GUARDIAN
+    amount: 30
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 105 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 105
+rewards:
+  items:
+    ECHO_SHARD: 13
+    ENDER_PEARL: 6
+  experience: 58187
+  money: 105190

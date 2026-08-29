@@ -1,0 +1,27 @@
+id: q0387
+title: "Verdant Masonry 387"
+description: "The frontier grows one wall at a time. Lay 287 waxed copper block and be part of it. Careful - the world pushes back harder the further you go"
+type: CONSTRUCTION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0386
+objectives:
+  - description: "Place 287 waxed copper block"
+    type: PLACE_BLOCK
+    target: WAXED_COPPER_BLOCK
+    amount: 287
+  - description: "Place 290 polished deepslate"
+    type: PLACE_BLOCK
+    target: POLISHED_DEEPSLATE
+    amount: 290
+  - description: "Place 293 quartz block"
+    type: PLACE_BLOCK
+    target: QUARTZ_BLOCK
+    amount: 293
+rewards:
+  items:
+    DIAMOND: 8
+    DIAMOND: 4
+  experience: 28664
+  money: 46719

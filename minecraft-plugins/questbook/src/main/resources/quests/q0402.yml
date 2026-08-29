@@ -1,0 +1,31 @@
+id: q0402
+title: "Obsidian Vigil 402"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. Few pages turn past this point. Fewer still turn back"
+type: COMBAT
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0401
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 60 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 60
+  - description: "Slay 62 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 62
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    NETHERITE_SCRAP: 8
+    NETHERITE_SCRAP: 4
+  experience: 29977
+  money: 49180

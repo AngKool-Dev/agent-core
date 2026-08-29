@@ -1,0 +1,31 @@
+id: q0427
+title: "Storm Masonry 427"
+description: "The frontier grows one wall at a time. Lay 132 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 9
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0426
+objectives:
+  - description: "Place 132 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 132
+  - description: "Place 135 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 135
+  - description: "Place 138 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 138
+  - description: "Place 141 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 141
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_INGOT: 4
+  experience: 32184
+  money: 53354

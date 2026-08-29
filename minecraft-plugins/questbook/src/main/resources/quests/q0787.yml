@@ -1,0 +1,31 @@
+id: q0787
+title: "Abyssal Masonry 787"
+description: "The frontier grows one wall at a time. Lay 237 blackstone and be part of it. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 16
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0786
+objectives:
+  - description: "Place 237 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 237
+  - description: "Place 240 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 240
+  - description: "Place 243 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 243
+  - description: "Place 246 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 246
+rewards:
+  items:
+    ENDER_PEARL: 15
+    SHULKER_SHELL: 7
+  experience: 66128
+  money: 121802

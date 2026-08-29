@@ -1,0 +1,31 @@
+id: q0527
+title: "Eternal Masonry 527"
+description: "Blueprints call for 161 blackstone. The rest is sweat and stubbornness. This is where the story stops being kind"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0526
+objectives:
+  - description: "Place 161 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 161
+  - description: "Place 164 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 164
+  - description: "Place 167 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 167
+  - description: "Place 170 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 170
+rewards:
+  items:
+    NETHERITE_INGOT: 10
+    NETHERITE_SCRAP: 5
+  experience: 41234
+  money: 70881

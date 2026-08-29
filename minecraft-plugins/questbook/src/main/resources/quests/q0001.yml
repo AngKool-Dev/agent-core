@@ -1,0 +1,22 @@
+id: q0001
+title: "Ember Expedition 001"
+description: "Every long road opens with a single honest task. Cartographers pay for certainty. Set eyes on the Forest and return to draw it true. Small steps still count on this road"
+type: EXPLORATION
+required_level: 1
+repeatable: false
+difficulty: NORMAL
+objectives:
+  - description: "Travel to the Forest biome"
+    type: VISIT_BIOME
+    target: FOREST
+    amount: 1
+  - description: "Travel to the Birch Forest biome"
+    type: VISIT_BIOME
+    target: BIRCH_FOREST
+    amount: 1
+rewards:
+  items:
+    COAL: 2
+    COAL: 1
+  experience: 26
+  money: 15

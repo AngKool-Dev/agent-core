@@ -1,0 +1,31 @@
+id: q0530
+title: "Eternal Reckoning 530"
+description: "Ghasts have been pushing past the borders after dark. Thin their ranks by 76 before the trails go cold. Few pages turn past this point. Fewer still turn back"
+type: COMBAT
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0529
+objectives:
+  - description: "Slay 76 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 76
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+  - description: "Slay 80 Shulkers"
+    type: KILL_MOB
+    target: SHULKER
+    amount: 80
+  - description: "Slay 12 Wardens"
+    type: KILL_MOB
+    target: WARDEN
+    amount: 12
+rewards:
+  items:
+    ECHO_SHARD: 10
+    NETHERITE_INGOT: 5
+  experience: 41511
+  money: 71427

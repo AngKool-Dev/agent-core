@@ -1,0 +1,31 @@
+id: q0940
+title: "Iron Harvest 940"
+description: "Diamond never sits idle in capable hands. Deliver 314 and the ledger stays balanced. The book keeps score, and it is watching closely now"
+type: COLLECTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0939
+objectives:
+  - description: "Collect 314 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 314
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+  - description: "Collect 48 shulker shell"
+    type: COLLECT_ITEM
+    target: SHULKER_SHELL
+    amount: 48
+  - description: "Collect 326 glowstone dust"
+    type: COLLECT_ITEM
+    target: GLOWSTONE_DUST
+    amount: 326
+rewards:
+  items:
+    GLOWSTONE_DUST: 17
+    GLOWSTONE_DUST: 8
+  experience: 81520
+  money: 154815

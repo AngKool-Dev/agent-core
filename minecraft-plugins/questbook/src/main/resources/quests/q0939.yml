@@ -1,0 +1,35 @@
+id: q0939
+title: "Iron Cornerstone 939"
+description: "The frontier grows one wall at a time. Lay 294 blackstone and be part of it. The book keeps score, and it is watching closely now"
+type: CONSTRUCTION
+required_level: 19
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0938
+objectives:
+  - description: "Place 294 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 294
+  - description: "Place 297 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 297
+  - description: "Place 300 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 300
+  - description: "Place 303 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 303
+rewards:
+  items:
+    ENDER_EYE: 17
+    ENDER_EYE: 8
+  experience: 81418
+  money: 154592
+  rare_items:
+    - material: NETHER_STAR
+      amount: 1
+      chance: 5

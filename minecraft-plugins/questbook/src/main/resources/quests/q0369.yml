@@ -1,0 +1,27 @@
+id: q0369
+title: "Frost Horizon 369"
+description: "Cartographers pay for certainty. Set eyes on the Badlands and return to draw it true. By now, quitting would cost more than continuing. Someone crossed out a name at the bottom"
+type: EXPLORATION
+required_level: 8
+repeatable: false
+difficulty: HARD
+required_quest: q0368
+objectives:
+  - description: "Travel to the Badlands biome"
+    type: VISIT_BIOME
+    target: BADLANDS
+    amount: 1
+  - description: "Locate a mansion"
+    type: FIND_STRUCTURE
+    target: mansion
+    amount: 1
+  - description: "Travel to the Mangrove Swamp biome"
+    type: VISIT_BIOME
+    target: MANGROVE_SWAMP
+    amount: 1
+rewards:
+  items:
+    MAGMA_CREAM: 8
+    RAW_GOLD: 4
+  experience: 27100
+  money: 43810

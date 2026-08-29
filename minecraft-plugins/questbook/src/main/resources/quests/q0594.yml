@@ -1,0 +1,31 @@
+id: q0594
+title: "Mirage Reckoning 594"
+description: "There is a price on Breezes this season. Collect on 60 of them; nobody asks how. What waits ahead has ended better adventurers than most. The ink here is darker than usual. A marginal note reads: bring help"
+type: COMBAT
+required_level: 12
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0593
+objectives:
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 86 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 86
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+rewards:
+  items:
+    NETHERITE_INGOT: 11
+    NETHERITE_SCRAP: 5
+  experience: 47476
+  money: 83311

@@ -1,0 +1,31 @@
+id: q0452
+title: "Abyssal Provision 452"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. The book keeps score, and it is watching closely now. The paper smells faintly of ozone"
+type: COLLECTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0451
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 155 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 155
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    DIAMOND: 9
+    DIAMOND: 4
+  experience: 34414
+  money: 57614

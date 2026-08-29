@@ -1,0 +1,27 @@
+id: q0181
+title: "Shattered Expedition 181"
+description: "Trade routes bend around the Stony Shore for want of a map. Be the one who fixes that. The road steepens; so do the rewards. Few have signed this page; fewer still twice"
+type: EXPLORATION
+required_level: 4
+repeatable: false
+difficulty: HARD
+required_quest: q0180
+objectives:
+  - description: "Travel to the Stony Shore biome"
+    type: VISIT_BIOME
+    target: STONY_SHORE
+    amount: 1
+  - description: "Locate an ocean ruin"
+    type: FIND_STRUCTURE
+    target: ocean_ruin
+    amount: 1
+  - description: "Travel to the Desert biome"
+    type: VISIT_BIOME
+    target: DESERT
+    amount: 1
+rewards:
+  items:
+    GOLD_INGOT: 5
+    PRISMARINE_SHARD: 2
+  experience: 11715
+  money: 16747

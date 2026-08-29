@@ -1,0 +1,31 @@
+id: q0462
+title: "Crimson Vigil 462"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. What waits ahead has ended better adventurers than most. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0461
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 68 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 68
+  - description: "Slay 70 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 70
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    ECHO_SHARD: 9
+    NETHERITE_INGOT: 4
+  experience: 35313
+  money: 59341

@@ -1,0 +1,35 @@
+id: q0822
+title: "Hollow Vigil 822"
+description: "Scouts report Evokers denning too close to the roads. Cull 40 and the caravans will breathe easier. What waits ahead has ended better adventurers than most. The spine creaks as if the book itself hesitates. This entry is written in a hurried hand"
+type: COMBAT
+required_level: 17
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0821
+objectives:
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 90 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 90
+  - description: "Slay 119 Ghasts"
+    type: KILL_MOB
+    target: GHAST
+    amount: 119
+  - description: "Slay 50 Ravagers"
+    type: KILL_MOB
+    target: RAVAGER
+    amount: 50
+rewards:
+  items:
+    ENDER_PEARL: 15
+    SHULKER_SHELL: 7
+  experience: 69606
+  money: 129171
+  rare_items:
+    - material: NETHERITE_INGOT
+      amount: 1
+      chance: 5

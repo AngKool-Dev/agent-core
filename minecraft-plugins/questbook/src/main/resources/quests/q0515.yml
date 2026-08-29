@@ -1,0 +1,31 @@
+id: q0515
+title: "Shattered Cornerstone 515"
+description: "The frontier grows one wall at a time. Lay 158 blackstone and be part of it. What waits ahead has ended better adventurers than most"
+type: CONSTRUCTION
+required_level: 11
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0514
+objectives:
+  - description: "Place 158 blackstone"
+    type: PLACE_BLOCK
+    target: BLACKSTONE
+    amount: 158
+  - description: "Place 161 obsidian"
+    type: PLACE_BLOCK
+    target: OBSIDIAN
+    amount: 161
+  - description: "Place 164 deepslate bricks"
+    type: PLACE_BLOCK
+    target: DEEPSLATE_BRICKS
+    amount: 164
+  - description: "Place 167 end stone bricks"
+    type: PLACE_BLOCK
+    target: END_STONE_BRICKS
+    amount: 167
+rewards:
+  items:
+    ECHO_SHARD: 10
+    NETHERITE_INGOT: 5
+  experience: 40131
+  money: 68711

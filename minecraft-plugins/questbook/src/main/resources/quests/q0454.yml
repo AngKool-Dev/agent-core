@@ -1,0 +1,31 @@
+id: q0454
+title: "Abyssal Reckoning 454"
+description: "There is a price on Breezes this season. Collect on 60 of them; nobody asks how. The book keeps score, and it is watching closely now. The spine creaks as if the book itself hesitates"
+type: COMBAT
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0453
+objectives:
+  - description: "Slay 60 Breezes"
+    type: KILL_MOB
+    target: BREEZE
+    amount: 60
+  - description: "Slay 67 Wither_Skeletons"
+    type: KILL_MOB
+    target: WITHER_SKELETON
+    amount: 67
+  - description: "Slay 40 Evokers"
+    type: KILL_MOB
+    target: EVOKER
+    amount: 40
+  - description: "Slay 71 Boggeds"
+    type: KILL_MOB
+    target: BOGGED
+    amount: 71
+rewards:
+  items:
+    NETHERITE_INGOT: 9
+    NETHERITE_INGOT: 4
+  experience: 34594
+  money: 57958

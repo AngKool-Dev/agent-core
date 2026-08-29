@@ -1,0 +1,31 @@
+id: q0492
+title: "Hollow Provision 492"
+description: "Stores run thin and patience thinner. 96 Nautilus shell, weighed honest, closes this entry. Few pages turn past this point. Fewer still turn back"
+type: COLLECTION
+required_level: 10
+repeatable: false
+difficulty: SUPER_HARD
+required_quest: q0491
+objectives:
+  - description: "Collect 96 nautilus shell"
+    type: COLLECT_ITEM
+    target: NAUTILUS_SHELL
+    amount: 96
+  - description: "Collect 96 ender pearl"
+    type: COLLECT_ITEM
+    target: ENDER_PEARL
+    amount: 96
+  - description: "Collect 168 diamond"
+    type: COLLECT_ITEM
+    target: DIAMOND
+    amount: 168
+  - description: "Collect 96 echo shard"
+    type: COLLECT_ITEM
+    target: ECHO_SHARD
+    amount: 96
+rewards:
+  items:
+    NETHERITE_SCRAP: 10
+    DIAMOND: 5
+  experience: 38028
+  money: 64601
