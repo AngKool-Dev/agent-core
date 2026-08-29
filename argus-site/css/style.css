@@ -869,6 +869,29 @@ section {
   outline: none;
 }
 
+.plugin-download {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border-top: none;
+}
+
+.plugin-download:hover,
+.plugin-download:focus {
+  color: #fff;
+  box-shadow: 0 0 20px rgba(124, 92, 255, 0.35);
+}
+
+.plugin-source {
+  color: var(--text-secondary);
+}
+
+.plugin-source:hover,
+.plugin-source:focus {
+  color: var(--text-primary);
+}
+
 @media (min-width: 768px) {
   .plugins-grid {
     grid-template-columns: repeat(3, 1fr);
