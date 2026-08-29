@@ -1,0 +1,38 @@
+name: Prime
+version: '${project.version}'
+main: dev.mcplugins.prime.PrimePlugin
+api-version: '1.21'
+description: Premium and cracked account authentication with SQLite-backed sessions.
+author: mcplugins
+website: https://github.com/mcplugins
+softdepend: [Vault]
+
+commands:
+  prime:
+    description: Prime authentication commands.
+    usage: /prime [register|login|changepassword|status|reload|premium|unregister]
+    aliases: [auth, login, register]
+  register:
+    description: Register a new cracked account.
+    usage: /register <password> <confirm>
+    permission: prime.use
+  login:
+    description: Login with your cracked account password.
+    usage: /login <password>
+    permission: prime.use
+  changepassword:
+    description: Change your account password.
+    usage: /changepassword <old> <new>
+    permission: prime.use
+  auth:
+    description: Check your authentication status.
+    usage: /auth status
+    permission: prime.use
+
+permissions:
+  prime.use:
+    description: Use Prime authentication commands.
+    default: true
+  prime.admin:
+    description: Administer Prime settings and player data.
+    default: op

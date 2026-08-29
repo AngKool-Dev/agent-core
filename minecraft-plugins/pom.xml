@@ -17,6 +17,7 @@
         <module>skillforge</module>
         <module>purge</module>
         <module>bazaar</module>
+        <module>prime</module>
     </modules>
 
     <properties>
