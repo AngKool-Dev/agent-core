@@ -885,6 +885,10 @@ section {
 /* ============================================
    Features
    ============================================ */
+.features {
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 255, 136, 0.02) 50%, transparent 100%);
+}
+
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -908,8 +912,8 @@ section {
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -917,11 +921,54 @@ section {
 .feature-card:hover {
   border-color: var(--border-strong);
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 30px var(--accent-dim);
 }
 
 .feature-card:hover::before {
   opacity: 1;
+}
+
+.feature-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: fit-content;
+  margin-bottom: 12px;
+}
+
+.feature-badge--core {
+  background: rgba(0, 255, 136, 0.12);
+  color: var(--accent-primary);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+}
+
+.feature-badge--automation {
+  background: rgba(0, 212, 255, 0.12);
+  color: var(--accent-secondary);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+}
+
+.feature-badge--content {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.feature-badge--interface {
+  background: rgba(255, 215, 0, 0.12);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+}
+
+.feature-badge--performance {
+  background: rgba(255, 100, 100, 0.12);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 100, 100, 0.25);
 }
 
 .feature-icon {
@@ -929,7 +976,12 @@ section {
   height: 40px;
   margin-bottom: 16px;
   color: var(--accent-primary);
-  filter: drop-shadow(0 0 6px var(--accent-glow));
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+  transition: filter 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+  filter: drop-shadow(0 0 12px var(--accent-glow));
 }
 
 .feature-icon svg {
@@ -964,6 +1016,13 @@ section {
 .feature-link:focus {
   color: var(--text-primary);
   outline: none;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* ============================================
