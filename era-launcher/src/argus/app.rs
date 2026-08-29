@@ -16,6 +16,7 @@ use crate::argus::ui;
 use crossterm::event::{
     Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent, MouseEventKind,
 };
+use std::env;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -45,6 +46,7 @@ pub struct ArgusApp {
     renderer: Renderer,
     tracker: RuntimeTracker,
     update_rx: Option<std::sync::mpsc::Receiver<crate::argus::update::UpdateCheckResult>>,
+    update_quit_rx: Option<std::sync::mpsc::Receiver<()>>,
 }
 
 impl ArgusApp {
@@ -60,6 +62,7 @@ impl ArgusApp {
             renderer,
             tracker: RuntimeTracker::new(),
             update_rx: None,
+            update_quit_rx: None,
         })
     }
 
@@ -74,6 +77,14 @@ impl ArgusApp {
         self.renderer.render(&self.state, &self.focus)?;
 
         let poll_timeout = Duration::from_millis(100);
+
+        std::panic::set_hook(Box::new(|info| {
+            let crash_dir = crate::platform::Paths::new().data_local.join("crash");
+            let _ = std::fs::create_dir_all(&crash_dir);
+            let ts = chrono::Local::now().format("%Y%m%d-%H%M%S");
+            let path = crash_dir.join(format!("era-launcher-panic-{}.log", ts));
+            let _ = std::fs::write(&path, format!("ARGUS panicked at {}\npanic info: {}\n", ts, info));
+        }));
 
         loop {
             // Periodically poll runtime state and process output
@@ -91,11 +102,47 @@ impl ArgusApp {
                                 LogLevel::Info,
                                 "ARGUS",
                                 &format!(
-                                    "Update available: {} (running v{})",
+                                    "Update available: {} (running v{}) — downloading...",
                                     tag,
                                     env!("CARGO_PKG_VERSION")
                                 ),
                             );
+                            self.state.set_loading(true, Some(format!("Downloading update v{}...", tag)));
+                            let _ = self.renderer.render(&self.state, &self.focus);
+                            let tag_for_thread = tag.clone();
+                            let current_exe = match std::env::current_exe() {
+                                Ok(p) => p,
+                                Err(e) => {
+                                    self.state.set_loading(false, None);
+                                    self.state.set_error(format!("Cannot locate launcher path: {}", e));
+                                    continue;
+                                }
+                            };
+                            let (quit_tx, quit_rx) = std::sync::mpsc::channel();
+                            self.update_quit_rx = Some(quit_rx);
+                            std::thread::spawn(move || {
+                                let dest = current_exe
+                                    .parent()
+                                    .map(|p| p.to_path_buf())
+                                    .unwrap_or_else(|| std::path::PathBuf::from("."))
+                                    .join("era-launcher.new");
+                                let result = (|| -> Result<(), String> {
+                                    let url = crate::argus::update::fetch_latest_asset_url()?;
+                                    crate::argus::update::download_asset(&url, &dest)?;
+                                    let helper = crate::argus::update::create_update_helper(&current_exe, &dest)?;
+                                    #[cfg(target_env = "msvc")]
+                                    let mut cmd = std::process::Command::new(helper)
+                                        .creation_flags(0x00000010);
+                                    #[cfg(not(target_env = "msvc"))]
+                                    let mut cmd = std::process::Command::new(helper);
+                                    let _ = cmd.spawn();
+                                    Ok(())
+                                })();
+                                let _ = quit_tx.send(());
+                                if let Err(e) = result {
+                                    eprintln!("Update failed: {}", e);
+                                }
+                            });
                         }
                         crate::argus::update::UpdateCheckResult::CheckFailed(err) => {
                             self.state.update_check = crate::argus::update::UpdateCheckResult::CheckFailed(err.clone());
@@ -110,6 +157,13 @@ impl ArgusApp {
                         }
                     }
                     self.update_rx = None;
+                }
+            }
+
+            if let Some(rx) = &self.update_quit_rx {
+                if let Ok(()) = rx.try_recv() {
+                    self.state.set_loading(false, None);
+                    self.state.should_quit = true;
                 }
             }
 
@@ -344,6 +398,12 @@ impl ArgusApp {
                         );
                     }
                 }
+                for (i, _) in self.state.updatable_mods.iter().enumerate() {
+                    self.focus.register(
+                        &format!("update_{}", i),
+                        &format!("Update {}", i + 1),
+                    );
+                }
             }
             Section::Worlds => {
                 if self.state.worlds.is_empty() {
@@ -360,6 +420,13 @@ impl ArgusApp {
                     self.focus.register("logs_empty", "No log entries");
                 } else {
                     self.focus.register("logs_list", "Log Entries");
+                }
+            }
+            Section::Crashes => {
+                if self.state.crash_reports.is_empty() {
+                    self.focus.register("crashes_empty", "No crash reports");
+                } else {
+                    self.focus.register("crashes_list", "Crash Reports");
                 }
             }
             Section::Settings => {
@@ -1719,11 +1786,11 @@ impl ArgusApp {
             pi.instance_id.as_deref(),
             pinned_version_id,
         ) {
-            Ok(filename) => {
+            Ok((filename, version_id)) => {
                 self.state.set_loading(false, None);
                 // Record the install so DISCOVER hides this project from now on.
                 if let Some(iid) = pi.instance_id.as_deref() {
-                    BackendBridge::record_install(iid, &pi.project_id, &filename, &pi.content_type);
+                    BackendBridge::record_install(iid, &pi.project_id, version_id.as_deref(), &filename, &pi.content_type);
                 }
                 self.state.set_status(format!("Installed: {}", filename));
                 self.state.log(
@@ -1790,6 +1857,40 @@ impl ArgusApp {
             }
             Err(e) => self.state.set_error(e),
         }
+    }
+
+    /// Reinstall the latest version of the updatable mod at `idx`.
+    fn update_mod_at_index(&mut self, idx: usize) {
+        let Some(updatable) = self.state.updatable_mods.get(idx).cloned() else {
+            return;
+        };
+        let Some(inst) = self.state.selected_instance.clone() else {
+            self.state.set_status("No instance selected".to_string());
+            return;
+        };
+
+        self.state.set_loading(
+            true,
+            Some(format!("Updating {}...", updatable.title)),
+        );
+        let _ = self.renderer.render(&self.state, &self.focus);
+
+        let content_type = match updatable.content_type.as_str() {
+            "modpack" => "modpack",
+            "resourcepack" => "resourcepack",
+            "shader" => "shader",
+            _ => "mod",
+        };
+
+        let pi = crate::argus::state::PendingInstall {
+            project_id: updatable.project_id.clone(),
+            title: updatable.title.clone(),
+            content_type: content_type.to_string(),
+            instance_id: Some(inst.id.clone()),
+            rows: vec![(updatable.latest_version_id.clone(), updatable.latest_version.clone())],
+        };
+
+        self.perform_install(&pi, Some(updatable.latest_version_id.as_str()));
     }
 
     /// Launch the selected/default instance via real backend

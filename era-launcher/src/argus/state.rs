@@ -19,6 +19,7 @@ pub enum Section {
     Mods,
     Worlds,
     Logs,
+    Crashes,
     Settings,
 }
 
@@ -66,6 +67,7 @@ impl Section {
             Section::Mods => "MODS",
             Section::Worlds => "WORLDS",
             Section::Logs => "LOGS",
+            Section::Crashes => "CRASHES",
             Section::Settings => "SETTINGS",
         }
     }
@@ -78,6 +80,7 @@ impl Section {
             Section::Mods,
             Section::Worlds,
             Section::Logs,
+            Section::Crashes,
             Section::Settings,
         ]
     }
@@ -206,6 +209,29 @@ pub struct InstalledContent {
     pub size_bytes: u64,
 }
 
+/// An installed content item that has a newer version available on Modrinth.
+#[derive(Debug, Clone)]
+pub struct UpdatableMod {
+    pub project_id: String,
+    pub title: String,
+    pub installed_version: String,
+    pub latest_version: String,
+    pub latest_version_id: String,
+    pub content_type: String,
+    pub filename: String,
+}
+
+/// Parsed summary of a JVM crash report (`hs_err_pid*.log`).
+#[derive(Debug, Clone)]
+pub struct CrashReport {
+    pub path: PathBuf,
+    pub timestamp: String,
+    pub exception: String,
+    pub thread: String,
+    pub jvm_version: String,
+    pub summary: String,
+}
+
 /// Loader choices offered when creating an instance: (id, description).
 pub const CREATE_LOADERS: &[(&str, &str)] = &[
     ("vanilla", "Official Minecraft — no mods"),
@@ -291,6 +317,10 @@ pub struct AppState {
     pub discover_scoped_instance: Option<String>,
     /// Content installed in the selected instance (MODS section)
     pub installed_content: Vec<InstalledContent>,
+    /// Mods/resource packs/shaders with newer versions available
+    pub updatable_mods: Vec<UpdatableMod>,
+    /// JVM crash reports found for the selected instance
+    pub crash_reports: Vec<CrashReport>,
     /// Worlds found in the selected instance's saves directory
     pub worlds: Vec<String>,
     /// System scan results
@@ -399,6 +429,8 @@ impl AppState {
             result_installed: Vec::new(),
             show_installed_discover: false,
             installed_content: Vec::new(),
+            updatable_mods: Vec::new(),
+            crash_reports: Vec::new(),
             worlds: Vec::new(),
             scan_results: Vec::new(),
             logs: VecDeque::with_capacity(1000),

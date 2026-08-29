@@ -99,7 +99,7 @@ pub fn draw_header(frame: &mut Frame, area: Rect, state: &AppState, _focus: &Foc
     // Left side: title
     let title = vec![
         Line::from(Span::styled(
-            "ERA LAUNCHER v0.1.4",
+            "ERA LAUNCHER v0.1.5",
             Style::default().fg(t.accent).bold(),
         )),
         Line::from(Span::styled(
@@ -1027,6 +1027,34 @@ pub fn draw_mods(frame: &mut Frame, area: Rect, state: &AppState, focus: &FocusM
         ))]));
     }
 
+    if !state.updatable_mods.is_empty() {
+        items.push(ListItem::new(vec![Line::from(Span::raw(" "))]));
+        items.push(ListItem::new(vec![Line::from(Span::styled(
+            "Updates available:",
+            Style::default().fg(t.warning).bold(),
+        ))]));
+        for (i, u) in state.updatable_mods.iter().enumerate() {
+            let id = format!("update_{}", i);
+            let row = items.len();
+            let is_focused = focus.current().map(|f| f.id == id).unwrap_or(false);
+            if is_focused {
+                selected_row = row;
+            }
+            let bg = if is_focused { t.bg_dark } else { t.bg };
+            items.push(ListItem::new(vec![Line::from(vec![
+                Span::styled(
+                    format!("[ UPDATE ] "),
+                    Style::default().fg(t.warning).bold().bg(bg),
+                ),
+                Span::styled(u.title.clone(), Style::default().fg(t.text).bg(bg)),
+                Span::styled(
+                    format!("  {} → {}", u.installed_version, u.latest_version),
+                    Style::default().fg(t.text_muted).bg(bg),
+                ),
+            ])]));
+        }
+    }
+
     let list = List::new(items)
         .block(panel_block(format!(
             "INSTALLED CONTENT  ({} file(s) · ↑↓ browse · X removes focused)",
@@ -1090,6 +1118,58 @@ pub fn draw_worlds(frame: &mut Frame, area: Rect, state: &AppState, _focus: &Foc
     }
 
     let list = List::new(items).block(panel_block("WORLDS".to_string()));
+    frame.render_widget(list, area);
+}
+
+/// Draw the CRASHES section — lists JVM crash reports found for the selected
+/// instance.
+pub fn draw_crashes(frame: &mut Frame, area: Rect, state: &AppState, _focus: &FocusManager) {
+    let t = theme::current();
+    let mut items = Vec::new();
+
+    let target = state
+        .selected_instance
+        .as_ref()
+        .map(|i| i.name.clone())
+        .unwrap_or_else(|| "(no instance)".to_string());
+    items.push(ListItem::new(vec![Line::from(vec![
+        Span::styled("Crash reports for ", Style::default().fg(t.text_dim)),
+        Span::styled(target, Style::default().fg(t.accent).bold()),
+    ])]));
+    items.push(ListItem::new(vec![Line::from(Span::raw(" "))]));
+
+    for report in &state.crash_reports {
+        items.push(ListItem::new(vec![Line::from(Span::styled(
+            format!("{} — {}", report.timestamp, report.summary),
+            Style::default().fg(t.error),
+        ))]));
+        items.push(ListItem::new(vec![Line::from(Span::styled(
+            format!("  Exception: {}", report.exception),
+            Style::default().fg(t.text_muted),
+        ))]));
+        items.push(ListItem::new(vec![Line::from(Span::styled(
+            format!("  Thread: {}", report.thread),
+            Style::default().fg(t.text_muted),
+        ))]));
+        items.push(ListItem::new(vec![Line::from(Span::styled(
+            format!("  JVM: {}", report.jvm_version),
+            Style::default().fg(t.text_muted),
+        ))]));
+        items.push(ListItem::new(vec![Line::from(Span::raw(" "))]));
+    }
+
+    if state.crash_reports.is_empty() {
+        items.push(ListItem::new(vec![Line::from(Span::styled(
+            "No crash reports found.",
+            Style::default().fg(t.text_dim),
+        ))]));
+        items.push(ListItem::new(vec![Line::from(Span::styled(
+            "Reports appear here after Minecraft exits abnormally.",
+            Style::default().fg(t.text_muted),
+        ))]));
+    }
+
+    let list = List::new(items).block(panel_block("CRASH REPORTS".to_string()));
     frame.render_widget(list, area);
 }
 

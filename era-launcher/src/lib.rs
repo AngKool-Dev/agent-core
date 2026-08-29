@@ -170,7 +170,7 @@ async fn get_fabric_loader_versions(_game_version: String) -> Vec<String> {
         .unwrap();
     let resp = http
         .get(fabric_url)
-        .header("User-Agent", "EraLauncher/0.1.0")
+        .header("User-Agent", "EraLauncher/0.1.5")
         .send()
         .await;
     if let Ok(resp) = resp {

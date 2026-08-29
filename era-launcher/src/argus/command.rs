@@ -75,6 +75,8 @@ impl CommandManager {
             "versions" => Self::cmd_versions(state),
             "search" => Self::cmd_search(state, args),
             "update" => Self::cmd_update(state),
+            "check-updates" | "mod-updates" => Self::cmd_check_updates(state),
+            "crashes" => Self::cmd_crashes(state),
             _ => CommandResult::Error(format!(
                 "Unknown command: '{}'. Type 'help' for available commands.",
                 cmd
@@ -672,6 +674,53 @@ impl CommandManager {
         }
     }
 
+    fn cmd_check_updates(state: &mut AppState) -> CommandResult {
+        let instance_id = state.selected_instance.as_ref().map(|i| i.id.clone());
+        let updates = BackendBridge::check_mod_updates(instance_id.as_deref());
+        state.updatable_mods = updates.clone();
+        if updates.is_empty() {
+            CommandResult::Success(Some("All mods are up to date.".to_string()))
+        } else {
+            let mut output = format!("{} mod(s) have updates available:\n", updates.len());
+            for (i, u) in updates.iter().enumerate() {
+                output.push_str(&format!(
+                    "{}. {} — {} → {}\n",
+                    i + 1,
+                    u.title,
+                    u.installed_version,
+                    u.latest_version
+                ));
+            }
+            output.push_str("\nGo to MODS section to update individual mods, or reinstall from DISCOVER.");
+            CommandResult::Output(output)
+        }
+    }
+
+    fn cmd_crashes(state: &mut AppState) -> CommandResult {
+        let instance_id = state.selected_instance.as_ref().map(|i| i.id.clone());
+        let reports = BackendBridge::scan_crash_reports(instance_id.as_deref());
+        state.crash_reports = reports.clone();
+        if reports.is_empty() {
+            CommandResult::Success(Some("No crash reports found.".to_string()))
+        } else {
+            let mut output = format!("{} crash report(s) found:\n\n", reports.len());
+            for (i, r) in reports.iter().enumerate() {
+                output.push_str(&format!(
+                    "{}. {} — {}\n   Exception: {}\n   Thread: {}\n   JVM: {}\n   Path: {}\n\n",
+                    i + 1,
+                    r.timestamp,
+                    r.summary,
+                    r.exception,
+                    r.thread,
+                    r.jvm_version,
+                    r.path.display()
+                ));
+            }
+            output.push_str("Tip: Check the exception type and problematic frame above.");
+            CommandResult::Output(output)
+        }
+    }
+
     fn cmd_search(state: &mut AppState, args: Option<&str>) -> CommandResult {
         let query = args.unwrap_or("");
         state.set_loading(true, Some(format!("Searching Modrinth for '{}'...", query)));
@@ -726,6 +775,7 @@ Navigation:
   mods              Show content installed in the selected instance
   worlds            Navigate to WORLDS management
   logs              Navigate to LOGS viewer
+  crashes           Show JVM crash reports for the selected instance
   settings          Navigate to SETTINGS
 
 Runtime:

@@ -84,7 +84,7 @@ impl ModrinthClient {
         let mut request = self
             .client
             .get(format!("{}/search", MODRINTH_API))
-            .header("User-Agent", "EraLauncher/0.1.0");
+            .header("User-Agent", "EraLauncher/0.1.5");
         if !query.is_empty() {
             request = request.query(&[("query", query)]);
         }
@@ -117,7 +117,7 @@ impl ModrinthClient {
         let resp = self
             .client
             .get(format!("{}/project/{}/version", MODRINTH_API, project_id))
-            .header("User-Agent", "EraLauncher/0.1.0")
+            .header("User-Agent", "EraLauncher/0.1.5")
             .send()
             .await?;
         if !resp.status().is_success() {
@@ -136,7 +136,7 @@ impl ModrinthClient {
         let resp = self
             .client
             .get(format!("{}/version", MODRINTH_API))
-            .header("User-Agent", "EraLauncher/0.1.0")
+            .header("User-Agent", "EraLauncher/0.1.5")
             .query(&[
                 ("loaders", "fabric"),
                 ("game_versions", game_version),
@@ -172,7 +172,7 @@ impl ModrinthClient {
         let resp = self
             .client
             .get(format!("{}/version", MODRINTH_API))
-            .header("User-Agent", "EraLauncher/0.1.0")
+            .header("User-Agent", "EraLauncher/0.1.5")
             .query(&[
                 ("loaders", "forge"),
                 ("game_versions", game_version),

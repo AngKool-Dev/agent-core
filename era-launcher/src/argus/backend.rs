@@ -179,6 +179,7 @@ pub enum LaunchEvent {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct InstallRecord {
     pub project_id: String,
+    pub version_id: Option<String>,
     pub filename: String,
     pub content_type: String,
 }
@@ -484,7 +485,7 @@ impl BackendBridge {
         content_type: &str,
         instance_id: Option<&str>,
         pinned_version_id: Option<&str>,
-    ) -> Result<String, String> {
+    ) -> Result<(String, Option<String>), String> {
         // Pick target instance: requested id, else first available.
         let mgr = INSTANCE_MANAGER.lock().unwrap();
         let instance = instance_id
@@ -580,7 +581,7 @@ Create a Fabric or Quilt instance first.",
                 }
             }
 
-            Ok(file.filename.clone())
+            Ok((file.filename.clone(), Some(version.id.clone())))
         })
     }
 
@@ -848,6 +849,94 @@ Create a Fabric or Quilt instance first.",
         worlds
     }
 
+    /// Scan the instance's game directory and the temp directory for JVM
+    /// crash reports (`hs_err_pid*.log`). Returns parsed summaries.
+    pub fn scan_crash_reports(instance_id: Option<&str>) -> Vec<crate::argus::state::CrashReport> {
+        use crate::argus::state::CrashReport;
+
+        let mgr = INSTANCE_MANAGER.lock().unwrap();
+        let instance = instance_id
+            .and_then(|id| mgr.list().iter().find(|i| i.id == id))
+            .or_else(|| mgr.list().first())
+            .cloned();
+        drop(mgr);
+        let Some(instance) = instance else {
+            return Vec::new();
+        };
+
+        let mut reports = Vec::new();
+        let mut scan_dirs = Vec::new();
+        let base = Self::instances_dir().join(&instance.id);
+        scan_dirs.push(base.join("game"));
+        scan_dirs.push(std::env::temp_dir());
+
+        for dir in scan_dirs {
+            if let Ok(entries) = std::fs::read_dir(&dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    let name = match path.file_name().and_then(|n| n.to_str()) {
+                        Some(n) => n,
+                        None => continue,
+                    };
+                    if !name.starts_with("hs_err_pid") || !name.ends_with(".log") {
+                        continue;
+                    }
+                    if let Ok(meta) = entry.metadata() {
+                        if let Ok(modified) = meta.modified() {
+                            if let Ok(duration) = modified.elapsed() {
+                                let ts = if duration.as_secs() < 86400 {
+                                    format!("{}h ago", duration.as_secs() / 3600)
+                                } else {
+                                    format!("{}d ago", duration.as_secs() / 86400)
+                                };
+                                let content = std::fs::read_to_string(&path).unwrap_or_default();
+                                let (exception, thread, jvm) = Self::parse_crash_report(&content);
+                                reports.push(CrashReport {
+                                    path: path.clone(),
+                                    timestamp: ts,
+                                    exception,
+                                    thread,
+                                    jvm_version: jvm,
+                                    summary: Self::summarize_crash(&content),
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        reports.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        reports
+    }
+
+    fn parse_crash_report(content: &str) -> (String, String, String) {
+        let mut exception = String::new();
+        let mut thread = String::new();
+        let mut jvm = String::new();
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("# ") && trimmed.contains("EXCEPTION") {
+                exception = trimmed.to_string();
+            } else if trimmed.starts_with("Thread:") {
+                thread = trimmed.trim_start_matches("Thread:").trim().to_string();
+            } else if trimmed.contains("OpenJDK") || trimmed.contains("jdk") {
+                jvm = trimmed.to_string();
+                break;
+            }
+        }
+        (exception, thread, jvm)
+    }
+
+    fn summarize_crash(content: &str) -> String {
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("# ") && trimmed.contains("EXCEPTION") {
+                return trimmed.to_string();
+            }
+        }
+        "Unknown crash".to_string()
+    }
+
     /// Install the Fabric or Quilt loader for a Minecraft version by fetching
     /// its meta API, downloading every launcher library into `libs_dir`, and
     /// returning `(main_class, downloaded_library_paths)`.
@@ -868,7 +957,7 @@ Create a Fabric or Quilt instance first.",
         );
         let resp = client
             .get(&url)
-            .header("User-Agent", "EraLauncher/0.1.0")
+            .header("User-Agent", "EraLauncher/0.1.5")
             .send()
             .await
             .map_err(|e| format!("Loader meta request failed: {}", e))?;
@@ -1125,7 +1214,7 @@ Create a Fabric or Quilt instance first.",
     }
 
     /// Persist an install record after a successful download.
-    pub fn record_install(instance_id: &str, project_id: &str, filename: &str, content_type: &str) {
+    pub fn record_install(instance_id: &str, project_id: &str, version_id: Option<&str>, filename: &str, content_type: &str) {
         let path = Self::installed_index_path(instance_id);
         let mut records: Vec<InstallRecord> = std::fs::read_to_string(&path)
             .ok()
@@ -1139,6 +1228,7 @@ Create a Fabric or Quilt instance first.",
         }
         records.push(InstallRecord {
             project_id: project_id.to_string(),
+            version_id: version_id.map(|s| s.to_string()),
             filename: filename.to_string(),
             content_type: content_type.to_string(),
         });
@@ -1158,6 +1248,128 @@ Create a Fabric or Quilt instance first.",
             .and_then(|s| serde_json::from_str::<Vec<InstallRecord>>(&s).ok())
             .map(|records| records.into_iter().map(|r| r.project_id).collect())
             .unwrap_or_default()
+    }
+
+    /// Full install records for this instance (includes version_id).
+    pub fn install_records(instance_id: Option<&str>) -> Vec<InstallRecord> {
+        let Some(id) = instance_id else {
+            return Vec::new();
+        };
+        let path = Self::installed_index_path(id);
+        std::fs::read_to_string(path)
+            .ok()
+            .and_then(|s| serde_json::from_str::<Vec<InstallRecord>>(&s).ok())
+            .unwrap_or_default()
+    }
+
+    /// Check installed mods/resource packs/shaders for newer versions on Modrinth.
+    /// Returns a list of `UpdatableMod` for content that has updates available.
+    pub fn check_mod_updates(instance_id: Option<&str>) -> Vec<crate::argus::state::UpdatableMod> {
+        use crate::argus::state::UpdatableMod;
+        let records = Self::install_records(instance_id);
+        if records.is_empty() {
+            return Vec::new();
+        }
+
+        let mgr = INSTANCE_MANAGER.lock().unwrap();
+        let instance = instance_id
+            .and_then(|id| mgr.list().iter().find(|i| i.id == id))
+            .or_else(|| mgr.list().first())
+            .cloned();
+        drop(mgr);
+        let Some(instance) = instance else {
+            return Vec::new();
+        };
+
+        let rt = match tokio::runtime::Runtime::new() {
+            Ok(rt) => rt,
+            Err(_) => return Vec::new(),
+        };
+
+        let mut updatable = Vec::new();
+        for record in records {
+            if record.content_type == "modpack" {
+                continue;
+            }
+            let versions: Vec<_> = rt.block_on(async {
+                let client = match ModrinthClient::new() {
+                    Ok(c) => c,
+                    Err(_) => return Vec::new(),
+                };
+                client.get_project_versions(&record.project_id).await.ok().unwrap_or_default()
+            });
+            let versions: Vec<_> = rt.block_on(async {
+                let client = match ModrinthClient::new() {
+                    Ok(c) => c,
+                    Err(_) => return Vec::new(),
+                };
+                client.get_project_versions(&record.project_id).await.ok().unwrap_or_default()
+            });
+
+            let latest_release = versions.iter().find(|v| v.version_type == "release");
+            let installed_id = record.version_id.as_deref();
+            let needs_update = match installed_id {
+                Some(iid) => latest_release.map(|v| v.id != *iid).unwrap_or(false),
+                None => {
+                    let installed_ver = Self::extract_version_from_filename(&record.filename);
+                    latest_release
+                        .map(|v| Self::compare_versions(&v.version_number, installed_ver.as_deref()) > 0)
+                        .unwrap_or(false)
+                }
+            };
+
+            if needs_update {
+                if let Some(latest) = latest_release {
+                    updatable.push(UpdatableMod {
+                        project_id: record.project_id.clone(),
+                        title: record.filename.clone(),
+                        installed_version: installed_id.unwrap_or("unknown").to_string(),
+                        latest_version: latest.version_number.clone(),
+                        latest_version_id: latest.id.clone(),
+                        content_type: record.content_type.clone(),
+                        filename: record.filename.clone(),
+                    });
+                }
+            }
+        }
+        updatable
+    }
+
+    /// Extract a version string like "0.5.11" from a filename like "sodium-0.5.11.jar".
+    fn extract_version_from_filename(filename: &str) -> Option<String> {
+        let stem = std::path::Path::new(filename).file_stem()?.to_string_lossy();
+        let mut parts = stem.rsplit('-');
+        let last = parts.next()?;
+        if last.chars().all(|c| c.is_ascii_digit() || c == '.') && last.contains('.') {
+            Some(last.to_string())
+        } else {
+            None
+        }
+    }
+
+    /// Compare two version strings semver-ish. Returns negative if a < b,
+    /// positive if a > b, 0 if equal.
+    fn compare_versions(a: &str, b: Option<&str>) -> i32 {
+        let Some(b) = b else { return 1 };
+        let parse = |s: &str| -> Vec<u64> {
+            s.trim()
+                .trim_start_matches('v')
+                .split('.')
+                .filter_map(|p| p.parse::<u64>().ok())
+                .collect()
+        };
+        let av = parse(a);
+        let bv = parse(b);
+        for i in 0..av.len().max(bv.len()) {
+            let ai = av.get(i).copied().unwrap_or(0);
+            let bi = bv.get(i).copied().unwrap_or(0);
+            match ai.cmp(&bi) {
+                std::cmp::Ordering::Greater => return 1,
+                std::cmp::Ordering::Less => return -1,
+                std::cmp::Ordering::Equal => {}
+            }
+        }
+        0
     }
 
     /// Heuristic legacy matcher: does an installed FILENAME look like it

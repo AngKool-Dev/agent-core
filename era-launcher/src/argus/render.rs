@@ -106,6 +106,7 @@ impl Renderer {
             Section::Mods => ui::draw_mods(f, chunks[2], state, focus),
             Section::Worlds => ui::draw_worlds(f, chunks[2], state, focus),
             Section::Logs => ui::draw_logs(f, chunks[2], state, focus),
+            Section::Crashes => ui::draw_crashes(f, chunks[2], state, focus),
             Section::Settings => ui::draw_settings(f, chunks[2], state, focus),
         }
 

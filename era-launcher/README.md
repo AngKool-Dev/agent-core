@@ -25,20 +25,19 @@ https://github.com/AngKool-Dev/argus-launcher/issues
 
 ## Build (Internal)
 
-This project uses Rust, Tauri, React, and TypeScript.
+This project uses Rust.
 
 ### Prerequisites
 
 - Rust (stable)
-- Node.js
-- npm or pnpm
 
 ### Build
 
-`ash
-npm install
-npm run tauri build
-`
+```bash
+cargo build --release
+```
+
+The output binary is `target/release/era-launcher.exe`.
 
 ## License
 

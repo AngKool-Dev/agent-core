@@ -82,7 +82,7 @@ impl ManifestClient {
         let manifest: serde_json::Value = self
             .client
             .get(MOJANG_MANIFEST)
-            .header("User-Agent", "EraLauncher/0.1.0")
+            .header("User-Agent", "EraLauncher/0.1.5")
             .send()
             .await?
             .json()
@@ -101,7 +101,7 @@ impl ManifestClient {
                 let info: ManifestVersionInfo = self
                     .client
                     .get(url)
-                    .header("User-Agent", "EraLauncher/0.1.0")
+                    .header("User-Agent", "EraLauncher/0.1.5")
                     .send()
                     .await?
                     .json()
@@ -119,7 +119,7 @@ impl ManifestClient {
         let manifest: serde_json::Value = self
             .client
             .get(MOJANG_MANIFEST)
-            .header("User-Agent", "EraLauncher/0.1.0")
+            .header("User-Agent", "EraLauncher/0.1.5")
             .send()
             .await?
             .json()
@@ -144,7 +144,7 @@ impl ManifestClient {
         let manifest: serde_json::Value = self
             .client
             .get(MOJANG_MANIFEST)
-            .header("User-Agent", "EraLauncher/0.1.0")
+            .header("User-Agent", "EraLauncher/0.1.5")
             .send()
             .await?
             .json()

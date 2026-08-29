@@ -88,7 +88,7 @@ After pushing changes to GitHub, Cloudflare Pages automatically redeploys the si
 - **Rust package name**: `era-launcher`
 - **Latest release tag**: `v0.1.2`
 - **TUI module**: `argus`
-- **Interfaces**: Terminal TUI (Ratatui) + Desktop GUI (Tauri)
+- **Interfaces**: Terminal TUI (Ratatui)
 
 ## License
 

@@ -659,7 +659,7 @@ impl LaunchEngine {
             ),
             ("assets_index_name".to_string(), info.asset_index.id.clone()),
             ("launcher_name".to_string(), "EraLauncher".to_string()),
-            ("launcher_version".to_string(), "0.1.0".to_string()),
+            ("launcher_version".to_string(), "0.1.5".to_string()),
             (
                 "natives_directory".to_string(),
                 natives_dir.to_string_lossy().to_string(),
@@ -950,7 +950,7 @@ impl LaunchEngine {
         let url = "https://meta.ichun.me/data/mc/mcVersions.json";
         let resp = client
             .get(url)
-            .header("User-Agent", "EraLauncher/0.1.0")
+            .header("User-Agent", "EraLauncher/0.1.5")
             .send()
             .await?;
         if !resp.status().is_success() {
