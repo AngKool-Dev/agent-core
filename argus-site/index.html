@@ -672,394 +672,148 @@
 
 
 
-    <section id="plugins" aria-labelledby="plugins-title">
-
-
+    <section id="plugins" class="plugins-section" aria-labelledby="plugins-title">
 
       <div class="container">
 
+        <div class="plugins-header">
+          <h2 id="plugins-title" class="plugins-title">Server plugins</h2>
+          <p class="plugins-subtitle">Companion Minecraft server plugins from the same developer.</p>
+        </div>
 
+        <div class="plugins-grid">
 
-        <h2 id="plugins-title" class="section-title">Server plugins</h2>
-
-
-
-        <p class="section-subtitle">Companion Minecraft server plugins from the same developer.</p>
-
-
-
-        <div class="features-grid">
-
-
-
-          <article class="feature-card">
-
-
-
-            <div class="feature-icon" aria-hidden="true">
-
-
-
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-
-
-
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-
-
-
-                <path d="M6.5 2 20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-
-
-
-                <path d="M9 7h8"/>
-
-
-
-                <path d="M9 11h6"/>
-
-
-
-              </svg>
-
-
-
+          <article class="plugin-card">
+            <div class="plugin-header">
+              <div class="plugin-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2 20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h8"/><path d="M9 11h6"/>
+                </svg>
+              </div>
+              <h3 class="plugin-title">Minecraft QuestBook</h3>
             </div>
-
-
-
-            <h3 class="feature-title">Minecraft QuestBook</h3>
-
-
-
-            <p class="feature-desc">Inventory-based quest book plugin for Paper 1.21+. Players accept quests from an in-game book, track objectives in a dedicated GUI, and earn rewards through a built-in distribution system. Supports kill, collect, visit, place, and NPC-interaction objectives with persistent quest state.</p>
-
-
-
-            <a class="feature-link" href="https://github.com/Angkool-Dev/Minecraft-QuestBook" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
-
-
-
+            <span class="plugin-badge plugin-badge--rpg">RPG</span>
+            <p class="plugin-desc">Inventory quest book with GUI tracking, NPC dialogue, multiple objective types, persistent quest state</p>
+            <a class="plugin-link" href="https://github.com/Angkool-Dev/Minecraft-QuestBook" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
           </article>
 
-
-
-          <article class="feature-card">
-
-
-
-            <div class="feature-icon" aria-hidden="true">
-
-
-
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-
-
-
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-
-
-
-                <polyline points="9 12 11 14 15 10"/>
-
-
-
-              </svg>
-
-
-
+          <article class="plugin-card">
+            <div class="plugin-header">
+              <div class="plugin-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+                </svg>
+              </div>
+              <h3 class="plugin-title">Sentinel</h3>
             </div>
-
-
-
-            <h3 class="feature-title">Sentinel</h3>
-
-
-
-            <p class="feature-desc">Advanced audit logging, inspection, and rollback plugin for Paper 1.21+. Captures block changes, inventory edits, and command usage into a queryable log backed by SQLite or PostgreSQL. Includes async caching for performance and an admin rollback tool to restore world state after incidents.</p>
-
-
-
-            <a class="feature-link" href="https://github.com/AngKool-Dev/Sentinel" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
-
-
-
+            <span class="plugin-badge plugin-badge--security">Security</span>
+            <p class="plugin-desc">Async audit logging with SQLite/PostgreSQL, queryable logs, block/inventory/command rollback</p>
+            <a class="plugin-link" href="https://github.com/AngKool-Dev/Sentinel" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
           </article>
 
-
-
-          <article class="feature-card">
-
-
-
-            <div class="feature-icon" aria-hidden="true">
-
-
-
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-
-
-
-                <path d="M3 3h18v18H3z"/>
-
-
-
-                <path d="M9 9h6v6H9z"/>
-
-
-
-                <path d="M3 9h6"/>
-
-
-
-                <path d="M15 9H21"/>
-
-
-
-                <path d="M3 15h6"/>
-
-
-
-                <path d="M15 15h6"/>
-
-
-
-              </svg>
-
-
-
+          <article class="plugin-card">
+            <div class="plugin-header">
+              <div class="plugin-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+              </div>
+              <h3 class="plugin-title">ChunkSovereignty</h3>
             </div>
-
-
-
-            <h3 class="feature-title">ChunkSovereignty</h3>
-
-
-
-            <p class="feature-desc">Organic land-claim system where domains expand through influence and contract through neglect. Players claim chunks, build trust networks for shared access, and see borders rendered as purple particle effects. Territory grows with playtime and block activity, and ages into higher tiers.</p>
-
-
-
-            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/chunksovereignty" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
-
-
-
+            <span class="plugin-badge plugin-badge--land">Land</span>
+            <p class="plugin-desc">Organic claims that grow with influence and shrink with neglect, trust networks, purple particle borders</p>
+            <a class="plugin-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/chunksovereignty" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
           </article>
 
-
-
-          <article class="feature-card">
-
-
-
-            <div class="feature-icon" aria-hidden="true">
-
-
-
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-
-
-
-                <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/>
-
-
-
-                <path d="M12 8v4l2 2"/>
-
-
-
-                <path d="M9 9h.01"/>
-
-
-
-                <path d="M15 9h.01"/>
-
-
-
-              </svg>
-
-
-
+          <article class="plugin-card">
+            <div class="plugin-header">
+              <div class="plugin-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l2 2"/><path d="M9 9h.01"/><path d="M15 9h.01"/>
+                </svg>
+              </div>
+              <h3 class="plugin-title">EchoRealms</h3>
             </div>
-
-
-
-            <h3 class="feature-title">EchoRealms</h3>
-
-
-
-            <p class="feature-desc">Ghost echo plugin for Paper 1.21+. When players abandon builds, the site slowly fades into an echo that whispers lore and drops Memory Shards. Players attune to echoes to gain experience, with deeper echoes offering greater rewards but longer cooldowns.</p>
-
-
-
-            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/echorealms" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
-
-
-
+            <span class="plugin-badge plugin-badge--rpg">RPG</span>
+            <p class="plugin-desc">Abandoned builds fade into ghost echoes that whisper lore and drop Memory Shards</p>
+            <a class="plugin-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/echorealms" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
           </article>
 
-
-
-          <article class="feature-card">
-
-
-
-            <div class="feature-icon" aria-hidden="true">
-
-
-
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-
-
-
-                <path d="M12 17V5"/>
-
-
-
-                <path d="M5 12h14"/>
-
-
-
-                <path d="M7 19h10"/>
-
-
-
-                <path d="M9 15l3 3 3-3"/>
-
-
-
-                <path d="M4 7h16v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7z"/>
-
-
-
-              </svg>
-
-
-
+          <article class="plugin-card">
+            <div class="plugin-header">
+              <div class="plugin-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 17V5"/><path d="M5 12h14"/><path d="M7 19h10"/><path d="M9 15l3 3 3-3"/><path d="M4 7h16v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7z"/>
+                </svg>
+              </div>
+              <h3 class="plugin-title">MobEcology</h3>
             </div>
-
-
-
-            <h3 class="feature-title">MobEcology</h3>
-
-
-
-            <p class="feature-desc">Adaptive mob ecosystem simulator for Paper 1.21+. Populations grow and shrink around a configurable carrying capacity, mobs develop farmed-mob adaptations over time, food chains emerge naturally, and region maps render ecosystem health in text for admins.</p>
-
-
-
-            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/mobecology" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
-
-
-
+            <span class="plugin-badge plugin-badge--world">World</span>
+            <p class="plugin-desc">Adaptive populations, carrying capacity, farmed-mob adaptations, text-based region maps</p>
+            <a class="plugin-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/mobecology" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
           </article>
 
-
-
-          <article class="feature-card">
-
-
-
-            <div class="feature-icon" aria-hidden="true">
-
-
-
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-
-
-
-                <path d="M12 1v6m0 0l2-2m-2 2-2-2z"/>
-
-
-
-                <path d="M4.27 4.27L3 5.54l4 4-4 4 1.27 1.27 4-4-4-4z"/>
-
-
-
-                <path d="M12 17.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z"/>
-
-
-
-                <path d="M19 9v6"/>
-
-
-
-                <path d="M9 19h6"/>
-
-
-
-              </svg>
-
-
-
+          <article class="plugin-card">
+            <div class="plugin-header">
+              <div class="plugin-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1v6m0 0l2-2m-2 2-2-2z"/><path d="M4.27 4.27L3 5.54l4 4-4 4 1.27 1.27 4-4-4-4z"/><path d="M12 17.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z"/><path d="M19 9v6"/><path d="M9 19h6"/>
+                </svg>
+              </div>
+              <h3 class="plugin-title">SovereignEconomy</h3>
             </div>
-
-
-
-            <h3 class="feature-title">SovereignEconomy</h3>
-
-
-
-            <p class="feature-desc">Living macro-economy plugin with floating market prices, configurable inflation, central-bank interest on savings, and random boom/bust events triggered by player activity. Includes admin tools to monitor and balance the economy, plus Vault integration for third-party plugin compatibility.</p>
-
-
-
-            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/sovereigneconomy" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
-
-
-
+            <span class="plugin-badge plugin-badge--economy">Economy</span>
+            <p class="plugin-desc">Floating markets, inflation, central-bank interest, boom/bust events, Vault integration</p>
+            <a class="plugin-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/sovereigneconomy" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
           </article>
 
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-              </svg>
+          <article class="plugin-card">
+            <div class="plugin-header">
+              <div class="plugin-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+              </div>
+              <h3 class="plugin-title">Bazaar</h3>
             </div>
-            <h3 class="feature-title">Bazaar</h3>
-            <p class="feature-desc">Player-driven auction house with a full GUI marketplace. List items for sale with configurable duration and taxes, browse live auctions across pages, manage your own listings from a dedicated view, and purchase goods with economy integration. Supports Vault and SovereignEconomy for deposits, withdrawals, and sale-tax distribution.</p>
-            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/bazaar" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
+            <span class="plugin-badge plugin-badge--economy">Economy</span>
+            <p class="plugin-desc">GUI auction house with configurable taxes, my-listings management, economy integration</p>
+            <a class="plugin-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/bazaar" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
           </article>
 
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
-              </svg>
+          <article class="plugin-card">
+            <div class="plugin-header">
+              <div class="plugin-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+              </div>
+              <h3 class="plugin-title">Purge</h3>
             </div>
-            <h3 class="feature-title">Purge</h3>
-            <p class="feature-desc">Performance maintenance plugin that periodically clears dropped items, excess mobs, and configurable entity pools on a schedule. Admins can tune intervals and thresholds, run manual purges, or pause the scheduler during events to keep TPS stable.</p>
-            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/purge" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
+            <span class="plugin-badge plugin-badge--performance">Performance</span>
+            <p class="plugin-desc">Scheduled cleanup of dropped items and mobs, manual purge commands, TPS protection</p>
+            <a class="plugin-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/purge" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
           </article>
 
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-              </svg>
+          <article class="plugin-card">
+            <div class="plugin-header">
+              <div class="plugin-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+              </div>
+              <h3 class="plugin-title">SkillForge</h3>
             </div>
-            <h3 class="feature-title">SkillForge</h3>
-            <p class="feature-desc">Deep crafting and progression plugin with mastery trees, signature item signing, reputation, and an apprenticeship system. Define skills and tiers that unlock recipes or modify crafting outcomes, let players inspect trees in a GUI, and tie progression to server-wide economy hooks.</p>
-            <a class="feature-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/skillforge" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
+            <span class="plugin-badge plugin-badge--rpg">RPG</span>
+            <p class="plugin-desc">Mastery trees, signature items, reputation, apprenticeships, crafting integration</p>
+            <a class="plugin-link" href="https://github.com/Angkool-Dev/minecraft-plugins/tree/main/skillforge" target="_blank" rel="noopener noreferrer">View on GitHub →</a>
           </article>
 
         </div>
 
-
-
       </div>
 
-
-
-    </section>
-
-
-
-
-
-
-
-    <section class="how-it-works" aria-labelledby="how-title">
+    </section>    <section class="how-it-works" aria-labelledby="how-title">
 
 
 
