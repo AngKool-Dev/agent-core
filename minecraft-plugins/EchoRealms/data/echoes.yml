@@ -1,0 +1,37 @@
+regions:
+  world|0|0:
+    sites:
+      50a2d6c1-0839-3e00-bc75-90024fd750a1:
+        count: 49
+        sumx: 348
+        sumz: 67
+        miny: 65
+        maxy: 79
+        last: 1787937168026
+  world|-2|-3:
+    sites:
+      b99f26dc-afb9-3dd9-9bee-2ab15f95689e:
+        count: 1
+        sumx: -220
+        sumz: -308
+        miny: 64
+        maxy: 64
+        last: 1787938875747
+  world|-1|-1:
+    sites:
+      b99f26dc-afb9-3dd9-9bee-2ab15f95689e:
+        count: 9
+        sumx: -435
+        sumz: -260
+        miny: 72
+        maxy: 73
+        last: 1787938835197
+  world|0|-1:
+    sites:
+      50a2d6c1-0839-3e00-bc75-90024fd750a1:
+        count: 7
+        sumx: 54
+        sumz: -77
+        miny: 69
+        maxy: 69
+        last: 1787804347740
