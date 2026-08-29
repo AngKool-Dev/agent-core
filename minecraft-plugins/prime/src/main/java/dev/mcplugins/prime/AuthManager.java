@@ -42,7 +42,23 @@ public final class AuthManager {
         }
     }
 
+    public boolean isUsernameTakenByPremium(String username) {
+        try (PreparedStatement ps = db.prepareStatement(
+                "SELECT 1 FROM prime_players WHERE LOWER(username) = LOWER(?) AND is_premium = 1")) {
+            ps.setString(1, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().warning("Prime DB error in isUsernameTakenByPremium: " + e.getMessage());
+            return false;
+        }
+    }
+
     public boolean register(UUID uuid, String username, String password) {
+        if (isUsernameTakenByPremium(username)) {
+            return false;
+        }
         String hash = BCrypt.hashpw(password, BCrypt.gensalt(12));
         String now = String.valueOf(System.currentTimeMillis());
         try (PreparedStatement ps = db.prepareStatement(

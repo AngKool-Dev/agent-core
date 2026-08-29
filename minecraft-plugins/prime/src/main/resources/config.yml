@@ -30,6 +30,7 @@ sessions:
 messages:
   register-success: "&aAccount registered successfully. You are now logged in."
   register-failed: "&cRegistration failed: {reason}"
+  register-failed-premium: "&cThat name is reserved for a premium account."
   login-success: "&aLogin successful. Welcome back, {player}."
   login-failed: "&cLogin failed: {reason}"
   already-logged-in: "&cYou are already authenticated."

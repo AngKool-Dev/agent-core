@@ -68,8 +68,11 @@ public final class AuthCommand implements CommandExecutor, TabCompleter {
             AuthListener.AuthSession session = plugin.getListener().getSession(p.getUniqueId());
             if (session != null) session.setAuthenticated(true);
         } else {
-            sender.sendMessage(plugin.colorize(plugin.getConfig().getString("messages.register-failed", "&cRegistration failed.")
-                    .replace("{reason}", "database error")));
+            String reason = plugin.getAuth().isUsernameTakenByPremium(p.getName())
+                    ? plugin.getConfig().getString("messages.register-failed-premium", "&cThat name is reserved for a premium account.")
+                    : "database error";
+            sender.sendMessage(plugin.colorize(plugin.getConfig().getString("messages.register-failed", "&cRegistration failed: {reason}")
+                    .replace("{reason}", reason)));
         }
     }
 
