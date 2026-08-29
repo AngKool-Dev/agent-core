@@ -1,29 +1,28 @@
 # Handoff Summary — ARGUS Launcher + Minecraft Plugin Ecosystem
 
 ## Objective
-Continue development of the ARGUS Launcher ecosystem, focusing on 4 active Minecraft server plugins and a roadmap of 10 total plugin concepts.
+Continue development of the ARGUS Launcher ecosystem, focusing on 3 active Minecraft server plugins and a roadmap of 10 total plugin concepts.
 
 ---
 
 ## What We Did So Far
 
-### 1. Unified Menu Commands Added to 4 Active Plugins
-Added quick-menu commands to all 4 plugins in `D:\agent-core\minecraft-plugins\`:
+### 1. Unified Menu Commands Added to 3 Active Plugins
+Added quick-menu commands to all 3 plugins in `D:\agent-core\minecraft-plugins\`:
 
 | Plugin | Quick Command | Menu File | Features |
 |--------|--------------|-----------|----------|
 | ChunkSovereignty | `/cs` | `DomainCommand.java` | claim, unclaim, domain, trust, untrust, particles, help |
-| EchoRealms | `/er` | `EchoCommand.java` | list, attune, scan, reload |
 | MobEcology | `/me` | `EcologyCommand.java` | status, scan, top, reset, reload |
 | SovereignEconomy | `/se` | `EconomyCommands.java` | money, pay, market, bank, reload |
 
 - Command permission audit completed: admin commands gated behind `*admin` permissions (default: `op`); player commands safe with ownership/fund checks.
-- All 4 plugins built with Maven, deployed to `D:\mc-test\plugins\`, and RCON-tested on a live Purpur 26.2 server.
+- All 3 plugins built with Maven, deployed to `D:\mc-test\plugins\`, and RCON-tested on a live Purpur 26.2 server.
 
 ### 2. Plugin Source Committed and Pushed
 - Git repo: `D:\agent-core\` (remote `https://github.com/AngKool-Dev/agent-core.git`)
 - Plugin source copied to `D:\agent-core\minecraft-plugins\`
-- Commit `660ca021`: "Add minecraft-plugins source: /cs /er /me /se menu commands for ChunkSovereignty, EchoRealms, MobEcology, SovereignEconomy"
+- Commit `660ca021`: "Add minecraft-plugins source: /cs /me /se menu commands for ChunkSovereignty, MobEcology, SovereignEconomy"
 - Pushed to `origin/master`
 
 ### 3. Website Updated and Deployed
@@ -70,17 +69,6 @@ Added quick-menu commands to all 4 plugins in `D:\agent-core\minecraft-plugins\`
 - **Permissions**: `sovoreconomy.use` (true default), `sovoreconomy.admin` (op default)
 - **GitHub**: `https://github.com/Angkool-Dev/minecraft-plugins/tree/main/sovereigneconomy`
 
-### EchoRealms
-- **Description**: Ghost Traces of Abandoned Structures — inactive players' builds become echo sites with lore, Memory Shards, and XP attunement.
-- **Source**: `D:\agent-core\minecraft-plugins\echorealms\`
-- **Main class**: `dev.mcplugins.echorealms.EchoRealmsPlugin`
-- **Commands file**: `EchoCommand.java`
-- **Version**: `0.2.0-SNAPSHOT`
-- **API**: Paper 1.21.4
-- **Commands**: `/er`, `/echo`
-- **Permissions**: `echorealms.use` (true default), `echorealms.admin` (op default)
-- **GitHub**: `https://github.com/Angkool-Dev/minecraft-plugins/tree/main/echorealms`
-
 ### MobEcology
 - **Description**: Living Ecosystems Where Mob Behavior Evolves — adaptive mob populations, food chains, carrying capacity, territorial behavior.
 - **Source**: `D:\agent-core\minecraft-plugins\mobecology\`
@@ -109,9 +97,8 @@ Added quick-menu commands to all 4 plugins in `D:\agent-core\minecraft-plugins\`
 
 ### Active (In Development)
 1. **SovereignEconomy** — Player-Driven Currency with Real Economic Principles
-2. **EchoRealms** — Ghost Traces of Abandoned Structures
-3. **MobEcology** — Living Ecosystems Where Mob Behavior Evolves
-4. **ChunkSovereignty** — Organic Land Claims That Grow or Shrink
+2. **MobEcology** — Living Ecosystems Where Mob Behavior Evolves
+3. **ChunkSovereignty** — Organic Land Claims That Grow or Shrink
 
 ### Planned (Concept Phase)
 5. **TerraGenesis** — Living, Evolving Biomes That Drift Over Time
@@ -159,7 +146,7 @@ Added quick-menu commands to all 4 plugins in `D:\agent-core\minecraft-plugins\`
 ## All Important Locations
 
 ### Source Code
-- `D:\agent-core\minecraft-plugins\` — 4 active plugins (ChunkSovereignty, EchoRealms, MobEcology, SovereignEconomy)
+- `D:\agent-core\minecraft-plugins\` — 3 active plugins (ChunkSovereignty, MobEcology, SovereignEconomy)
 - `D:\agent-core\unified_folder\ObsidianVault\Projects\Minecraft-QuestBook\` — QuestBook source (separate project)
 - `D:\agent-core\argus-site\` — ARGUS website source
 
@@ -208,11 +195,10 @@ Added quick-menu commands to all 4 plugins in `D:\agent-core\minecraft-plugins\`
 ## What We Are Doing Next
 
 1. **SovereignEconomy** — Continue building the dynamic economy system (market mechanics, interest rates, economic events)
-2. **EchoRealms** — Expand echo site mechanics, lore system, and Memory Shard crafting integration
-3. **MobEcology** — Add food chain mechanics, migratory patterns, and domestication features
-4. **ChunkSovereignty** — Implement terrain deformation, border conflicts, and diplomatic alliances
-5. **TerraGenesis** — Start concept/prototype for dynamic biome evolution
-6. **Website** — Add download links for plugin JARs, consider connecting Git provider for automated deploys
+2. **MobEcology** — Add food chain mechanics, migratory patterns, and domestication features
+3. **ChunkSovereignty** — Implement terrain deformation, border conflicts, and diplomatic alliances
+4. **TerraGenesis** — Start concept/prototype for dynamic biome evolution
+5. **Website** — Add download links for plugin JARs, consider connecting Git provider for automated deploys
 
 ---
 

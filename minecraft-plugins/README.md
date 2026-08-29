@@ -9,7 +9,6 @@ Unique Minecraft server plugins targeting Paper **1.21 -> 26.2** from a single j
 |---|---|---|
 | MobEcology | implemented | Adaptive mob ecosystems: populations, carrying capacity, food webs, mobs that adapt to being farmed |
 | SovereignEconomy | planned | Floating player-driven macro economy |
-| EchoRealms | planned | Ghost echoes of abandoned builds |
 | ChunkSovereignty | planned | Organic land claims that grow or shrink |
 | SkillForge | planned | Crafting mastery trees with signed artifacts |
 | ChronoShards | planned | Time-loop roguelite dungeons |
