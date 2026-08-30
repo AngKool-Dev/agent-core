@@ -38,3 +38,6 @@ check_all_html.py
 purge_cache.py
 purge_cdn.py
 verifykey.java
+
+# Website source (use docs/ for GitHub Pages)
+argus-site/
