@@ -3,7 +3,9 @@ version: '${project.version}'
 main: dev.mcplugins.bazaar.BazaarPlugin
 api-version: '1.21'
 description: Player-driven auction house with GUI menus.
-author: mcplugins
+authors:
+  - Angkool-dev
+  - Kilo
 website: https://github.com/mcplugins
 softdepend: [Vault, SovereignEconomy]
 

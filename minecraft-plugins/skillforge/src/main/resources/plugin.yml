@@ -3,7 +3,9 @@ version: '0.2.0-SNAPSHOT'
 main: dev.mcplugins.skillforge.SkillForgePlugin
 api-version: '1.21'
 description: Deep crafting specialization with mastery trees, signature items, reputation, and apprenticeship.
-author: mcplugins
+authors:
+  - Angkool-dev
+  - Kilo
 website: https://github.com/Angkool-Dev/minecraft-plugins
 softdepend: [Vault, SovereignEconomy, ChunkSovereignty, MobEcology]
 

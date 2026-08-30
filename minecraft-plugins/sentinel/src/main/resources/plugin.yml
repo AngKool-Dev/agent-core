@@ -3,6 +3,8 @@ version: '${project.version}'
 main: dev.sentinel.audit.SentinelAuditPlugin
 api-version: '1.21'
 authors:
+  - Angkool-dev
+  - Kilo
   - Sentinel Contributors
 description: Advanced audit logging, inspection, and rollback plugin
 website: https://github.com/AngKool-Dev/Sentinel
@@ -10,28 +12,4 @@ website: https://github.com/AngKool-Dev/Sentinel
 commands:
   sentinel:
     description: Main Sentinel command
-    usage: /sentinel <subcommand>
-    aliases:
-      - sn
-      - s
-    permission: sentinel.admin
-
-permissions:
-  sentinel.admin:
-    description: Access to all Sentinel commands
-    default: op
-  sentinel.inspect:
-    description: Inspect blocks
-    default: op
-  sentinel.rollback:
-    description: Rollback changes
-    default: op
-  sentinel.purge:
-    description: Purge audit records
-    default: op
-  sentinel.reload:
-    description: Reload configuration
-    default: op
-  sentinel.status:
-    description: View plugin status
-    default: op
+    usage: /sentinel [help|inspect|rollback|export|config]

@@ -3,7 +3,9 @@ version: '${project.version}'
 main: dev.mcplugins.sovereigneconomy.SovereignEconomyPlugin
 api-version: '1.21'
 description: A living macro economy - floating markets, inflation, central-bank interest and boom/bust events.
-author: mcplugins
+authors:
+  - Angkool-dev
+  - Kilo
 website: https://github.com/mcplugins
 softdepend: [Vault]
 loadbefore: [QuestBook]

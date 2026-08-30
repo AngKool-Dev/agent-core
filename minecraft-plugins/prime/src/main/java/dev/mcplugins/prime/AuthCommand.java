@@ -21,18 +21,34 @@ public final class AuthCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        String sub = args.length == 0 ? "status" : args[0].toLowerCase(Locale.ROOT);
-        switch (sub) {
-            case "register" -> handleRegister(sender, args);
-            case "login" -> handleLogin(sender, args);
-            case "changepassword" -> handleChangePassword(sender, args);
-            case "status" -> handleStatus(sender);
-            case "reload" -> handleReload(sender);
-            case "premium" -> handlePremium(sender, args);
-            case "unregister" -> handleUnregister(sender);
-            default -> sender.sendMessage(plugin.colorize("&cUsage: /prime [register|login|changepassword|status|reload|premium|unregister]"));
+        String name = cmd.getName().toLowerCase(Locale.ROOT);
+        if (name.equals("register")) {
+            handleRegister(sender, args);
+            return true;
         }
-        return true;
+        if (name.equals("login")) {
+            handleLogin(sender, args);
+            return true;
+        }
+        if (name.equals("auth") || name.equals("prime")) {
+            String sub = args.length == 0 ? "status" : args[0].toLowerCase(Locale.ROOT);
+            switch (sub) {
+                case "register" -> handleRegister(sender, args);
+                case "login" -> handleLogin(sender, args);
+                case "changepassword" -> handleChangePassword(sender, args);
+                case "status" -> handleStatus(sender);
+                case "reload" -> handleReload(sender);
+                case "premium" -> handlePremium(sender, args);
+                case "unregister" -> handleUnregister(sender);
+                default -> sender.sendMessage(plugin.colorize("&cUsage: /prime [register|login|changepassword|status|reload|premium|unregister]"));
+            }
+            return true;
+        }
+        if (name.equals("changepassword")) {
+            handleChangePassword(sender, args);
+            return true;
+        }
+        return false;
     }
 
     private void handleRegister(CommandSender sender, String[] args) {

@@ -3,7 +3,9 @@ version: '0.2.0-SNAPSHOT'
 main: dev.mcplugins.skillforge.SkillForgePlugin
 api-version: '1.21'
 description: Deep crafting specialization with mastery trees, signature items, reputation, and apprenticeship.
-author: mcplugins
+authors:
+  - Angkool-dev
+  - Kilo
 website: https://github.com/Angkool-Dev/minecraft-plugins
 softdepend: [Vault, SovereignEconomy, ChunkSovereignty, MobEcology]
 
@@ -18,8 +20,8 @@ commands:
     usage: /sf
     permission: skillforge.use
   skill:
-    description: Specialization, XP, unlocks, and skill tree.
-    usage: /skill [set|xp|unlock|tree|check|inspect|sign] [args]
+    description: Specialization, XP, unlocks, skill tree, and tiers.
+    usage: /skill [set|xp|unlock|tree|check|inspect|sign|tiers] [args]
     permission: skillforge.use
   apprentice:
     description: Register, remove, or list apprentices.

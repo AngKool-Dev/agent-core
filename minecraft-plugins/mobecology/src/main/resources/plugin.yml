@@ -3,14 +3,15 @@ version: '${project.version}'
 main: dev.mcplugins.mobecology.MobEcologyPlugin
 api-version: '1.21'
 description: Adaptive mob ecosystems with populations, carrying capacity, food webs and farmed-mob adaptations.
-author: mcplugins
+authors:
+  - Angkool-dev
+  - Kilo
 website: https://github.com/mcplugins
 
 commands:
   ecology:
     description: Inspect and manage the living ecosystem.
     usage: /ecology [status|scan|top|reset|reload]
-    permission: mobecology.use
   me:
     description: MobEcology quick menu.
     usage: /me

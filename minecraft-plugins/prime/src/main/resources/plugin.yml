@@ -3,7 +3,9 @@ version: '${project.version}'
 main: dev.mcplugins.prime.PrimePlugin
 api-version: '1.21'
 description: Premium and cracked account authentication with SQLite-backed sessions.
-author: mcplugins
+authors:
+  - Angkool-dev
+  - Kilo
 website: https://github.com/mcplugins
 softdepend: [Vault]
 

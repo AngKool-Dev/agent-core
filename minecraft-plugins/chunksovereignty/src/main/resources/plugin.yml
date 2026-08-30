@@ -3,7 +3,9 @@ version: '${project.version}'
 main: dev.mcplugins.chunksovereignty.SovereigntyPlugin
 api-version: '1.21'
 description: Living land claims - domains grow with influence, shrink with neglect, and reward age.
-author: mcplugins
+authors:
+  - Angkool-dev
+  - Kilo
 website: https://github.com/mcplugins
 
 commands:

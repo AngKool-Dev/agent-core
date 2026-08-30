@@ -3,7 +3,9 @@ version: '${project.version}'
 main: dev.mcplugins.purge.PurgePlugin
 api-version: '1.21'
 description: Periodically clears dropped items and excess mobs to keep the server responsive.
-author: mcplugins
+authors:
+  - Angkool-dev
+  - Kilo
 website: https://github.com/mcplugins
 
 commands:
@@ -11,7 +13,6 @@ commands:
     description: Purge control and status.
     usage: /purge <status|clear|reload|enable|disable>
     aliases: [cl, lag]
-    permission: purge.use
   lag:
     description: Alias for /purge status.
     usage: /lag
