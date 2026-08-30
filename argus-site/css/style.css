@@ -236,6 +236,54 @@ ul {
   vertical-align: middle;
 }
 
+.nav-link--discord {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.15), rgba(88, 101, 242, 0.05));
+  border: 1px solid rgba(88, 101, 242, 0.35);
+  color: #b4c0ff;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 20px rgba(88, 101, 242, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.nav-link--discord::before {
+  display: none;
+}
+
+.nav-link--discord::after {
+  display: none;
+}
+
+.nav-discord-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(88, 101, 242, 0.5));
+  transition: filter 0.3s ease;
+}
+
+.nav-link--discord:hover,
+.nav-link--discord:focus {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.35), rgba(88, 101, 242, 0.15));
+  border-color: rgba(88, 101, 242, 0.6);
+  box-shadow: 0 0 30px rgba(88, 101, 242, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.nav-link--discord:hover .nav-discord-icon,
+.nav-link--discord:focus .nav-discord-icon {
+  filter: drop-shadow(0 0 8px rgba(88, 101, 242, 0.8));
+}
+
 .nav-toggle {
   display: none;
   flex-direction: column;
