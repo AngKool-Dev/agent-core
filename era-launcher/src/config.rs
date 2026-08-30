@@ -11,6 +11,7 @@ pub struct Settings {
     pub theme: String,
     pub language: String,
     pub optimization_profile: OptimizationProfile,
+    pub custom_jvm_args: Vec<String>,
 }
 
 impl Default for Settings {
@@ -21,6 +22,7 @@ impl Default for Settings {
             theme: "dark".to_string(),
             language: "en".to_string(),
             optimization_profile: OptimizationProfile::Mid,
+            custom_jvm_args: Vec::new(),
         }
     }
 }
@@ -40,6 +42,7 @@ pub struct InstanceConfig {
     pub resolution_height: Option<u32>,
     pub account_uuid: Option<String>,
     pub minecraft_dir: Option<String>,
+    pub custom_jvm_args: Vec<String>,
 }
 
 impl Default for InstanceConfig {
@@ -57,11 +60,12 @@ impl Default for InstanceConfig {
             resolution_height: None,
             account_uuid: None,
             minecraft_dir: None,
+            custom_jvm_args: Vec::new(),
         }
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, Deserialize)]
 #[serde(default)]
 pub struct WindowConfig {
     pub width: u32,
@@ -79,7 +83,7 @@ impl Default for WindowConfig {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, Deserialize)]
 #[serde(default)]
 #[derive(Default)]
 pub struct Config {

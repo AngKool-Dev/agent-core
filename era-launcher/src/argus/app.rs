@@ -198,6 +198,8 @@ impl ArgusApp {
                         } else if self.state.account_selector_open || self.state.account_input_mode
                         {
                             self.handle_account_input(key);
+                        } else if self.state.settings_edit_mode == SettingsEditMode::CustomJvmEditor {
+                            self.handle_custom_jvm_input(key);
                         } else if self.state.command_prompt_active {
                             self.handle_command_input(key);
                         } else {
@@ -1129,6 +1131,44 @@ impl ArgusApp {
         }
     }
 
+    /// Handle keyboard input in custom JVM args editor
+    fn handle_custom_jvm_input(&mut self, key: KeyEvent) {
+        match key.code {
+            KeyCode::Enter => {
+                let input = self.state.custom_jvm_input.trim().to_string();
+                let profile_saved = BackendBridge::set_optimization_profile(crate::minecraft::optimization::OptimizationProfile::Custom);
+                let args_saved = BackendBridge::set_custom_jvm_args(&input);
+                if profile_saved && args_saved {
+                    self.state.log(
+                        LogLevel::Info,
+                        "BACKEND",
+                        &format!("Custom JVM args saved ({} args)", input.split_whitespace().count()),
+                    );
+                } else {
+                    self.state.log(
+                        LogLevel::Error,
+                        "BACKEND",
+                        "Failed to save custom JVM args",
+                    );
+                }
+                self.state.settings_edit_mode = SettingsEditMode::None;
+                self.state.custom_jvm_input.clear();
+            }
+            KeyCode::Esc => {
+                self.state.custom_jvm_input.clear();
+                self.state.settings_edit_mode = SettingsEditMode::None;
+                self.state.log(LogLevel::Info, "ARGUS", "Custom JVM edit cancelled");
+            }
+            KeyCode::Backspace => {
+                self.state.custom_jvm_input.pop();
+            }
+            KeyCode::Char(c) => {
+                self.state.custom_jvm_input.push(c);
+            }
+            _ => {}
+        }
+    }
+
     /// Handle mouse events: click focuses/activates hit-tested targets,
     /// wheel scrolls lists.
     fn handle_mouse(&mut self, mouse: &MouseEvent) {
@@ -1614,6 +1654,9 @@ impl ArgusApp {
             }
             "settings_optimization" => {
                 self.open_optimization_selector();
+            }
+            "settings_custom_jvm" => {
+                self.open_custom_jvm_editor();
             }
             "settings_account" => {
                 self.open_account_selector();
@@ -2266,6 +2309,19 @@ impl ArgusApp {
         );
     }
 
+    /// Open the custom JVM args text editor
+    fn open_custom_jvm_editor(&mut self) {
+        let settings = BackendBridge::get_settings();
+        self.state.custom_jvm_input = settings.custom_jvm_args.join(" ");
+        self.state.settings_edit_mode = SettingsEditMode::CustomJvmEditor;
+        self.state.settings_edit_index = 0;
+        self.state.log(
+            LogLevel::Info,
+            "ARGUS",
+            "Custom JVM args editor opened (type args, ENTER to save, ESC to cancel)",
+        );
+    }
+
     /// Handle Up key in settings edit mode
     fn settings_edit_up(&mut self) {
         match &self.state.settings_edit_mode {
@@ -2307,6 +2363,7 @@ impl ArgusApp {
                     .log(LogLevel::Info, "ARGUS", &format!("Optimization: {}", profile.as_str()));
             }
             SettingsEditMode::None => {}
+            SettingsEditMode::CustomJvmEditor => {}
         }
     }
 
@@ -2355,6 +2412,7 @@ impl ArgusApp {
                     .log(LogLevel::Info, "ARGUS", &format!("Optimization: {}", profile.as_str()));
             }
             SettingsEditMode::None => {}
+            SettingsEditMode::CustomJvmEditor => {}
         }
     }
 
@@ -2479,7 +2537,10 @@ impl ArgusApp {
             SettingsEditMode::OptimizationSelector => {
                 let profiles = crate::minecraft::optimization::OptimizationProfile::all();
                 let selected = profiles[self.state.settings_edit_index];
-                if BackendBridge::set_optimization_profile(selected) {
+                if selected == crate::minecraft::optimization::OptimizationProfile::Custom {
+                    self.open_custom_jvm_editor();
+                    return;
+                } else if BackendBridge::set_optimization_profile(selected) {
                     self.state.log(
                         LogLevel::Info,
                         "BACKEND",
@@ -2495,6 +2556,7 @@ impl ArgusApp {
                 self.state.settings_edit_mode = SettingsEditMode::None;
             }
             SettingsEditMode::None => {}
+            SettingsEditMode::CustomJvmEditor => {}
         }
         self.state.settings_edit_index = 0;
     }

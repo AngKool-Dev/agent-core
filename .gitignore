@@ -9,3 +9,32 @@ dist/
 build/
 .pytest_cache/
 unified_folder/
+
+# Build tools / downloads
+gradle-*-bin.zip
+maven.zip
+maven/
+mc-build*/
+mc-profiler/
+
+# Temp / extraction
+$extractDir/
+argus-launcher-temp/
+*-temp/
+*.tmp
+
+# Download dumps / HTML
+download_check*.html
+download_fixed.html
+download_page_raw.html
+
+# Tool caches
+.kilo/
+.wrangler/
+
+# Temp scripts
+add_specs.py
+check_all_html.py
+purge_cache.py
+purge_cdn.py
+verifykey.java

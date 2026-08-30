@@ -321,6 +321,13 @@ impl BackendBridge {
         Self::save_settings(&settings)
     }
 
+    /// Set custom JVM args (space-separated string) and persist.
+    pub fn set_custom_jvm_args(args: &str) -> bool {
+        let mut settings = Self::get_settings();
+        settings.custom_jvm_args = args.split_whitespace().map(|s| s.to_string()).collect();
+        Self::save_settings(&settings)
+    }
+
     /// Create a new instance using the REAL instance manager and config.
     pub fn create_instance(config: InstanceConfig) -> InstanceConfig {
         let instance = config.clone();
@@ -342,6 +349,7 @@ impl BackendBridge {
                 resolution_height: config.resolution_height,
                 account_uuid: config.account_uuid.clone(),
                 minecraft_dir: config.minecraft_dir.clone(),
+                custom_jvm_args: config.custom_jvm_args.clone(),
             });
         }
 
@@ -379,6 +387,7 @@ impl BackendBridge {
                 resolution_height: config.resolution_height,
                 account_uuid: config.account_uuid.clone(),
                 minecraft_dir: config.minecraft_dir.clone(),
+                custom_jvm_args: config.custom_jvm_args.clone(),
             });
         }
 
@@ -426,6 +435,7 @@ impl BackendBridge {
             resolution_height: Some(720),
             account_uuid: state.selected_account.clone(),
             minecraft_dir: None,
+            custom_jvm_args: Vec::new(),
         };
 
         let instance = BackendBridge::create_instance(config);
@@ -1177,6 +1187,7 @@ Create a Fabric or Quilt instance first.",
             resolution_height: Some(720),
             account_uuid: state.selected_account.clone(),
             minecraft_dir: None,
+            custom_jvm_args: Vec::new(),
         };
 
         let instance = Self::create_instance(config);
@@ -2373,10 +2384,11 @@ Create a Fabric or Quilt instance first.",
             ),
         ];
 
-        // JVM args: optimization profile args plus the manifest-provided ones.
+        // JVM args: optimization profile args plus instance custom args.
         let profile_args = optimization_profile.jvm_args(instance.memory);
         let mut jvm_args = Vec::new();
         jvm_args.extend(profile_args);
+        jvm_args.extend(instance.custom_jvm_args.clone());
         jvm_args.push("-Duser.language=en".to_string());
         // Game args: use the manifest's official list when available;
         // otherwise fall back to a minimal hand-built set.
@@ -2780,11 +2792,12 @@ mod tests {
             resolution_height: None,
             account_uuid: None,
             minecraft_dir: None,
+            custom_jvm_args: Vec::new(),
         };
         let dir = std::env::temp_dir().join("era-test-launch-cmd");
         let classpath = "C:\\libs\\a.jar;C:\\client.jar";
         let (jvm, game, main_class) =
-            BackendBridge::build_launch_command(&version_info, &instance, &dir, classpath);
+            BackendBridge::build_launch_command(&version_info, &instance, &dir, classpath, crate::minecraft::optimization::OptimizationProfile::Mid);
 
         // 1. Flags and values are separate argv elements.
         for arg in &game {
@@ -2881,10 +2894,11 @@ mod tests {
             resolution_height: None,
             account_uuid: None,
             minecraft_dir: None,
+            custom_jvm_args: Vec::new(),
         };
         let dir = std::env::temp_dir().join("era-test-launch-legacy");
         let (jvm, game, _) =
-            BackendBridge::build_launch_command(&version_info, &instance, &dir, "cp.jar");
+            BackendBridge::build_launch_command(&version_info, &instance, &dir, "cp.jar", crate::minecraft::optimization::OptimizationProfile::Mid);
 
         let cp_pos = jvm.iter().position(|a| a == "-cp").unwrap();
         assert_eq!(jvm[cp_pos + 1], "cp.jar");
@@ -3108,9 +3122,10 @@ mod tests {
             resolution_height: None,
             account_uuid: None,
             minecraft_dir: None,
+            custom_jvm_args: Vec::new(),
         };
         let (_jvm, game, _) =
-            BackendBridge::build_launch_command(&version_info, &instance, &dir, "cp.jar");
+            BackendBridge::build_launch_command(&version_info, &instance, &dir, "cp.jar", crate::minecraft::optimization::OptimizationProfile::Mid);
         let gd_pos = game.iter().position(|a| a == "--gameDir").unwrap();
         assert_eq!(
             std::path::Path::new(&game[gd_pos + 1]),

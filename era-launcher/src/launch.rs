@@ -20,6 +20,7 @@ pub struct LaunchRequest {
     pub loader: String,
     pub loader_version: Option<String>,
     pub optimization_profile: crate::minecraft::optimization::OptimizationProfile,
+    pub custom_jvm_args: Vec<String>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -189,6 +190,7 @@ impl LaunchEngine {
             loader_main_class.as_deref(),
             &classpath,
             req.optimization_profile,
+            req.custom_jvm_args.clone(),
         );
 
         self.emit_status(
@@ -640,6 +642,7 @@ impl LaunchEngine {
         loader_main_class: Option<&str>,
         classpath: &str,
         optimization_profile: crate::minecraft::optimization::OptimizationProfile,
+        custom_jvm_args: Vec<String>,
     ) -> (Vec<String>, Vec<String>, String) {
         let tokens = vec![
             ("auth_player_name".to_string(), req.account_name.clone()),
@@ -702,6 +705,8 @@ impl LaunchEngine {
 
         let jvm_args = ArgumentBuilder::substitute_tokens(&jvm_args, &tokens);
         let game_args = ArgumentBuilder::substitute_tokens(&game_args, &tokens);
+        let mut jvm_args = jvm_args;
+        jvm_args.extend(custom_jvm_args);
         let main_class = loader_main_class
             .map(|s| s.to_string())
             .or_else(|| info.main_class.clone())

@@ -158,6 +158,7 @@ pub enum SettingsEditMode {
     ThemeSelector,
     LanguageInfo,
     OptimizationSelector,
+    CustomJvmEditor,
 }
 
 impl SettingsEditMode {
@@ -367,6 +368,8 @@ pub struct AppState {
     pub current_version: &'static str,
     /// Selected optimization profile for JVM args
     pub optimization_profile: OptimizationProfile,
+    /// Temporary input buffer for custom JVM args editor
+    pub custom_jvm_input: String,
 }
 
 /// A confirmation dialog
@@ -458,6 +461,7 @@ impl AppState {
             last_update_check: None,
             current_version: env!("CARGO_PKG_VERSION"),
             optimization_profile: OptimizationProfile::Mid,
+            custom_jvm_input: String::new(),
         }
     }
 
@@ -735,6 +739,7 @@ mod tests {
             resolution_height: None,
             account_uuid: None,
             minecraft_dir: None,
+            custom_jvm_args: Vec::new(),
         });
         state.select_instance(0);
         assert!(state.selected_instance.is_some());

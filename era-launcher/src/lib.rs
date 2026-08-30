@@ -37,6 +37,7 @@ fn to_config_instance(i: &crate::instances::InstanceConfig) -> crate::config::In
         resolution_height: i.resolution_height,
         account_uuid: i.account_uuid.clone(),
         minecraft_dir: i.minecraft_dir.clone(),
+        custom_jvm_args: i.custom_jvm_args.clone(),
     }
 }
 
@@ -54,6 +55,7 @@ fn from_config_instance(i: &crate::config::InstanceConfig) -> crate::instances::
         resolution_height: i.resolution_height,
         account_uuid: i.account_uuid.clone(),
         minecraft_dir: i.minecraft_dir.clone(),
+        custom_jvm_args: i.custom_jvm_args.clone(),
     }
 }
 

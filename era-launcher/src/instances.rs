@@ -15,6 +15,7 @@ pub struct InstanceConfig {
     pub resolution_height: Option<u32>,
     pub account_uuid: Option<String>,
     pub minecraft_dir: Option<String>,
+    pub custom_jvm_args: Vec<String>,
 }
 
 impl Default for InstanceConfig {
@@ -32,6 +33,7 @@ impl Default for InstanceConfig {
             resolution_height: None,
             account_uuid: None,
             minecraft_dir: None,
+            custom_jvm_args: Vec::new(),
         }
     }
 }
@@ -125,6 +127,7 @@ mod tests {
             resolution_height: None,
             account_uuid: None,
             minecraft_dir: None,
+            custom_jvm_args: Vec::new(),
         };
         let base = PathBuf::from("/instances");
         let dir = inst.instance_dir(&base);
@@ -151,6 +154,7 @@ mod tests {
             resolution_height: None,
             account_uuid: None,
             minecraft_dir: None,
+            custom_jvm_args: Vec::new(),
         };
         inst.prepare_dirs(&tmp).unwrap();
         let base = inst.instance_dir(&tmp);

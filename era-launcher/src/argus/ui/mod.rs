@@ -99,7 +99,7 @@ pub fn draw_header(frame: &mut Frame, area: Rect, state: &AppState, _focus: &Foc
     // Left side: title
     let title = vec![
         Line::from(Span::styled(
-            "ERA LAUNCHER v0.1.5",
+            concat!("ERA LAUNCHER v", env!("CARGO_PKG_VERSION")),
             Style::default().fg(t.accent).bold(),
         )),
         Line::from(Span::styled(
@@ -328,33 +328,31 @@ pub fn draw_home(frame: &mut Frame, area: Rect, state: &AppState, focus: &FocusM
     let runtime_label = state.runtime_state.label();
 
     let top_border = "╔══════════════════════════════════════════════════════════════╗";
-    // Derive the info row's right padding from the real box width so the
-    // closing border always lines up with the other rows (a hardcoded
-    // constant here previously left it 2 columns short).
     let inner_width = top_border.chars().count().saturating_sub(2);
-    let info_line = format!(
-        "║  {} | {} | {} instances",
+    let info_content = format!(
+        "  {} | {} | {} instances",
         runtime_label, java_version, instance_count
     );
-    let pad = (inner_width + 1)
-        .saturating_sub(info_line.chars().count())
-        .max(0);
+    let info_pad = inner_width - info_content.chars().count();
+    let info_line = format!("║{}{}║", info_content, " ".repeat(info_pad.max(0)));
+    let title_text = "ARGUS Runtime Control Terminal";
+    let version_text = concat!("v", env!("CARGO_PKG_VERSION"));
+    let title_content = format!("  {}  {}  ", title_text, version_text);
+    let title_pad = inner_width - title_content.chars().count();
+    let title_line = format!("║{}{}║", title_content, " ".repeat(title_pad.max(0)));
     let welcome = vec![
         Line::from(Span::styled(top_border, Style::default().fg(t.border))),
         Line::from(Span::styled(
-            "║                                                              ║",
+            format!("║{}║", " ".repeat(inner_width)),
             Style::default().fg(t.border),
         )),
         Line::from(Span::styled(
-            format!(
-                "║  ERA LAUNCHER     ARGUS Runtime Control Terminal     {:<6}  ║",
-                concat!("v", env!("CARGO_PKG_VERSION"))
-            ),
+            title_line,
             Style::default().fg(t.accent).bold(),
         )),
         Line::from(vec![
             Span::styled(info_line, Style::default().fg(t.text_dim)),
-            Span::raw(format!("{}║", " ".repeat(pad))),
+            Span::raw(format!("{}║", " ".repeat(info_pad))),
         ]),
         Line::from(Span::styled(
             "║                                                              ║",
@@ -743,10 +741,6 @@ pub fn draw_settings(frame: &mut Frame, area: Rect, state: &AppState, focus: &Fo
     }
 
     let mut items = Vec::new();
-    items.push(ListItem::new(vec![Line::from(Span::styled(
-        "SETTINGS",
-        Style::default().fg(t.accent).bold(),
-    ))]));
 
     // Helper to check if a setting is currently focused
     let focused_style = |id: &str| -> Style {
@@ -928,6 +922,24 @@ fn draw_settings_selector(frame: &mut Frame, area: Rect, state: &AppState, _focu
                 items.push(label);
             }
             ("OPTIMIZATION PROFILE".to_string(), items)
+        }
+        SettingsEditMode::CustomJvmEditor => {
+            let cfg = CONFIG.lock().unwrap();
+            let current = cfg.settings.custom_jvm_args.join(" ");
+            drop(cfg);
+            let input = if state.custom_jvm_input.is_empty() {
+                current.clone()
+            } else {
+                state.custom_jvm_input.clone()
+            };
+            let title = "CUSTOM JVM ARGS".to_string();
+            let hint = "Edit args separated by spaces. ENTER to save, ESC to cancel.".to_string();
+            let items = vec![
+                hint,
+                format!("Current: {}", if current.is_empty() { "(none)".to_string() } else { current.clone() }),
+                format!("> {}", input),
+            ];
+            (title, items)
         }
         SettingsEditMode::None => return,
     };
