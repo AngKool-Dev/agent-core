@@ -3,3 +3,9 @@ target/
 .idea/
 .vscode/
 run/
+
+# Plugin runtime data
+**/Prime/
+*.db
+*.db.bak
+build-skillforge.bat
