@@ -10,21 +10,36 @@ fn main() {
     let rc_file = Path::new(&manifest_dir).join("src/resources/era-launcher.rc");
 
     if rc_file.exists() {
-        let windres = "C:\\Users\\Administrator\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\\mingw64\\bin\\windres.exe";
-        let output = Command::new(windres)
-            .current_dir(&manifest_dir)
-            .arg(
-                rc_file
-                    .strip_prefix(&manifest_dir)
-                    .unwrap_or(Path::new("src/resources/era-launcher.rc")),
-            )
-            .arg("-o")
-            .arg(&obj_file)
-            .output()
-            .expect("Failed to execute windres");
+        let windres = find_windres();
+        if let Some(windres) = windres {
+            let output = Command::new(&windres)
+                .current_dir(&manifest_dir)
+                .arg(
+                    rc_file
+                        .strip_prefix(&manifest_dir)
+                        .unwrap_or(Path::new("src/resources/era-launcher.rc")),
+                )
+                .arg("-o")
+                .arg(&obj_file)
+                .output();
 
-        if output.status.success() {
-            println!("cargo:rustc-link-arg={}", obj_file.display());
+            if let Ok(output) = output {
+                if output.status.success() {
+                    println!("cargo:rustc-link-arg={}", obj_file.display());
+                }
+            }
         }
+    }
+}
+
+fn find_windres() -> Option<std::path::PathBuf> {
+    if let Ok(p) = std::env::var("WINDRES_PATH") {
+        return Some(std::path::PathBuf::from(p));
+    }
+    let output = Command::new("windres").arg("--version").output();
+    if output.map(|o| o.status.success()).unwrap_or(false) {
+        Some(std::path::PathBuf::from("windres"))
+    } else {
+        None
     }
 }
