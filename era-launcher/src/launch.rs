@@ -862,7 +862,7 @@ impl LaunchEngine {
     async fn download_forge_libraries(
         &self,
         game_version: &str,
-        _loader_version: Option<&str>,
+        loader_version: Option<&str>,
         instance_dir: &Path,
         loader_libs: &mut Vec<PathBuf>,
     ) -> Result<Option<String>> {
@@ -873,15 +873,17 @@ impl LaunchEngine {
         let major_num: u32 = major.parse().unwrap_or(16);
 
         if major_num <= 16 {
-            let forge_version = _loader_version.map(|v| v.to_string()).unwrap_or_else(|| {
-                if game_version == "1.16.5" {
-                    "36.2.39".to_string()
-                } else if game_version == "1.15.2" {
-                    "31.2.57".to_string()
-                } else {
-                    "32.0.108".to_string()
-                }
-            });
+            let forge_version = loader_version
+                .map(|v| v.to_string())
+                .unwrap_or_else(|| {
+                    if game_version == "1.16.5" {
+                        "36.2.39".to_string()
+                    } else if game_version == "1.15.2" {
+                        "31.2.57".to_string()
+                    } else {
+                        "32.0.108".to_string()
+                    }
+                });
 
             let url = format!(
                 "https://maven.minecraftforge.net/net/minecraftforge/forge/{}/{}.jar",
@@ -898,7 +900,6 @@ impl LaunchEngine {
             loader_libs.push(dest);
             Ok(Some("net.minecraft.launchwrapper.Launch".to_string()))
         } else {
-            let _ = game_version;
             Ok(None)
         }
     }
