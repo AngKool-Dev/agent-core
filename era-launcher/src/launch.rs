@@ -685,9 +685,7 @@ impl LaunchEngine {
         parts.extend(loader_libs.iter().cloned());
         parts.push(client_jar.to_path_buf());
         parts.extend(libs.iter().cloned());
-        if _has_loader && natives_dir.exists() {
-            parts.push(natives_dir.to_path_buf());
-        } else if natives_dir.exists() {
+        if natives_dir.exists() {
             parts.push(natives_dir.to_path_buf());
         }
         let sep = if cfg!(windows) { ";" } else { ":" };

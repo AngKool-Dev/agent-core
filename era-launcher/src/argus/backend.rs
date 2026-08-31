@@ -1955,7 +1955,7 @@ Create a Fabric or Quilt instance first.",
                     std::thread::spawn(move || {
                         use std::io::BufRead;
                         let reader = std::io::BufReader::new(stdout);
-                        for line in reader.lines().flatten() {
+                        for line in reader.lines().map_while(Result::ok) {
                             let _ = tx.send(line);
                         }
                     });
@@ -1965,7 +1965,7 @@ Create a Fabric or Quilt instance first.",
                     std::thread::spawn(move || {
                         use std::io::BufRead;
                         let reader = std::io::BufReader::new(stderr);
-                        for line in reader.lines().flatten() {
+                        for line in reader.lines().map_while(Result::ok) {
                             let _ = tx.send(line);
                         }
                     });
