@@ -16,6 +16,14 @@ from agentcore import Agent, AgentConfig, MemoryManager, create_agent
 from agentcore.runtimes.base import RuntimeAdapter, ToolCall, ToolResult
 
 from argus.context import ConversationContext, ProjectContext, ProjectProfile, discover_project_context
+from argus.events import (
+    EventBus,
+    EventEmitter,
+    EventSource,
+    EventStatus,
+    EventType,
+    get_event_bus,
+)
 from argus.memory import ArgusMemory
 from argus.model import ModelProvider, build_messages, parse_model_output
 from argus.skills import Skill, SkillRegistry, SkillRouter
@@ -133,6 +141,13 @@ class ArgusAgent:
             f"You are Argus, an AI coding agent working in project: {self.project_path}"
         )
 
+        # Event emitter for observability
+        self._event_emitter = EventEmitter(
+            bus=get_event_bus(),
+            run_id="",
+            session_id=f"session-{int(time.time())}",
+        )
+
     def _register_default_tools(self) -> None:
         self._tool_registry.register(ReadFileTool())
         self._tool_registry.register(WriteFileTool())
@@ -177,7 +192,17 @@ class ArgusAgent:
         self._engineering_state = None
         self._conversation.add_user(request)
 
-        self.route_skills(request)
+        # Set up event emitter for this run
+        run_id = f"run-{int(self._start_time)}"
+        self._event_emitter.run_id = run_id
+        self._event_emitter.session_id = f"session-{int(self._start_time)}"
+
+        # Emit agent started event
+        self._event_emitter.emit(
+            EventType.AGENT_STARTED,
+            EventSource.AGENT,
+            status=EventStatus.STARTED,
+        )
 
         result = {
             "request": request,
@@ -197,6 +222,13 @@ class ArgusAgent:
             plan = self._plan(request)
             result["plan"] = [s.to_dict() for s in plan]
 
+            # Emit plan created event
+            self._event_emitter.emit(
+                EventType.PLAN_CREATED,
+                EventSource.AGENT,
+                metadata={"steps": [s.action for s in plan]},
+            )
+
             execution = self._run_loop(plan, request)
             result.update(execution)
 
@@ -211,14 +243,38 @@ class ArgusAgent:
         except KeyboardInterrupt:
             result["status"] = "CANCELLED"
             result["failure_reason"] = "user_cancellation"
+            self._event_emitter.emit(
+                EventType.AGENT_FAILED,
+                EventSource.AGENT,
+                status=EventStatus.FAILED,
+                metadata={"reason": "user_cancellation"},
+            )
         except Exception as e:
             result["status"] = "FAILED"
             result["failure_reason"] = "unexpected_error"
             result["error"] = str(e)
+            self._event_emitter.emit(
+                EventType.AGENT_FAILED,
+                EventSource.AGENT,
+                status=EventStatus.FAILED,
+                metadata={"error": str(e)},
+            )
 
         result["iterations"] = self._iterations
         result["tools_used"] = self._tools_used
         self._last_result = result
+
+        # Emit completion event
+        self._event_emitter.emit(
+            EventType.AGENT_COMPLETED if result["success"] else EventType.AGENT_FAILED,
+            EventSource.AGENT,
+            status=EventStatus.COMPLETED if result["success"] else EventStatus.FAILED,
+            metadata={
+                "iterations": result["iterations"],
+                "tools_used": result["tools_used"],
+                "duration": time.time() - self._start_time,
+            },
+        )
 
         final = result.get("final_response") or result.get("status", "Done")
         self._conversation.add_assistant(final, result=result)
@@ -665,9 +721,28 @@ class ArgusAgent:
 
         self._tools_used += 1
         self._status(f"Running {tool_name}...")
+
+        # Emit capability started event
+        self._event_emitter.emit(
+            EventType.CAPABILITY_STARTED,
+            EventSource.CAPABILITY_ROUTER,
+            status=EventStatus.STARTED,
+            capability=tool_name,
+            metadata={"arguments": list(arguments.keys())},
+        )
+
         result = self._tool_registry.execute(tool_name, **arguments)
         status = "success" if result.success else "failed"
         self._status(f"Tool {tool_name} {status}")
+
+        # Emit capability completed/failed event
+        self._event_emitter.emit(
+            EventType.CAPABILITY_COMPLETED if result.success else EventType.CAPABILITY_FAILED,
+            EventSource.CAPABILITY_ROUTER,
+            status=EventStatus.COMPLETED if result.success else EventStatus.FAILED,
+            capability=tool_name,
+            metadata={"error": result.error if not result.success else None},
+        )
 
         if self._handle_workflow_approval(tool_name, result):
             return result

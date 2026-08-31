@@ -110,7 +110,7 @@ def _build_router(config: ArgusConfig, credentials: Optional[CredentialManager] 
 
 def _build_gateway_model(config: ArgusConfig) -> Optional[GatewayModelProvider]:
     gateway_config = config.get("gateway", {})
-    if not gateway_config or not gateway_config.get("base_url"):
+    if not gateway_config or not gateway_config.get("base_url") or not gateway_config.get("api_key"):
         return None
     return GatewayModelProvider(
         base_url=gateway_config.get("base_url", ""),
@@ -257,6 +257,42 @@ def cmd_gateway(config: ArgusConfig) -> int:
         print(f"Failed to list models: {e}")
 
     return 0
+
+
+def cmd_reality(config: ArgusConfig) -> int:
+    """Run production-reality qualification suite."""
+    from argus.reality import run_reality_suite, generate_reality_report
+    try:
+        run = run_reality_suite()
+        print(generate_reality_report(run, format="text"))
+        if run.invariant_results:
+            failed = [k for k, v in run.invariant_results.items() if not v.passed]
+            if failed:
+                return 1
+        if run.secret_canary_results:
+            leaked = [k for k, v in run.secret_canary_results.items() if v.canary_detected]
+            if leaked:
+                return 1
+        return 0 if run.failed == 0 else 1
+    except Exception as e:
+        print(f"Reality suite failed: {e}", file=sys.stderr)
+        return 1
+
+
+def cmd_release(config: ArgusConfig) -> int:
+    """Run release engineering qualification suite."""
+    from argus.release import run_release_qualification, generate_release_report
+    try:
+        run = run_release_qualification()
+        print(generate_release_report(run, format="text"))
+        if run.invariant_results:
+            failed = [k for k, v in run.invariant_results.items() if v.status.value == "fail"]
+            if failed:
+                return 1
+        return 0 if run.failed == 0 else 1
+    except Exception as e:
+        print(f"Release suite failed: {e}", file=sys.stderr)
+        return 1
 
 
 def cmd_gateway_serve(config: ArgusConfig) -> int:
@@ -421,6 +457,12 @@ def main(args=None) -> int:
 
     if request == "gateway":
         return cmd_gateway(config)
+
+    if request == "reality":
+        return cmd_reality(config)
+
+    if request == "release":
+        return cmd_release(config)
 
     mode = parsed.mode
     if not mode:

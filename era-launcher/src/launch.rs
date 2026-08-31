@@ -350,9 +350,9 @@ impl LaunchEngine {
                 file_name_prefix: &str,
     ) -> DownloadManager {
         use std::sync::Arc;
-        let prefix = file_name_prefix.to_string();
+        let _prefix = file_name_prefix.to_string();
         let cb: Arc<dyn Fn(crate::downloads::DownloadProgress) + Send + Sync> =
-            Arc::new(move |progress| {
+            Arc::new(move |_progress| {
                 let _ = ();
             });
         DownloadManager::new().with_progress_callback(cb)
@@ -440,7 +440,6 @@ impl LaunchEngine {
             }
         }
 
-        let total = download_tasks.len();
         let dm = DownloadManager::new();
         let stream = futures::stream::iter(download_tasks.into_iter())
             .map(|(url, path)| {
@@ -454,13 +453,7 @@ impl LaunchEngine {
             })
             .buffer_unordered(8);
         tokio::pin!(stream);
-        let mut downloaded = 0usize;
-        while let Some(ok) = stream.next().await {
-            if ok {
-                downloaded += 1;
-            }
-            let _ = ();
-        }
+        while let Some(_ok) = stream.next().await {}
         Ok(paths)
     }
 
@@ -581,7 +574,6 @@ impl LaunchEngine {
         let objects_dir = assets_dir.join("objects");
         std::fs::create_dir_all(&objects_dir)?;
 
-        let total = objects.len();
         let mut tasks: Vec<(String, PathBuf)> = Vec::new();
         for (name, obj) in objects {
             let hash = obj
@@ -599,7 +591,6 @@ impl LaunchEngine {
             }
         }
 
-        let already_done = total - tasks.len();
         let dm = DownloadManager::new();
         let stream = futures::stream::iter(tasks.into_iter())
             .map(|(url, path)| {
@@ -614,13 +605,7 @@ impl LaunchEngine {
             .buffer_unordered(8);
 
         tokio::pin!(stream);
-        let mut downloaded = already_done;
-        while let Some(ok) = stream.next().await {
-            if ok {
-                downloaded += 1;
-            }
-            let _ = ();
-        }
+        while let Some(_ok) = stream.next().await {}
         Ok(())
     }
 

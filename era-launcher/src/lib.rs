@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 pub mod argus;
 pub mod auth;
 pub mod config;

@@ -24,7 +24,9 @@ class TestCommandRegistry:
     def test_registry_builds_all_commands(self):
         registry = build_registry()
         expected = {"help", "exit", "quit", "clear", "session", "config",
-                    "tools", "skills", "memory", "project", "agent"}
+                    "tools", "skills", "memory", "project", "agent",
+                    "capabilities", "doctor", "trace", "review", "subagents",
+                    "replay", "reality", "release"}
         assert set(registry._commands.keys()) == expected
 
     def test_handle_known_command(self):

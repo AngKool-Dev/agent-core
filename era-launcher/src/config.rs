@@ -1,7 +1,7 @@
 use crate::auth::Account;
 use crate::minecraft::optimization::OptimizationProfile;
 use crate::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 #[derive(Debug, Clone, serde::Serialize, Deserialize)]
 #[serde(default)]

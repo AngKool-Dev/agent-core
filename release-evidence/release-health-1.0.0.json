@@ -1,19 +1,19 @@
 {
   "version": "1.0.0",
-  "release_commit": "26013aa0248bb39349693f6b207fcd3533dc8e23",
+  "release_commit": "c2bdf6ccbd7ac22639e7c95ae0fbfa3d657a2762",
   "release_tag": "v1.0.0",
   "release_date": "2026-08-31",
   "qualification_date": "2026-08-31",
   "artifacts": {
     "wheel": {
       "filename": "agentcore-1.0.0-py3-none-any.whl",
-      "sha256": "PENDING_BUILD",
-      "size": 0
+      "sha256": "fc8fc06d81d73b2b4be11a66635d7a3c7855f6507589f99d5647df33df580294",
+      "size": 2726731
     },
     "sdist": {
       "filename": "agentcore-1.0.0.tar.gz",
-      "sha256": "PENDING_BUILD",
-      "size": 0
+      "sha256": "33c221d14e88b29c323556435409b579f68889eeb7627b9cc80eddd36a900489",
+      "size": 1065081
     }
   },
   "tests": {
@@ -39,8 +39,8 @@
     "import": "PASS"
   },
   "publication": {
-    "status": "NOT_PERFORMED",
-    "pypi": "NOT_ATTEMPTED",
+    "status": "BLOCKED_BY_CREDENTIALS",
+    "pypi": "BLOCKED_BY_CREDENTIALS",
     "github_release": "NOT_ATTEMPTED"
   },
   "public_installation": {

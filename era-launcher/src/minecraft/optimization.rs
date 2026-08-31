@@ -34,7 +34,7 @@ impl OptimizationProfile {
     }
 
     pub fn jvm_args(&self, memory_mb: u32) -> Vec<String> {
-        let mut args = match self {
+        let args = match self {
             OptimizationProfile::Low => vec![
                 format!("-Xmx{}M", (memory_mb * 3 / 4).max(2048)),
                 format!("-Xms{}M", (memory_mb / 8).max(512).min(1024)),

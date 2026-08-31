@@ -111,7 +111,6 @@ impl ArgusApp {
                             );
                             self.state.set_loading(true, Some(format!("Downloading update v{}...", tag)));
                             let _ = self.renderer.render(&self.state, &self.focus);
-                            let tag_for_thread = tag.clone();
                             let current_exe = match std::env::current_exe() {
                                 Ok(p) => p,
                                 Err(e) => {
@@ -1925,6 +1924,7 @@ impl ArgusApp {
     }
 
     /// Reinstall the latest version of the updatable mod at `idx`.
+    #[allow(dead_code)]
     fn update_mod_at_index(&mut self, idx: usize) {
         let Some(updatable) = self.state.updatable_mods.get(idx).cloned() else {
             return;

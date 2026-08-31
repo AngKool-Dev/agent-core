@@ -1566,7 +1566,7 @@ pub fn draw_account_selector(frame: &mut Frame, area: Rect, state: &AppState) {
     frame.render_widget(ratatui::widgets::Clear, modal);
 
     let mut items = vec![ListItem::new(vec![Line::from(Span::styled(
-        "OFFLINE ACCOUNTS",
+        "ACCOUNTS",
         Style::default().fg(t.accent).bold(),
     ))])];
 
@@ -1604,7 +1604,7 @@ pub fn draw_account_selector(frame: &mut Frame, area: Rect, state: &AppState) {
     };
     items.push(ListItem::new(vec![Line::from(Span::styled(
         format!(
-            " {} [+ Create new account ]",
+            " {} [+ Create offline account ]",
             if create_selected { "▸" } else { " " }
         ),
         create_style,

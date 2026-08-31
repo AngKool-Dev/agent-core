@@ -4,13 +4,21 @@ import os
 from typing import Dict, List
 
 from argus.commands.agent import handle as agent_handle
+from argus.commands.capabilities import handle as capabilities_handle
 from argus.commands.config import handle as config_handle
+from argus.commands.doctor import handle as doctor_handle
 from argus.commands.help import handle as help_handle
 from argus.commands.memory import handle as memory_handle
 from argus.commands.project import handle as project_handle
+from argus.commands.reality import handle as reality_handle
+from argus.commands.release import handle as release_handle
+from argus.commands.replay import handle as replay_handle
+from argus.commands.review import handle as review_handle
 from argus.commands.session import handle as session_handle
 from argus.commands.skills import handle as skills_handle
+from argus.commands.subagents import handle as subagents_handle
 from argus.commands.tools import handle as tools_handle
+from argus.commands.trace import handle as trace_handle
 
 
 _COMMAND_GROUPS = [
@@ -58,6 +66,14 @@ _COMMAND_GROUPS = [
         "commands": [
             ("config", "config", "Configuration (get, set, show)"),
             ("tools", "tools", "Tool operations (list, run)"),
+            ("capabilities", "capabilities", "Capability operations (list, show, search, discover)"),
+            ("doctor", "doctor", "System health check and diagnostics"),
+            ("trace", "trace", "Execution tracing and history"),
+            ("replay", "replay", "Run reconstruction and forensics"),
+            ("review", "review", "Evidence-based review of completed work"),
+            ("reality", "reality", "Production-reality qualification suite"),
+            ("release", "release", "Release engineering qualification suite"),
+            ("subagents", "subagents", "Subagent operations (list, show, create, cancel)"),
             ("help", "help", "Show this help"),
             ("exit", "exit", "Exit Argus (alias: quit)"),
         ]
@@ -88,6 +104,14 @@ def build_registry() -> CommandRegistry:
     registry.register("session", session_handle)
     registry.register("config", config_handle)
     registry.register("tools", tools_handle)
+    registry.register("capabilities", capabilities_handle)
+    registry.register("doctor", doctor_handle)
+    registry.register("trace", trace_handle)
+    registry.register("replay", replay_handle)
+    registry.register("review", review_handle)
+    registry.register("reality", reality_handle)
+    registry.register("release", release_handle)
+    registry.register("subagents", subagents_handle)
     registry.register("skills", skills_handle)
     registry.register("memory", memory_handle)
     registry.register("project", project_handle)

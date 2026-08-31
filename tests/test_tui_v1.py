@@ -282,7 +282,7 @@ class TestStartupModelStatus:
         repl = make_repl()
         repl._credentials.list_providers.return_value = {}
         status = repl._determine_model_status()
-        assert status["mode"] in ("Local", "Local fallback")
+        assert status["mode"] in ("Local", "Local fallback", "Argus Free")
         assert "provider" in status
 
     def test_status_byok(self):

@@ -103,6 +103,7 @@ _COMMAND_GROUPS: List[Dict[str, Any]] = [
             ("tools", "tools", "Tool operations (list, run)"),
             ("help", "help", "Show this help"),
             ("exit", "exit", "Exit Argus"),
+            ("reality", "reality", "Production-reality qualification suite"),
         ]
     },
 ]
