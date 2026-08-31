@@ -729,7 +729,7 @@ pub fn draw_settings(frame: &mut Frame, area: Rect, state: &AppState, focus: &Fo
         win_h,
         win_max,
     ) = {
-        let config = CONFIG.lock().unwrap();
+        let config = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
         (
             config.settings.default_memory,
             config.settings.java_path.clone(),
@@ -855,7 +855,7 @@ fn draw_settings_selector(frame: &mut Frame, area: Rect, state: &AppState, _focu
             let presets = MEMORY_PRESETS;
             let selected = state.settings_edit_index;
             let current = {
-                let config = CONFIG.lock().unwrap();
+                let config = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
                 config.settings.default_memory
             };
             let mut items = Vec::new();
@@ -933,7 +933,7 @@ fn draw_settings_selector(frame: &mut Frame, area: Rect, state: &AppState, _focu
             ("OPTIMIZATION PROFILE".to_string(), items)
         }
         SettingsEditMode::CustomJvmEditor => {
-            let cfg = CONFIG.lock().unwrap();
+            let cfg = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
             let current = cfg.settings.custom_jvm_args.join(" ");
             drop(cfg);
             let input = if state.custom_jvm_input.is_empty() {

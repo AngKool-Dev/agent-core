@@ -69,7 +69,7 @@ pub(crate) static CONFIG: Lazy<Mutex<Config>> =
 /// INSTANCE_MANAGER is hydrated from the loaded config so previously created
 /// instances appear in both the GUI and the terminal UI after a restart.
 pub(crate) static INSTANCE_MANAGER: Lazy<Mutex<InstanceManager>> = Lazy::new(|| {
-    let cfg = CONFIG.lock().unwrap();
+    let cfg = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
     let mut mgr = InstanceManager::new();
     for instance in &cfg.instances {
         mgr.add(from_config_instance(instance));
@@ -78,23 +78,23 @@ pub(crate) static INSTANCE_MANAGER: Lazy<Mutex<InstanceManager>> = Lazy::new(|| 
 });
 
 fn get_config() -> Config {
-    CONFIG.lock().unwrap().clone()
+    CONFIG.lock().unwrap_or_else(|e| e.into_inner()).clone()
 }
 
 fn save_config(config: Config) -> anyhow::Result<()> {
     config.save().map_err(|e| anyhow::anyhow!(e))?;
-    *CONFIG.lock().unwrap() = config;
+    *CONFIG.lock().unwrap_or_else(|e| e.into_inner()) = config;
     Ok(())
 }
 
 fn list_instances() -> Vec<crate::instances::InstanceConfig> {
-    INSTANCE_MANAGER.lock().unwrap().list().to_vec()
+    INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner()).list().to_vec()
 }
 
 fn create_instance(instance: crate::instances::InstanceConfig) -> crate::instances::InstanceConfig {
-    let mut m = INSTANCE_MANAGER.lock().unwrap();
+    let mut m = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
     m.add(instance.clone());
-    let mut config = CONFIG.lock().unwrap();
+    let mut config = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
     config.instances.push(to_config_instance(&instance));
     let _ = config.save();
     drop(m);
@@ -102,16 +102,16 @@ fn create_instance(instance: crate::instances::InstanceConfig) -> crate::instanc
 }
 
 fn delete_instance(id: String) -> bool {
-    INSTANCE_MANAGER.lock().unwrap().remove(&id);
-    let mut config = CONFIG.lock().unwrap();
+    INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
+    let mut config = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
     config.instances.retain(|i| i.id != id);
     let _ = config.save();
     true
 }
 
 fn update_instance(instance: crate::instances::InstanceConfig) -> bool {
-    INSTANCE_MANAGER.lock().unwrap().update(instance.clone());
-    let mut config = CONFIG.lock().unwrap();
+    INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner()).update(instance.clone());
+    let mut config = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
     let cfg_inst = to_config_instance(&instance);
     if let Some(existing) = config.instances.iter_mut().find(|i| i.id == instance.id) {
         *existing = cfg_inst;

@@ -190,7 +190,7 @@ pub struct BackendBridge;
 impl BackendBridge {
     /// Get all instances from the REAL instance manager.
     pub fn list_instances() -> Vec<InstanceConfig> {
-        let mgr = INSTANCE_MANAGER.lock().unwrap();
+        let mgr = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
         mgr.list().to_vec()
     }
 
@@ -201,7 +201,7 @@ impl BackendBridge {
 
     /// Get the first available instance (for quick launch).
     pub fn get_default_instance() -> Option<InstanceConfig> {
-        let mgr = INSTANCE_MANAGER.lock().unwrap();
+        let mgr = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
         let list = mgr.list();
         if list.is_empty() {
             None
@@ -268,7 +268,7 @@ impl BackendBridge {
 
     /// Get the current settings from the real CONFIG.
     pub fn get_settings() -> crate::config::Settings {
-        let config = crate::CONFIG.lock().unwrap();
+        let config = crate::CONFIG.lock().unwrap_or_else(|e| e.into_inner());
         config.settings.clone()
     }
 
@@ -285,7 +285,7 @@ impl BackendBridge {
 
     /// Get the current window config.
     pub fn get_window_config() -> crate::config::WindowConfig {
-        crate::CONFIG.lock().unwrap().window.clone()
+        crate::CONFIG.lock().unwrap_or_else(|e| e.into_inner()).window.clone()
     }
 
     /// Set the default memory and persist.
@@ -331,7 +331,7 @@ impl BackendBridge {
     /// Create a new instance using the REAL instance manager and config.
     pub fn create_instance(config: InstanceConfig) -> InstanceConfig {
         let instance = config.clone();
-        let mut mgr = INSTANCE_MANAGER.lock().unwrap();
+        let mut mgr = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
         mgr.add(config.clone());
 
         // Persist to config file
@@ -358,7 +358,7 @@ impl BackendBridge {
 
     /// Delete an instance using the REAL instance manager and config.
     pub fn delete_instance(id: &str) -> bool {
-        let mut mgr = INSTANCE_MANAGER.lock().unwrap();
+        let mut mgr = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
         let removed = mgr.remove(id);
 
         if let Ok(mut cfg) = crate::CONFIG.lock() {
@@ -370,7 +370,7 @@ impl BackendBridge {
 
     /// Update an instance using the REAL instance manager.
     pub fn update_instance(config: InstanceConfig) -> bool {
-        let mut mgr = INSTANCE_MANAGER.lock().unwrap();
+        let mut mgr = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
         let updated = mgr.update(config.clone());
 
         if let Ok(mut cfg) = crate::CONFIG.lock() {
@@ -497,7 +497,7 @@ impl BackendBridge {
         pinned_version_id: Option<&str>,
     ) -> Result<(String, Option<String>), String> {
         // Pick target instance: requested id, else first available.
-        let mgr = INSTANCE_MANAGER.lock().unwrap();
+        let mgr = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
         let instance = instance_id
             .and_then(|id| mgr.list().iter().find(|i| i.id == id))
             .or_else(|| mgr.list().first())
@@ -781,7 +781,7 @@ Create a Fabric or Quilt instance first.",
         use crate::argus::state::InstalledContent;
 
         let mut out = Vec::new();
-        let mgr = INSTANCE_MANAGER.lock().unwrap();
+        let mgr = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
         let instance = instance_id
             .and_then(|id| mgr.list().iter().find(|i| i.id == id))
             .or_else(|| mgr.list().first())
@@ -834,7 +834,7 @@ Create a Fabric or Quilt instance first.",
     /// List world names in the given instance's saves dir. When
     /// `instance_id` is None, the first available instance is used.
     pub fn list_worlds(instance_id: Option<&str>) -> Vec<String> {
-        let mgr = INSTANCE_MANAGER.lock().unwrap();
+        let mgr = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
         let instance = instance_id
             .and_then(|id| mgr.list().iter().find(|i| i.id == id))
             .or_else(|| mgr.list().first())
@@ -864,7 +864,7 @@ Create a Fabric or Quilt instance first.",
     pub fn scan_crash_reports(instance_id: Option<&str>) -> Vec<crate::argus::state::CrashReport> {
         use crate::argus::state::CrashReport;
 
-        let mgr = INSTANCE_MANAGER.lock().unwrap();
+        let mgr = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
         let instance = instance_id
             .and_then(|id| mgr.list().iter().find(|i| i.id == id))
             .or_else(|| mgr.list().first())
@@ -1288,7 +1288,7 @@ Create a Fabric or Quilt instance first.",
             return Vec::new();
         }
 
-        let mgr = INSTANCE_MANAGER.lock().unwrap();
+        let mgr = INSTANCE_MANAGER.lock().unwrap_or_else(|e| e.into_inner());
         let instance = instance_id
             .and_then(|id| mgr.list().iter().find(|i| i.id == id))
             .or_else(|| mgr.list().first())
@@ -1465,12 +1465,12 @@ Create a Fabric or Quilt instance first.",
 
     /// All saved accounts (offline profiles).
     pub fn list_accounts() -> Vec<crate::auth::Account> {
-        CONFIG.lock().unwrap().accounts.clone()
+        CONFIG.lock().unwrap_or_else(|e| e.into_inner()).accounts.clone()
     }
 
     /// The account launches use (config.default_account).
     pub fn active_account() -> Option<crate::auth::Account> {
-        let cfg = CONFIG.lock().unwrap();
+        let cfg = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
         let id = cfg.default_account.clone()?;
         cfg.accounts.iter().find(|a| a.id == id).cloned()
     }
@@ -1485,7 +1485,7 @@ Create a Fabric or Quilt instance first.",
             );
         }
         let account = crate::auth::Account::new_offline(name.to_string());
-        let mut cfg = CONFIG.lock().unwrap();
+        let mut cfg = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
         if cfg
             .accounts
             .iter()
@@ -1505,7 +1505,7 @@ Create a Fabric or Quilt instance first.",
 
     /// Make an existing account the launch account.
     pub fn set_active_account(id: &str) -> Result<(), String> {
-        let mut cfg = CONFIG.lock().unwrap();
+        let mut cfg = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
         if !cfg.accounts.iter().any(|a| a.id == id) {
             return Err("Account not found".to_string());
         }
@@ -1519,10 +1519,10 @@ Create a Fabric or Quilt instance first.",
     /// becomes active (or none).
     pub fn delete_account(id: &str) -> Result<(), String> {
         let was_active = {
-            let cfg = CONFIG.lock().unwrap();
+            let cfg = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
             cfg.default_account.as_deref() == Some(id)
         };
-        let mut cfg = CONFIG.lock().unwrap();
+        let mut cfg = CONFIG.lock().unwrap_or_else(|e| e.into_inner());
         cfg.remove_account(id)
             .map_err(|_| "Account not found".to_string())?;
         if was_active {
@@ -1832,7 +1832,7 @@ Create a Fabric or Quilt instance first.",
 
                 let classpath = Self::build_classpath(&client_jar, &all_libs);
                 let optimization_profile = {
-                    let config = crate::CONFIG.lock().unwrap();
+                    let config = crate::CONFIG.lock().unwrap_or_else(|e| e.into_inner());
                     config.settings.optimization_profile
                 };
                 let (jvm_args, game_args, manifest_main) =
