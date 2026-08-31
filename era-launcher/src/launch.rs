@@ -528,7 +528,9 @@ impl LaunchEngine {
         let index_path = assets_dir
             .join("indexes")
             .join(format!("{}.json", info.asset_index.id));
-        std::fs::create_dir_all(index_path.parent().unwrap())?;
+        if let Some(parent) = index_path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
         if !index_path.exists() {
             let dm = self.download_with_progress(&info.asset_index.id);
             dm.download(&info.asset_index.url, &index_path).await?;
