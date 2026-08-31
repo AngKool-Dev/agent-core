@@ -719,7 +719,16 @@ pub fn draw_settings(frame: &mut Frame, area: Rect, state: &AppState, focus: &Fo
     // selector overlay below re-reads CONFIG, and holding this guard across
     // that call deadlocked the same thread (std Mutex is not re-entrant) —
     // ENTER on "Default Memory" froze the launcher permanently.
-    let (default_memory, java_path, theme_name, language, optimization_profile, win_w, win_h, win_max) = {
+    let (
+        default_memory,
+        java_path,
+        theme_name,
+        language,
+        optimization_profile,
+        win_w,
+        win_h,
+        win_max,
+    ) = {
         let config = CONFIG.lock().unwrap();
         (
             config.settings.default_memory,
@@ -936,7 +945,14 @@ fn draw_settings_selector(frame: &mut Frame, area: Rect, state: &AppState, _focu
             let hint = "Edit args separated by spaces. ENTER to save, ESC to cancel.".to_string();
             let items = vec![
                 hint,
-                format!("Current: {}", if current.is_empty() { "(none)".to_string() } else { current.clone() }),
+                format!(
+                    "Current: {}",
+                    if current.is_empty() {
+                        "(none)".to_string()
+                    } else {
+                        current.clone()
+                    }
+                ),
                 format!("> {}", input),
             ];
             (title, items)

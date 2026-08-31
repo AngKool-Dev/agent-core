@@ -92,7 +92,8 @@ fn fetch_latest_tag() -> Result<Option<String>, String> {
         }
 
         let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
-        let tag = json.get("tag_name")
+        let tag = json
+            .get("tag_name")
             .and_then(|s| s.as_str())
             .map(|s| s.trim().to_string());
         Ok(tag)
@@ -123,14 +124,16 @@ pub fn fetch_latest_asset_url() -> Result<String, String> {
         }
 
         let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
-        let assets = json.get("assets")
+        let assets = json
+            .get("assets")
             .and_then(|a| a.as_array())
             .ok_or_else(|| "Release has no assets".to_string())?;
 
         for asset in assets {
             let name = asset.get("name").and_then(|n| n.as_str()).unwrap_or("");
             if name == "era-launcher.exe" {
-                let url = asset.get("browser_download_url")
+                let url = asset
+                    .get("browser_download_url")
                     .and_then(|u| u.as_str())
                     .ok_or_else(|| "Asset missing browser_download_url".to_string())?;
                 return Ok(url.to_string());
@@ -170,14 +173,17 @@ pub fn download_asset(url: &str, dest: &std::path::Path) -> Result<(), String> {
 
 /// Create a Windows `.bat` helper that waits for the current process to exit,
 /// copies `new_exe` over `current_exe`, deletes itself, and relaunches.
-pub fn create_update_helper(current_exe: &std::path::Path, new_exe: &std::path::Path) -> Result<std::path::PathBuf, String> {
+pub fn create_update_helper(
+    current_exe: &std::path::Path,
+    new_exe: &std::path::Path,
+) -> Result<std::path::PathBuf, String> {
     let helper_path = current_exe.with_extension("bat");
     let current_exe_str = current_exe.to_string_lossy().replace("\\", "/");
     let new_exe_str = new_exe.to_string_lossy().replace("\\", "/");
     let helper_str = helper_path.to_string_lossy().replace("\\", "/");
 
     let script = format!(
-r#"@echo off
+        r#"@echo off
 setlocal
 set "CURRENT={}"
 set "NEW={}"

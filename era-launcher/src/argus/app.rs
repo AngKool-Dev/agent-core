@@ -75,7 +75,10 @@ impl ArgusApp {
         self.setup_focus_targets();
         let current_version = self.state.current_version;
         let last_check = self.state.last_update_check;
-        self.update_rx = Some(crate::argus::update::spawn_check(current_version, last_check));
+        self.update_rx = Some(crate::argus::update::spawn_check(
+            current_version,
+            last_check,
+        ));
         self.renderer.render(&self.state, &self.focus)?;
 
         let poll_timeout = Duration::from_millis(100);
@@ -85,7 +88,10 @@ impl ArgusApp {
             let _ = std::fs::create_dir_all(&crash_dir);
             let ts = chrono::Local::now().format("%Y%m%d-%H%M%S");
             let path = crash_dir.join(format!("era-launcher-panic-{}.log", ts));
-            let _ = std::fs::write(&path, format!("ARGUS panicked at {}\npanic info: {}\n", ts, info));
+            let _ = std::fs::write(
+                &path,
+                format!("ARGUS panicked at {}\npanic info: {}\n", ts, info),
+            );
         }));
 
         loop {
@@ -99,7 +105,10 @@ impl ArgusApp {
                     self.state.last_update_check = Some(std::time::Instant::now());
                     match result {
                         crate::argus::update::UpdateCheckResult::UpdateAvailable(tag) => {
-                            self.state.update_check = crate::argus::update::UpdateCheckResult::UpdateAvailable(tag.clone());
+                            self.state.update_check =
+                                crate::argus::update::UpdateCheckResult::UpdateAvailable(
+                                    tag.clone(),
+                                );
                             self.state.log(
                                 LogLevel::Info,
                                 "ARGUS",
@@ -109,13 +118,15 @@ impl ArgusApp {
                                     env!("CARGO_PKG_VERSION")
                                 ),
                             );
-                            self.state.set_loading(true, Some(format!("Downloading update v{}...", tag)));
+                            self.state
+                                .set_loading(true, Some(format!("Downloading update v{}...", tag)));
                             let _ = self.renderer.render(&self.state, &self.focus);
                             let current_exe = match std::env::current_exe() {
                                 Ok(p) => p,
                                 Err(e) => {
                                     self.state.set_loading(false, None);
-                                    self.state.set_error(format!("Cannot locate launcher path: {}", e));
+                                    self.state
+                                        .set_error(format!("Cannot locate launcher path: {}", e));
                                     continue;
                                 }
                             };
@@ -130,7 +141,10 @@ impl ArgusApp {
                                 let result = (|| -> Result<(), String> {
                                     let url = crate::argus::update::fetch_latest_asset_url()?;
                                     crate::argus::update::download_asset(&url, &dest)?;
-                                    let helper = crate::argus::update::create_update_helper(&current_exe, &dest)?;
+                                    let helper = crate::argus::update::create_update_helper(
+                                        &current_exe,
+                                        &dest,
+                                    )?;
                                     #[cfg(target_env = "msvc")]
                                     let mut cmd = std::process::Command::new(helper)
                                         .creation_flags(0x00000010);
@@ -146,7 +160,8 @@ impl ArgusApp {
                             });
                         }
                         crate::argus::update::UpdateCheckResult::CheckFailed(err) => {
-                            self.state.update_check = crate::argus::update::UpdateCheckResult::CheckFailed(err.clone());
+                            self.state.update_check =
+                                crate::argus::update::UpdateCheckResult::CheckFailed(err.clone());
                             self.state.log(
                                 LogLevel::Warn,
                                 "ARGUS",
@@ -154,7 +169,8 @@ impl ArgusApp {
                             );
                         }
                         crate::argus::update::UpdateCheckResult::UpToDate => {
-                            self.state.update_check = crate::argus::update::UpdateCheckResult::UpToDate;
+                            self.state.update_check =
+                                crate::argus::update::UpdateCheckResult::UpToDate;
                         }
                     }
                     self.update_rx = None;
@@ -175,7 +191,10 @@ impl ArgusApp {
                     self.state.log(
                         LogLevel::Info,
                         "ARGUS",
-                        &format!("{} mod(s) with updates available", self.state.updatable_mods.len()),
+                        &format!(
+                            "{} mod(s) with updates available",
+                            self.state.updatable_mods.len()
+                        ),
                     );
                 }
             }
@@ -211,7 +230,8 @@ impl ArgusApp {
                         } else if self.state.account_selector_open || self.state.account_input_mode
                         {
                             self.handle_account_input(key);
-                        } else if self.state.settings_edit_mode == SettingsEditMode::CustomJvmEditor {
+                        } else if self.state.settings_edit_mode == SettingsEditMode::CustomJvmEditor
+                        {
                             self.handle_custom_jvm_input(key);
                         } else if self.state.command_prompt_active {
                             self.handle_command_input(key);
@@ -414,10 +434,8 @@ impl ArgusApp {
                     }
                 }
                 for (i, _) in self.state.updatable_mods.iter().enumerate() {
-                    self.focus.register(
-                        &format!("update_{}", i),
-                        &format!("Update {}", i + 1),
-                    );
+                    self.focus
+                        .register(&format!("update_{}", i), &format!("Update {}", i + 1));
                 }
             }
             Section::Worlds => {
@@ -1149,20 +1167,22 @@ impl ArgusApp {
         match key.code {
             KeyCode::Enter => {
                 let input = self.state.custom_jvm_input.trim().to_string();
-                let profile_saved = BackendBridge::set_optimization_profile(crate::minecraft::optimization::OptimizationProfile::Custom);
+                let profile_saved = BackendBridge::set_optimization_profile(
+                    crate::minecraft::optimization::OptimizationProfile::Custom,
+                );
                 let args_saved = BackendBridge::set_custom_jvm_args(&input);
                 if profile_saved && args_saved {
                     self.state.log(
                         LogLevel::Info,
                         "BACKEND",
-                        &format!("Custom JVM args saved ({} args)", input.split_whitespace().count()),
+                        &format!(
+                            "Custom JVM args saved ({} args)",
+                            input.split_whitespace().count()
+                        ),
                     );
                 } else {
-                    self.state.log(
-                        LogLevel::Error,
-                        "BACKEND",
-                        "Failed to save custom JVM args",
-                    );
+                    self.state
+                        .log(LogLevel::Error, "BACKEND", "Failed to save custom JVM args");
                 }
                 self.state.settings_edit_mode = SettingsEditMode::None;
                 self.state.custom_jvm_input.clear();
@@ -1170,7 +1190,8 @@ impl ArgusApp {
             KeyCode::Esc => {
                 self.state.custom_jvm_input.clear();
                 self.state.settings_edit_mode = SettingsEditMode::None;
-                self.state.log(LogLevel::Info, "ARGUS", "Custom JVM edit cancelled");
+                self.state
+                    .log(LogLevel::Info, "ARGUS", "Custom JVM edit cancelled");
             }
             KeyCode::Backspace => {
                 self.state.custom_jvm_input.pop();
@@ -1854,7 +1875,13 @@ impl ArgusApp {
                 self.state.set_loading(false, None);
                 // Record the install so DISCOVER hides this project from now on.
                 if let Some(iid) = pi.instance_id.as_deref() {
-                    BackendBridge::record_install(iid, &pi.project_id, version_id.as_deref(), &filename, &pi.content_type);
+                    BackendBridge::record_install(
+                        iid,
+                        &pi.project_id,
+                        version_id.as_deref(),
+                        &filename,
+                        &pi.content_type,
+                    );
                 }
                 self.state.set_status(format!("Installed: {}", filename));
                 self.state.log(
@@ -1934,10 +1961,8 @@ impl ArgusApp {
             return;
         };
 
-        self.state.set_loading(
-            true,
-            Some(format!("Updating {}...", updatable.title)),
-        );
+        self.state
+            .set_loading(true, Some(format!("Updating {}...", updatable.title)));
         let _ = self.renderer.render(&self.state, &self.focus);
 
         let content_type = match updatable.content_type.as_str() {
@@ -1952,7 +1977,10 @@ impl ArgusApp {
             title: updatable.title.clone(),
             content_type: content_type.to_string(),
             instance_id: Some(inst.id.clone()),
-            rows: vec![(updatable.latest_version_id.clone(), updatable.latest_version.clone())],
+            rows: vec![(
+                updatable.latest_version_id.clone(),
+                updatable.latest_version.clone(),
+            )],
         };
 
         self.perform_install(&pi, Some(updatable.latest_version_id.as_str()));
@@ -2380,9 +2408,13 @@ impl ArgusApp {
                 if self.state.settings_edit_index > 0 {
                     self.state.settings_edit_index -= 1;
                 }
-                let profile = crate::minecraft::optimization::OptimizationProfile::all()[self.state.settings_edit_index];
-                self.state
-                    .log(LogLevel::Info, "ARGUS", &format!("Optimization: {}", profile.as_str()));
+                let profile = crate::minecraft::optimization::OptimizationProfile::all()
+                    [self.state.settings_edit_index];
+                self.state.log(
+                    LogLevel::Info,
+                    "ARGUS",
+                    &format!("Optimization: {}", profile.as_str()),
+                );
             }
             SettingsEditMode::None => {}
             SettingsEditMode::CustomJvmEditor => {}
@@ -2430,8 +2462,11 @@ impl ArgusApp {
                     self.state.settings_edit_index += 1;
                 }
                 let profile = profiles[self.state.settings_edit_index];
-                self.state
-                    .log(LogLevel::Info, "ARGUS", &format!("Optimization: {}", profile.as_str()));
+                self.state.log(
+                    LogLevel::Info,
+                    "ARGUS",
+                    &format!("Optimization: {}", profile.as_str()),
+                );
             }
             SettingsEditMode::None => {}
             SettingsEditMode::CustomJvmEditor => {}
@@ -2566,7 +2601,10 @@ impl ArgusApp {
                     self.state.log(
                         LogLevel::Info,
                         "BACKEND",
-                        &format!("Optimization profile set to {} (persisted)", selected.as_str()),
+                        &format!(
+                            "Optimization profile set to {} (persisted)",
+                            selected.as_str()
+                        ),
                     );
                 } else {
                     self.state.log(

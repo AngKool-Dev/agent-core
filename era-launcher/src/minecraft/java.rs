@@ -80,12 +80,7 @@ impl JavaManager {
     pub fn detect_compatible() -> Vec<JavaInstallation> {
         Self::detect_all()
             .into_iter()
-            .filter(|i| {
-                i.version
-                    .as_ref()
-                    .map(|v| v.major >= 17)
-                    .unwrap_or(false)
-            })
+            .filter(|i| i.version.as_ref().map(|v| v.major >= 17).unwrap_or(false))
             .collect()
     }
 
@@ -97,7 +92,11 @@ impl JavaManager {
                 .join("runtimes");
             if let Ok(entries) = std::fs::read_dir(&base) {
                 for entry in entries.flatten() {
-                    let java_exe = entry.path().join("bin").join(if cfg!(windows) { "java.exe" } else { "java" });
+                    let java_exe = entry.path().join("bin").join(if cfg!(windows) {
+                        "java.exe"
+                    } else {
+                        "java"
+                    });
                     if !java_exe.exists() {
                         continue;
                     }

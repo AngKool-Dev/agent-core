@@ -1225,7 +1225,13 @@ Create a Fabric or Quilt instance first.",
     }
 
     /// Persist an install record after a successful download.
-    pub fn record_install(instance_id: &str, project_id: &str, version_id: Option<&str>, filename: &str, content_type: &str) {
+    pub fn record_install(
+        instance_id: &str,
+        project_id: &str,
+        version_id: Option<&str>,
+        filename: &str,
+        content_type: &str,
+    ) {
         let path = Self::installed_index_path(instance_id);
         let mut records: Vec<InstallRecord> = std::fs::read_to_string(&path)
             .ok()
@@ -1307,17 +1313,17 @@ Create a Fabric or Quilt instance first.",
                     Ok(c) => c,
                     Err(_) => return Vec::new(),
                 };
-                client.get_project_versions(&record.project_id).await.ok().unwrap_or_default()
+                client
+                    .get_project_versions(&record.project_id)
+                    .await
+                    .ok()
+                    .unwrap_or_default()
             });
 
             let loader_filter = instance.loader.to_lowercase();
             let compatible: Vec<_> = versions
                 .iter()
-                .filter(|v| {
-                    v.loaders
-                        .iter()
-                        .any(|l| l.to_lowercase() == loader_filter)
-                })
+                .filter(|v| v.loaders.iter().any(|l| l.to_lowercase() == loader_filter))
                 .cloned()
                 .collect();
 
@@ -1327,14 +1333,18 @@ Create a Fabric or Quilt instance first.",
                 compatible
             };
 
-            let latest_release = versions_to_check.iter().find(|v| v.version_type == "release");
+            let latest_release = versions_to_check
+                .iter()
+                .find(|v| v.version_type == "release");
             let installed_id = record.version_id.as_deref();
             let needs_update = match installed_id {
                 Some(iid) => latest_release.map(|v| v.id != *iid).unwrap_or(false),
                 None => {
                     let installed_ver = Self::extract_version_from_filename(&record.filename);
                     match installed_ver {
-                        Some(iv) => latest_release.map(|v| Self::compare_versions(&v.version_number, Some(&iv)) > 0).unwrap_or(false),
+                        Some(iv) => latest_release
+                            .map(|v| Self::compare_versions(&v.version_number, Some(&iv)) > 0)
+                            .unwrap_or(false),
                         None => false,
                     }
                 }
@@ -1364,11 +1374,14 @@ Create a Fabric or Quilt instance first.",
     /// digits and a version marker (`.` or `+`), skipping `mc`-prefixed MC
     /// version suffixes. Returns the best candidate found.
     fn extract_version_from_filename(filename: &str) -> Option<String> {
-        let stem = std::path::Path::new(filename).file_stem()?.to_string_lossy();
+        let stem = std::path::Path::new(filename)
+            .file_stem()?
+            .to_string_lossy();
         for part in stem.split('-') {
             let has_digit = part.chars().any(|c| c.is_ascii_digit());
             let has_version_marker = part.contains('.') || part.contains('+');
-            if has_digit && has_version_marker && !part.starts_with("mc") && !part.starts_with("MC") {
+            if has_digit && has_version_marker && !part.starts_with("mc") && !part.starts_with("MC")
+            {
                 return Some(part.to_string());
             }
         }
@@ -2813,8 +2826,13 @@ mod tests {
         };
         let dir = std::env::temp_dir().join("era-test-launch-cmd");
         let classpath = "C:\\libs\\a.jar;C:\\client.jar";
-        let (jvm, game, main_class) =
-            BackendBridge::build_launch_command(&version_info, &instance, &dir, classpath, crate::minecraft::optimization::OptimizationProfile::Mid);
+        let (jvm, game, main_class) = BackendBridge::build_launch_command(
+            &version_info,
+            &instance,
+            &dir,
+            classpath,
+            crate::minecraft::optimization::OptimizationProfile::Mid,
+        );
 
         // 1. Flags and values are separate argv elements.
         for arg in &game {
@@ -2914,8 +2932,13 @@ mod tests {
             custom_jvm_args: Vec::new(),
         };
         let dir = std::env::temp_dir().join("era-test-launch-legacy");
-        let (jvm, game, _) =
-            BackendBridge::build_launch_command(&version_info, &instance, &dir, "cp.jar", crate::minecraft::optimization::OptimizationProfile::Mid);
+        let (jvm, game, _) = BackendBridge::build_launch_command(
+            &version_info,
+            &instance,
+            &dir,
+            "cp.jar",
+            crate::minecraft::optimization::OptimizationProfile::Mid,
+        );
 
         let cp_pos = jvm.iter().position(|a| a == "-cp").unwrap();
         assert_eq!(jvm[cp_pos + 1], "cp.jar");
@@ -3141,8 +3164,13 @@ mod tests {
             minecraft_dir: None,
             custom_jvm_args: Vec::new(),
         };
-        let (_jvm, game, _) =
-            BackendBridge::build_launch_command(&version_info, &instance, &dir, "cp.jar", crate::minecraft::optimization::OptimizationProfile::Mid);
+        let (_jvm, game, _) = BackendBridge::build_launch_command(
+            &version_info,
+            &instance,
+            &dir,
+            "cp.jar",
+            crate::minecraft::optimization::OptimizationProfile::Mid,
+        );
         let gd_pos = game.iter().position(|a| a == "--gameDir").unwrap();
         assert_eq!(
             std::path::Path::new(&game[gd_pos + 1]),

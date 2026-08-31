@@ -1,10 +1,10 @@
 //! AppState — holds the ARGUS application state including navigation,
 //! runtime state, and command interface.
 
+use crate::argus::update::UpdateCheckResult;
 use crate::instances::InstanceConfig;
 use crate::minecraft::java::JavaInstallation;
 use crate::minecraft::optimization::OptimizationProfile;
-use crate::argus::update::UpdateCheckResult;
 use crate::modrinth::Project;
 use crate::versions::ScanResult;
 use std::collections::VecDeque;

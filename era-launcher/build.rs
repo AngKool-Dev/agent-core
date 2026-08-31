@@ -13,7 +13,11 @@ fn main() {
         let windres = "C:\\Users\\Administrator\\AppData\\Local\\Microsoft\\WinGet\\Packages\\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\\mingw64\\bin\\windres.exe";
         let output = Command::new(windres)
             .current_dir(&manifest_dir)
-            .arg(rc_file.strip_prefix(&manifest_dir).unwrap_or(Path::new("src/resources/era-launcher.rc")))
+            .arg(
+                rc_file
+                    .strip_prefix(&manifest_dir)
+                    .unwrap_or(Path::new("src/resources/era-launcher.rc")),
+            )
             .arg("-o")
             .arg(&obj_file)
             .output()

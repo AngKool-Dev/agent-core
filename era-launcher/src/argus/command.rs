@@ -567,7 +567,7 @@ impl CommandManager {
                                     return CommandResult::Error(format!(
                                         "Invalid optimization profile '{}'. Use: low, mid, high, custom",
                                         val
-                                    ))
+                                    ));
                                 }
                             };
                             if BackendBridge::set_optimization_profile(profile) {
@@ -581,7 +581,9 @@ impl CommandManager {
                                     profile.as_str()
                                 )))
                             } else {
-                                CommandResult::Error("Failed to save optimization profile.".to_string())
+                                CommandResult::Error(
+                                    "Failed to save optimization profile.".to_string(),
+                                )
                             }
                         } else {
                             CommandResult::Output(format!(
@@ -691,7 +693,9 @@ impl CommandManager {
                     u.latest_version
                 ));
             }
-            output.push_str("\nGo to MODS section to update individual mods, or reinstall from DISCOVER.");
+            output.push_str(
+                "\nGo to MODS section to update individual mods, or reinstall from DISCOVER.",
+            );
             CommandResult::Output(output)
         }
     }

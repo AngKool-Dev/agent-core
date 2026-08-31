@@ -77,25 +77,19 @@ pub(crate) static INSTANCE_MANAGER: Lazy<Mutex<InstanceManager>> = Lazy::new(|| 
     Mutex::new(mgr)
 });
 
-
 fn get_config() -> Config {
     CONFIG.lock().unwrap().clone()
 }
 
-
 fn save_config(config: Config) -> anyhow::Result<()> {
-    config
-        .save()
-        .map_err(|e| anyhow::anyhow!(e))?;
+    config.save().map_err(|e| anyhow::anyhow!(e))?;
     *CONFIG.lock().unwrap() = config;
     Ok(())
 }
 
-
 fn list_instances() -> Vec<crate::instances::InstanceConfig> {
     INSTANCE_MANAGER.lock().unwrap().list().to_vec()
 }
-
 
 fn create_instance(instance: crate::instances::InstanceConfig) -> crate::instances::InstanceConfig {
     let mut m = INSTANCE_MANAGER.lock().unwrap();
@@ -107,7 +101,6 @@ fn create_instance(instance: crate::instances::InstanceConfig) -> crate::instanc
     instance
 }
 
-
 fn delete_instance(id: String) -> bool {
     INSTANCE_MANAGER.lock().unwrap().remove(&id);
     let mut config = CONFIG.lock().unwrap();
@@ -115,7 +108,6 @@ fn delete_instance(id: String) -> bool {
     let _ = config.save();
     true
 }
-
 
 fn update_instance(instance: crate::instances::InstanceConfig) -> bool {
     INSTANCE_MANAGER.lock().unwrap().update(instance.clone());
@@ -128,11 +120,9 @@ fn update_instance(instance: crate::instances::InstanceConfig) -> bool {
     true
 }
 
-
 fn scan_versions() -> Vec<ScanResult> {
     SystemScanner::new().scan().unwrap_or_default()
 }
-
 
 async fn get_versions() -> Vec<String> {
     let client = match ManifestClient::new() {
@@ -163,7 +153,6 @@ async fn get_versions() -> Vec<String> {
         ]
     })
 }
-
 
 async fn get_fabric_loader_versions(_game_version: String) -> Vec<String> {
     let fabric_url = "https://meta.ichun.me/data/mc/mcVersions.json";
@@ -202,7 +191,6 @@ async fn get_fabric_loader_versions(_game_version: String) -> Vec<String> {
     ]
 }
 
-
 async fn get_forge_versions(_game_version: String) -> Vec<String> {
     vec![
         "53.0.27".to_string(),
@@ -218,14 +206,13 @@ pub async fn launch_instance(
     req: crate::launch::LaunchRequest,
     instances_dir: String,
 ) -> anyhow::Result<crate::launch::LaunchResult> {
-     let engine = LaunchEngine::new().map_err(|e| anyhow::anyhow!(e))?;
-     let path = std::path::PathBuf::from(instances_dir);
-     engine
-         .launch(&req, &path)
-         .await
-         .map_err(|e| anyhow::anyhow!(e))
- }
-
+    let engine = LaunchEngine::new().map_err(|e| anyhow::anyhow!(e))?;
+    let path = std::path::PathBuf::from(instances_dir);
+    engine
+        .launch(&req, &path)
+        .await
+        .map_err(|e| anyhow::anyhow!(e))
+}
 
 async fn search_modrinth(
     query: String,
@@ -233,8 +220,7 @@ async fn search_modrinth(
     game_version: String,
     loader: String,
 ) -> anyhow::Result<Vec<crate::modrinth::Project>> {
-    let client = crate::modrinth::ModrinthClient::new()
-        .map_err(|e| anyhow::anyhow!(e))?;
+    let client = crate::modrinth::ModrinthClient::new().map_err(|e| anyhow::anyhow!(e))?;
     let mut facets: Vec<String> = vec![format!("project_type:{}", content_type)];
     if !game_version.is_empty() {
         facets.push(format!("versions:{}", game_version));
@@ -249,7 +235,6 @@ async fn search_modrinth(
     Ok(result.hits)
 }
 
-
 async fn get_mod_versions(project_id: String) -> anyhow::Result<Vec<Version>> {
     let client = ModrinthClient::new().map_err(|e| anyhow::anyhow!(e))?;
     client
@@ -257,7 +242,6 @@ async fn get_mod_versions(project_id: String) -> anyhow::Result<Vec<Version>> {
         .await
         .map_err(|e| anyhow::anyhow!(e))
 }
-
 
 async fn install_mod(
     _project_id: String,
@@ -284,11 +268,9 @@ async fn install_mod(
     Ok(())
 }
 
-
 fn get_java_installations() -> Vec<crate::minecraft::java::JavaInstallation> {
     JavaManager::detect_all()
 }
-
 
 fn get_instances_dir() -> String {
     crate::platform::Paths::new()
@@ -296,7 +278,6 @@ fn get_instances_dir() -> String {
         .to_string_lossy()
         .to_string()
 }
-
 
 fn get_installer_info() -> serde_json::Value {
     serde_json::json!({
@@ -316,7 +297,6 @@ fn get_installer_info() -> serde_json::Value {
     })
 }
 
-
 fn prepare_instance(
     instance: crate::instances::InstanceConfig,
     instances_dir: String,
@@ -328,7 +308,6 @@ fn prepare_instance(
     Ok(())
 }
 
-
 async fn install_java_runtime(java_version: u32) -> anyhow::Result<Option<String>> {
     let install_dir = crate::platform::Paths::new().data_local;
     let path = crate::installer::install_java_runtime(install_dir, java_version)
@@ -336,4 +315,3 @@ async fn install_java_runtime(java_version: u32) -> anyhow::Result<Option<String
         .map_err(|e| anyhow::anyhow!(e))?;
     Ok(path.map(|p| p.to_string_lossy().to_string()))
 }
-

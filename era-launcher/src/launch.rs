@@ -43,11 +43,7 @@ impl LaunchEngine {
         })
     }
 
-    pub async fn launch(
-        &self,
-        req: &LaunchRequest,
-        instances_dir: &Path,
-            ) -> Result<LaunchResult> {
+    pub async fn launch(&self, req: &LaunchRequest, instances_dir: &Path) -> Result<LaunchResult> {
         let instance_dir = instances_dir.join(&req.instance_id);
         std::fs::create_dir_all(&instance_dir)?;
 
@@ -55,7 +51,7 @@ impl LaunchEngine {
             .await?;
 
         self.emit_status(
-                        "PREPARING",
+            "PREPARING",
             format!("Resolving version {}...", req.game_version),
         )
         .await?;
@@ -67,30 +63,24 @@ impl LaunchEngine {
 
         let mut loader_libs: Vec<PathBuf> = Vec::new();
         let loader_main_class: Option<String> = if req.loader == "fabric" {
-            self.emit_status(
-                                "DOWNLOADING",
-                "Downloading Fabric loader...".to_string(),
-            )
-            .await?;
+            self.emit_status("DOWNLOADING", "Downloading Fabric loader...".to_string())
+                .await?;
             self.download_fabric_loader(
                 &req.game_version,
                 req.loader_version.as_deref(),
                 &instance_dir,
                 &mut loader_libs,
-                            )
+            )
             .await?
         } else if req.loader == "forge" {
-            self.emit_status(
-                                "DOWNLOADING",
-                "Downloading Forge libraries...".to_string(),
-            )
-            .await?;
+            self.emit_status("DOWNLOADING", "Downloading Forge libraries...".to_string())
+                .await?;
             self.download_forge_libraries(
                 &req.game_version,
                 req.loader_version.as_deref(),
                 &instance_dir,
                 &mut loader_libs,
-                            )
+            )
             .await?
         } else {
             None
@@ -130,11 +120,8 @@ impl LaunchEngine {
 
         let resolved_java_path = java_path.to_string_lossy().to_string();
 
-        self.emit_status(
-                        "DOWNLOADING",
-            "Downloading client JAR...".to_string(),
-        )
-        .await?;
+        self.emit_status("DOWNLOADING", "Downloading client JAR...".to_string())
+            .await?;
         let client_jar = self
             .download_client(&version_info, &instance_dir, req.fresh)
             .await?;
@@ -156,8 +143,7 @@ impl LaunchEngine {
 
         self.emit_status("DOWNLOADING", "Downloading assets...".to_string())
             .await?;
-        self.download_assets(&version_info, &assets_dir)
-            .await?;
+        self.download_assets(&version_info, &assets_dir).await?;
 
         self.emit_status("VERIFYING", "Verifying files...".to_string())
             .await?;
@@ -193,11 +179,8 @@ impl LaunchEngine {
             req.custom_jvm_args.clone(),
         );
 
-        self.emit_status(
-                        "LAUNCHING",
-            "Starting Minecraft process...".to_string(),
-        )
-        .await?;
+        self.emit_status("LAUNCHING", "Starting Minecraft process...".to_string())
+            .await?;
 
         let mut cmd = Command::new(&java_path);
         for arg in &jvm_args {
@@ -267,7 +250,7 @@ impl LaunchEngine {
         let pid = child.id();
 
         self.emit_status(
-                        "RUNNING",
+            "RUNNING",
             format!("Minecraft {} launched (PID {})", req.game_version, pid),
         )
         .await?;
@@ -287,8 +270,7 @@ impl LaunchEngine {
                         Err(_) => break,
                     };
                     let _ = n;
-                    if !line.is_empty() {
-                                            }
+                    if !line.is_empty() {}
                 }
             }
             if let Some(stderr) = stderr {
@@ -303,11 +285,10 @@ impl LaunchEngine {
                         Err(_) => break,
                     };
                     let _ = n;
-                    if !line.is_empty() {
-                                            }
+                    if !line.is_empty() {}
                 }
             }
-                    });
+        });
 
         Ok(LaunchResult {
             success: true,
@@ -318,11 +299,7 @@ impl LaunchEngine {
         })
     }
 
-    async fn emit_status(
-        &self,
-        _status: &str,
-        _message: String,
-    ) -> Result<()> {
+    async fn emit_status(&self, _status: &str, _message: String) -> Result<()> {
         Ok(())
     }
 
@@ -331,7 +308,7 @@ impl LaunchEngine {
         info: &ManifestVersionInfo,
         root: &Path,
         fresh: bool,
-            ) -> Result<PathBuf> {
+    ) -> Result<PathBuf> {
         let versions_dir = root.join("versions").join(&info.id);
         std::fs::create_dir_all(&versions_dir)?;
         let client_path = versions_dir.join(format!("{}.jar", info.id));
@@ -345,10 +322,7 @@ impl LaunchEngine {
         Ok(client_path)
     }
 
-    fn download_with_progress(
-        &self,
-                file_name_prefix: &str,
-    ) -> DownloadManager {
+    fn download_with_progress(&self, file_name_prefix: &str) -> DownloadManager {
         use std::sync::Arc;
         let _prefix = file_name_prefix.to_string();
         let cb: Arc<dyn Fn(crate::downloads::DownloadProgress) + Send + Sync> =
@@ -363,7 +337,7 @@ impl LaunchEngine {
         info: &ManifestVersionInfo,
         root: &Path,
         fresh: bool,
-            ) -> Result<Vec<PathBuf>> {
+    ) -> Result<Vec<PathBuf>> {
         let libs_dir = root.join("libraries");
         std::fs::create_dir_all(&libs_dir)?;
         let os = match std::env::consts::OS {
@@ -550,11 +524,7 @@ impl LaunchEngine {
         Ok(())
     }
 
-    async fn download_assets(
-        &self,
-        info: &ManifestVersionInfo,
-        assets_dir: &Path,
-            ) -> Result<()> {
+    async fn download_assets(&self, info: &ManifestVersionInfo, assets_dir: &Path) -> Result<()> {
         let index_path = assets_dir
             .join("indexes")
             .join(format!("{}.json", info.asset_index.id));
