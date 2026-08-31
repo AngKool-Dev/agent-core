@@ -3383,4 +3383,49 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_extract_version_from_filename() {
+        assert_eq!(
+            BackendBridge::extract_version_from_filename("sodium-0.5.11.jar"),
+            Some("0.5.11".to_string())
+        );
+        assert_eq!(
+            BackendBridge::extract_version_from_filename(
+                "fabric-language-kotlin-1.13.13+kotlin.2.4.10.jar"
+            ),
+            Some("1.13.13+kotlin.2.4.10".to_string())
+        );
+        // mc-prefixed segments should be skipped
+        assert_eq!(
+            BackendBridge::extract_version_from_filename("modname-mc1.20.1-1.0.0.jar"),
+            Some("1.0.0".to_string())
+        );
+        // Version with mc suffix attached
+        assert_eq!(
+            BackendBridge::extract_version_from_filename("sodium-extra-fabric-0.9.3+mc26.2.jar"),
+            Some("0.9.3+mc26.2".to_string())
+        );
+        // NeoForge mod filename
+        assert_eq!(
+            BackendBridge::extract_version_from_filename("ImmediatelyFast-NeoForge-1.16.3+26.2.jar"),
+            Some("1.16.3+26.2".to_string())
+        );
+        // No version segment — falls back to last part
+        assert_eq!(
+            BackendBridge::extract_version_from_filename("no_version.jar"),
+            Some("no_version".to_string())
+        );
+    }
+
+    #[test]
+    fn test_compare_versions() {
+        assert_eq!(BackendBridge::compare_versions("1.0.0", Some("0.9.3")), 1);
+        assert_eq!(BackendBridge::compare_versions("0.9.3", Some("1.0.0")), -1);
+        assert_eq!(BackendBridge::compare_versions("1.0.0", Some("1.0.0")), 0);
+        assert_eq!(BackendBridge::compare_versions("1.2.3", None), 1);
+        assert_eq!(BackendBridge::compare_versions("v1.16.14", Some("1.16.14")), 0);
+        assert_eq!(BackendBridge::compare_versions("1.21.1", Some("1.20.1")), 1);
+        assert_eq!(BackendBridge::compare_versions("1.20", Some("1.20.1")), -1);
+    }
 }
