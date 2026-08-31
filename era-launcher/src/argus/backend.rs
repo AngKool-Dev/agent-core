@@ -2691,8 +2691,14 @@ Create a Fabric or Quilt instance first.",
                 .map_err(|e| crate::errors::LauncherError::Zip(e.to_string()))?;
             let name = file.name().to_string();
             if name.ends_with(".so") || name.ends_with(".dll") || name.ends_with(".dylib") {
-                let outpath = natives_dir.join(std::path::Path::new(&name).file_name().unwrap());
-                fs::create_dir_all(outpath.parent().unwrap())?;
+                let Some(file_name) = std::path::Path::new(&name).file_name() else {
+                    continue;
+                };
+                let outpath = natives_dir.join(file_name);
+                let Some(parent) = outpath.parent() else {
+                    continue;
+                };
+                fs::create_dir_all(parent)?;
                 let mut out = fs::File::create(&outpath)?;
                 std::io::copy(&mut file, &mut out)?;
             }
