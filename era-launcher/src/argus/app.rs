@@ -47,6 +47,7 @@ pub struct ArgusApp {
     tracker: RuntimeTracker,
     update_rx: Option<std::sync::mpsc::Receiver<crate::argus::update::UpdateCheckResult>>,
     update_quit_rx: Option<std::sync::mpsc::Receiver<()>>,
+    mod_update_rx: Option<std::sync::mpsc::Receiver<Vec<crate::argus::state::UpdatableMod>>>,
 }
 
 impl ArgusApp {
@@ -63,6 +64,7 @@ impl ArgusApp {
             tracker: RuntimeTracker::new(),
             update_rx: None,
             update_quit_rx: None,
+            mod_update_rx: None,
         })
     }
 
@@ -164,6 +166,18 @@ impl ArgusApp {
                 if let Ok(()) = rx.try_recv() {
                     self.state.set_loading(false, None);
                     self.state.should_quit = true;
+                }
+            }
+
+            if let Some(rx) = &self.mod_update_rx {
+                if let Ok(updates) = rx.try_recv() {
+                    self.state.updatable_mods = updates;
+                    self.mod_update_rx = None;
+                    self.state.log(
+                        LogLevel::Info,
+                        "ARGUS",
+                        &format!("{} mod(s) with updates available", self.state.updatable_mods.len()),
+                    );
                 }
             }
 
@@ -1363,10 +1377,18 @@ impl ArgusApp {
         if self.state.current_section == Section::Discover && self.state.modrinth_results.is_empty()
         {
             self.fetch_discover_results("");
-            // fetch may have populated results; stay on categories until a
-            // category is activated.
             self.state.discover_pane = DiscoverPane::Categories;
             self.focus.set_by_id(&self.active_category_id());
+        }
+
+        if self.state.current_section == Section::Mods && self.mod_update_rx.is_none() {
+            let (tx, rx) = std::sync::mpsc::channel();
+            self.mod_update_rx = Some(rx);
+            let instance_id = self.state.selected_instance.as_ref().map(|i| i.id.clone());
+            std::thread::spawn(move || {
+                let updates = BackendBridge::check_mod_updates(instance_id.as_deref());
+                let _ = tx.send(updates);
+            });
         }
     }
 

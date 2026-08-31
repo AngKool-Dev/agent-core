@@ -1299,7 +1299,7 @@ Create a Fabric or Quilt instance first.",
 
         let mut updatable = Vec::new();
         for record in records {
-            if record.content_type == "modpack" {
+            if record.content_type != "mod" {
                 continue;
             }
             let versions: Vec<_> = rt.block_on(async {
@@ -1309,23 +1309,34 @@ Create a Fabric or Quilt instance first.",
                 };
                 client.get_project_versions(&record.project_id).await.ok().unwrap_or_default()
             });
-            let versions: Vec<_> = rt.block_on(async {
-                let client = match ModrinthClient::new() {
-                    Ok(c) => c,
-                    Err(_) => return Vec::new(),
-                };
-                client.get_project_versions(&record.project_id).await.ok().unwrap_or_default()
-            });
 
-            let latest_release = versions.iter().find(|v| v.version_type == "release");
+            let loader_filter = instance.loader.to_lowercase();
+            let compatible: Vec<_> = versions
+                .iter()
+                .filter(|v| {
+                    v.loaders
+                        .iter()
+                        .any(|l| l.to_lowercase() == loader_filter)
+                })
+                .cloned()
+                .collect();
+
+            let versions_to_check = if compatible.is_empty() {
+                versions
+            } else {
+                compatible
+            };
+
+            let latest_release = versions_to_check.iter().find(|v| v.version_type == "release");
             let installed_id = record.version_id.as_deref();
             let needs_update = match installed_id {
                 Some(iid) => latest_release.map(|v| v.id != *iid).unwrap_or(false),
                 None => {
                     let installed_ver = Self::extract_version_from_filename(&record.filename);
-                    latest_release
-                        .map(|v| Self::compare_versions(&v.version_number, installed_ver.as_deref()) > 0)
-                        .unwrap_or(false)
+                    match installed_ver {
+                        Some(iv) => latest_release.map(|v| Self::compare_versions(&v.version_number, Some(&iv)) > 0).unwrap_or(false),
+                        None => false,
+                    }
                 }
             };
 
@@ -1346,16 +1357,22 @@ Create a Fabric or Quilt instance first.",
         updatable
     }
 
-    /// Extract a version string like "0.5.11" from a filename like "sodium-0.5.11.jar".
+    /// Extract a version string from a filename like "sodium-0.5.11.jar" or
+    /// "fabric-language-kotlin-1.13.13+kotlin.2.4.10.jar".
+    ///
+    /// Scans dash-separated segments from left to right for one that contains
+    /// digits and a version marker (`.` or `+`), skipping `mc`-prefixed MC
+    /// version suffixes. Returns the best candidate found.
     fn extract_version_from_filename(filename: &str) -> Option<String> {
         let stem = std::path::Path::new(filename).file_stem()?.to_string_lossy();
-        let mut parts = stem.rsplit('-');
-        let last = parts.next()?;
-        if last.chars().all(|c| c.is_ascii_digit() || c == '.') && last.contains('.') {
-            Some(last.to_string())
-        } else {
-            None
+        for part in stem.split('-') {
+            let has_digit = part.chars().any(|c| c.is_ascii_digit());
+            let has_version_marker = part.contains('.') || part.contains('+');
+            if has_digit && has_version_marker && !part.starts_with("mc") && !part.starts_with("MC") {
+                return Some(part.to_string());
+            }
         }
+        stem.split('-').last().map(|s| s.to_string())
     }
 
     /// Compare two version strings semver-ish. Returns negative if a < b,

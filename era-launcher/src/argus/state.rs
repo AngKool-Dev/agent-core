@@ -364,6 +364,8 @@ pub struct AppState {
     pub update_check: UpdateCheckResult,
     /// When the last update check was performed
     pub last_update_check: Option<std::time::Instant>,
+    /// Receiver for background mod update check results
+    pub mod_update_rx: Option<std::sync::mpsc::Receiver<Vec<crate::argus::state::UpdatableMod>>>,
     /// Version this binary was built from
     pub current_version: &'static str,
     /// Selected optimization profile for JVM args
@@ -459,6 +461,7 @@ impl AppState {
             ],
             update_check: UpdateCheckResult::UpToDate,
             last_update_check: None,
+            mod_update_rx: None,
             current_version: env!("CARGO_PKG_VERSION"),
             optimization_profile: OptimizationProfile::Mid,
             custom_jvm_input: String::new(),
