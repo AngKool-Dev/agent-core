@@ -1,127 +1,160 @@
-# AgentCore V0.1
+# ARGUS 1.0.0
 
-Universal AI coding-agent framework with pluggable runtime adapters.
+Universal AI coding-agent framework with security-first execution, durable operations, and pluggable runtime adapters.
 
-## The Principle
+## What is ARGUS?
 
-**THE AGENT BRAIN IS SEPARATE FROM THE AGENT RUNTIME.**
+ARGUS is a capability-based AI coding agent framework that enforces security at every level of execution. It provides:
 
-Hermes is the first runtime. Kilo and OpenCode can be added later as interchangeable engines underneath the same system.
+- **Security-first execution**: MODEL → CAPABILITY ROUTER → SECURITY POLICY → ALLOW/ASK/DENY → EXECUTION
+- **Durable execution**: Journaled operations with crash recovery and reconciliation
+- **Replay/Forensics**: Observational replay of past executions for debugging and auditing
+- **Provider resilience**: Circuit breakers, retry policies, and fallback providers
+- **MCP support**: Integration with Model Context Protocol servers
+- **Benchmarking**: Scientific evaluation of agent performance
 
 ## Installation
 
+### From Source
+
 ```bash
-cd /home/era/agent-core
+git clone https://github.com/AngKool-Dev/agent-core.git
+cd agent-core
 pip install -e .
+```
+
+### Development Installation
+
+```bash
+pip install -e ".[dev]"
 ```
 
 ## Quick Start
 
 ```bash
-# Run a task
-agent "Fix the launcher crash"
+# Run ARGUS CLI
+argus --help
 
-# Use a specific project
-agent -p /home/era/Projects/EraLauncher "Why does launch fail?"
+# Check version
+argus --version
 
-# Use a specific runtime/model
-agent -r hermes -m claude-sonnet-4 "Implement X"
-```
+# Run with a project
+argus -p /path/to/project "Your task here"
 
-## Components
-
-| Component | Purpose |
-|-----------|---------|
-| `agent.py` | Main orchestrator - runs the agent loop |
-| `task.py` | Task model with states and serialization |
-| `router.py` | Automatic skill routing |
-| `context.py` | Project context discovery |
-| `memory.py` | Memory abstraction layer |
-| `verifier.py` | Project-appropriate verification |
-| `tools.py` | Controlled tool execution |
-| `runtimes/base.py` | Abstract runtime interface |
-| `runtimes/hermes.py` | Hermes runtime adapter |
-| `skills/` | Skill registry and loader |
-
-## Architecture
-
-```
-User → AgentCore → Runtime Adapter (Hermes) → Tools
-```
-
-The agent brain owns:
-- Task state
-- Skill routing
-- Project context
-- Memory
-- Planning
-- Verification
-
-The runtime adapter owns:
-- Model invocation
-- Tool definition
-- Session management
-
-## Skill System
-
-Skills are discovered from the paths configured in `argus.toml` (default:
-`~/.config/argus/config.toml` or `./argus.toml`) and automatically composed
-based on user prompts.
-
-Available skills include:
-- `debugging-and-error-recovery` - Systematic bug fixing
-- `test-driven-development` - Test-driven development
-- `documentation-and-adrs` - Documentation and architecture decisions
-- `code-review-and-quality` - Code review guidance
-- And many more...
-
-## Memory Integration
-
-AgentCore uses DB-Obsidian for persistent memory via a clean abstraction:
-
-```python
-from agentcore.memory import MemoryManager
-from agentcore.adapters.memory_dbobsidian import DBObsidianBackend
-
-backend = DBObsidianBackend(db_path="~/.agentcore/memory.db")
-memory = MemoryManager(backend)
-
-# Search memories
-results = memory.search("decision", project="my-project")
-
-# Store information
-memory.store_decision("Use async patterns", project="my-project")
+# Run in REPL mode
+argus
 ```
 
 ## Configuration
 
-Configuration is in `config/agent.toml`:
+ARGUS uses a configuration file (default: `argus.toml`):
 
 ```toml
-default_runtime = "hermes"
-max_iterations = 10
-max_tools = 20
-timeout_seconds = 300
+[model]
+provider = "ollama"
+name = "llama3"
+
+[gateway]
+base_url = "https://your-gateway.example.com"
+api_key = "your-api-key"
 ```
 
-## Development
+## Provider Setup
+
+ARGUS supports multiple LLM providers:
+
+- **Ollama**: Local models (default)
+- **OpenRouter**: Cloud models
+- **Gemini**: Google's Gemini models
+- **Groq**: Fast inference
+- **Cerebras**: High-performance inference
+
+Configure providers in your `argus.toml` or via environment variables.
+
+## MCP Setup
+
+ARGUS supports Model Context Protocol (MCP) servers for extended capabilities:
+
+```toml
+[mcp.servers.my-server]
+command = "my-mcp-server"
+args = ["--option", "value"]
+```
+
+## Security Model
+
+ARGUS enforces a security-first execution model:
+
+1. **DENY** cannot execute
+2. **ASK** requires human approval
+3. Approval scope cannot expand
+4. Sandbox remains authoritative
+5. MCP cannot bypass security
+6. Provider fallback cannot bypass security
+7. Recovery cannot bypass security
+8. Replay cannot execute
+9. Secrets cannot enter persisted model-visible state
+
+## Crash Recovery
+
+ARGUS provides durable execution with automatic crash recovery:
+
+- Operations are journaled before execution
+- Crashes are detected automatically
+- State is reconciled after recovery
+- Recovery budget prevents infinite loops
+
+## Replay
+
+ARGUS can replay past executions for debugging and auditing:
 
 ```bash
-# Install with dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest tests/
+argus replay <run-id>
 ```
 
-## Future Roadmap
+Replay is observational only - it cannot execute operations.
 
-- V0.2: Better planning, parallel tool execution
-- V0.3: Advanced memory, semantic retrieval
-- V0.4: Automatic lesson extraction
-- V0.5: Kilo and OpenCode runtime adapters
-- V1.0: Full autonomous coding workflow
+## Benchmarking
+
+ARGUS includes a scientific benchmarking framework:
+
+```bash
+argus benchmark
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **CLI not found**: Ensure the package is installed and the scripts directory is in your PATH
+2. **Provider errors**: Check your provider configuration and API keys
+3. **MCP errors**: Verify MCP server configuration and connectivity
+
+### Getting Help
+
+- Check the documentation in `docs/`
+- Review the `CHANGELOG.md`
+- Open an issue on GitHub
+
+## Known Limitations
+
+- External provider tests require opt-in credentials
+- Long-duration stability tests not executed in CI
+- Platform-specific tests may vary outside Windows
+- Build reproducibility is semantic (timestamps vary)
+
+## Reporting Security Issues
+
+Please see [SECURITY.md](SECURITY.md) for information on reporting security vulnerabilities.
+
+## Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for planned future work.

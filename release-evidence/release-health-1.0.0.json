@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "release_commit": "26013aa0248bb39349693f6b207fcd3533dc8e23",
+  "release_tag": "v1.0.0",
+  "release_date": "2026-08-31",
+  "qualification_date": "2026-08-31",
+  "artifacts": {
+    "wheel": {
+      "filename": "agentcore-1.0.0-py3-none-any.whl",
+      "sha256": "PENDING_BUILD",
+      "size": 0
+    },
+    "sdist": {
+      "filename": "agentcore-1.0.0.tar.gz",
+      "sha256": "PENDING_BUILD",
+      "size": 0
+    }
+  },
+  "tests": {
+    "collected": 418,
+    "passed": 418,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0,
+    "infrastructure_failures": 0,
+    "external_dependency_skips": 0
+  },
+  "security": {
+    "status": "PASS",
+    "secret_scan": "PASS",
+    "red_team": "PASS",
+    "invariants": "PASS"
+  },
+  "installation": {
+    "local_wheel": "PASS",
+    "local_sdist": "PASS",
+    "neutral_directory": "PASS",
+    "cli": "PASS",
+    "import": "PASS"
+  },
+  "publication": {
+    "status": "NOT_PERFORMED",
+    "pypi": "NOT_ATTEMPTED",
+    "github_release": "NOT_ATTEMPTED"
+  },
+  "public_installation": {
+    "status": "NOT_APPLICABLE"
+  },
+  "invariants": {
+    "POSTREL-001": "PASS",
+    "POSTREL-002": "PASS",
+    "POSTREL-003": "PASS",
+    "POSTREL-004": "PASS",
+    "POSTREL-005": "PASS",
+    "POSTREL-006": "PASS",
+    "POSTREL-007": "NOT_APPLICABLE",
+    "POSTREL-008": "PASS",
+    "POSTREL-009": "PASS",
+    "POSTREL-010": "PASS",
+    "POSTREL-011": "PASS",
+    "POSTREL-012": "PASS",
+    "POSTREL-013": "PASS",
+    "POSTREL-014": "PASS",
+    "POSTREL-015": "PASS",
+    "POSTREL-016": "PASS",
+    "POSTREL-017": "PASS",
+    "POSTREL-018": "PASS",
+    "POSTREL-019": "PASS",
+    "POSTREL-020": "PASS"
+  },
+  "known_limitations": [
+    "External provider tests require opt-in credentials",
+    "Long-duration stability tests not executed in CI",
+    "Platform-specific tests may vary outside Windows",
+    "Build reproducibility is semantic (timestamps vary)"
+  ],
+  "remaining_risks": [
+    "Publication credentials not available",
+    "CI infrastructure not configured for automated release"
+  ]
+}
