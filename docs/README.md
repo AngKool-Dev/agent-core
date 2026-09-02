@@ -86,7 +86,7 @@ After pushing changes to GitHub, Cloudflare Pages automatically redeploys the si
 - **Download URL pattern**: `https://github.com/AngKool-Dev/argus-releases/releases/latest/download/era-launcher.exe`
 - **Current Windows executable size**: ~13.7 MB
 - **Rust package name**: `era-launcher`
-- **Latest release tag**: `v0.1.6`
+- **Latest release tag**: `v0.1.8`
 - **TUI module**: `argus`
 - **Interfaces**: Terminal TUI (Ratatui)
 
